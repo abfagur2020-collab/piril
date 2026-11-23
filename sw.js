@@ -16,7 +16,10 @@ self.addEventListener('fetch', e => {
     e.respondWith(Promise.race([net, late]).catch(() => caches.match('./').then(r => r || net)));
     return;
   }
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+  // İkon ve manifest önbellekten gelir, arkadan yenilenir; eski kopya bir sonraki açılışta düzelir.
+  const net = fetch(e.request, { cache: 'no-cache' }).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); } return r; });
+  e.waitUntil(net.catch(() => {}));
+  e.respondWith(caches.match(e.request, { cacheName: CACHE }).then(r => r || net));
 });
 
 /* ---------- Hatırlatıcı: tarayıcı arka planda çağırır (Android, kurulu uygulama) ---------- */
