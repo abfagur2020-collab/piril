@@ -4,25 +4,25 @@
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef3ee"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1c1a">
 <meta name="description" content="Günde 3 dakikalık elektronik dersleri">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Pırıl"><meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Pırıl Elektronik</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Akımlı"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Akımlı</title>
 <style>
 /* Düzen: ana sayfada her ünite bir baskı devre kartı, dersler bakır yolla bağlı lehim pedleri. Diğer ekranlar sade. */
 :root{
   --bg:#eef3ee; --card:#fff; --ink:#12302c; --soft:#4b6661; --line:#c9d6cf;
   --mask:#15564c; --mask2:#0f463e; --silk:#eaf5ee; --copper:#d08a4a; --tin:#c9d4d0;
-  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc;
+  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc; --hi1:#fff1c7; --hi2:#d9ecff;
   --disp:"Roboto Condensed","sans-serif-condensed","Avenir Next Condensed","Arial Narrow","Segoe UI",sans-serif;
   --body:Roboto,"Segoe UI",system-ui,sans-serif; --mono:"Roboto Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; color-scheme:dark}}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; color-scheme:dark}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
@@ -82,7 +82,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .node.done .pad i{background:var(--led);color:var(--ledink)}
 .node.next .pad{box-shadow:0 0 0 5px var(--mask),0 0 0 8px var(--led)}
 .node[disabled]{cursor:default}
-.node[disabled] .pad{background:#5c8a7f}
+.node[disabled] .pad{background:rgba(255,255,255,.3)}
 .node em{font-style:normal;min-width:0}
 .node strong{display:block;font-size:17px;line-height:1.25}
 .node small{font-size:14px}
@@ -167,12 +167,22 @@ dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:ri
 .bdg li>span{min-width:0}
 .bdg svg{width:40px;height:40px;flex:none}
 .bdg b{display:block;color:var(--ink);font-size:15px}
+/* Zorluk renkleri: yeşil, sarı, kırmızı nokta; yazı rengi değişmez, kontrast korunur. */
+.z1{--zc:#2fbf63}.z2{--zc:#f2b200}.z3{--zc:#ff5242}
+.zt{display:inline-flex;align-items:center;gap:5px}
+.zt::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--zc);box-shadow:0 0 0 1.5px rgba(0,0,0,.15)}
+.lvl button{border-top:6px solid var(--zc)}
+.lvl .zt::before{display:none}
+.bar i{background:linear-gradient(90deg,var(--led),#ff8a3d)}
+.hello{background:linear-gradient(120deg,var(--hi1),var(--hi2));border-radius:14px;padding:12px 14px}
 .hop{animation:hop .5s ease-out}
 .glow{animation:glow 2.6s ease-in-out infinite}
 @keyframes hop{0%{transform:translateY(8px)}45%{transform:translateY(-8px)}100%{transform:none}}
 @keyframes glow{50%{opacity:.18}}
 @media (hover:hover) and (pointer:fine){.opt:not([disabled]):hover{border-color:var(--copper)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.sel{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sel select{min-height:48px;min-width:150px;font:inherit;padding:0 12px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px)}#app{min-height:calc(100dvh - env(safe-area-inset-top,0px))}</style>
 </head><body>
@@ -883,7 +893,7 @@ const XP_Z = [0, 4, 6, 8], XP_RIGHT = 4, XP_FINISH = 10, XP_PERFECT = 6, GOAL = 
 // Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
 const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
 
-const fresh = () => ({ xp: 0, done: {}, wrong: [], ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0 });
+const fresh = () => ({ xp: 0, done: {}, wrong: [], ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0 });
 
 function parseState(raw, validIds) {
   const s = fresh();
@@ -1090,11 +1100,38 @@ const KEY = 'piril-v1', app = document.getElementById('app');
 const $ = (s, r = app) => r.querySelector(s), $$ = (s, r = app) => [...r.querySelectorAll(s)];
 let saveOk = true, S;
 try { S = parseState(localStorage.getItem(KEY), Object.keys(QUESTIONS)); } catch { S = fresh(); saveOk = false; }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveOk = true; } catch { saveOk = false; } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveOk = true; } catch { saveOk = false; } shareState(); };
+// Hizmet çalışanı localStorage okuyamaz; hatırlatıcının ihtiyacı olan özeti önbelleğe yazarız.
+function shareState() {
+  const d = { rem: S.rem, day: S.day, dayXp: S.dayXp, goal: GOAL, last: S.last, streak: S.streak, freeze: S.freeze, wrong: S.wrong.length };
+  try { caches.open('akimli-durum').then(c => c.put('durum', new Response(JSON.stringify(d)))).catch(() => {}); } catch {}
+}
+const swReg = () => 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration() : Promise.resolve(null);
+// Durum: 'yok' (tarayıcı desteklemiyor), 'izin' (bildirim izni yok), 'arka' (arka plan kontrolü yok), 'tamam'.
+async function armReminder(ask) {
+  const reg = await swReg();
+  if (!reg || !self.Notification) return 'yok';
+  if (Notification.permission !== 'granted' && (!ask || await Notification.requestPermission() !== 'granted')) return 'izin';
+  if (!reg.periodicSync) return 'arka';
+  try {
+    if ((await navigator.permissions.query({ name: 'periodic-background-sync' })).state !== 'granted') return 'arka';
+    await reg.periodicSync.register('hatirlat', { minInterval: 3600e3 }); // tarayıcı en sık 12 saatte bir çalıştırır
+    return 'tamam';
+  } catch { return 'arka'; }
+}
+const REM_NOTE = {
+  yok: 'Bu tarayıcı bildirim göstermiyor. iPhone’da önce Paylaş › Ana Ekrana Ekle ile kur, sonra uygulamadan aç.',
+  izin: 'Bildirim izni verilmedi. Açmak için telefonun ayarlarında bu uygulamanın bildirimlerine izin ver.',
+  arka: 'Bildirim izni tamam, ama bu cihaz arka planda kontrol yapmaya izin vermiyor. Hatırlatıcı Android’de, ana ekrana eklenmiş uygulamada çalışır; iPhone ve bilgisayar bunu desteklemiyor.',
+  tamam: 'Açık. O gün hedefini tamamlamadıysan hatırlatırım. Kontrol zamanını telefon seçer, genelde günde bir iki kez; 22.00 ile 09.00 arası bildirim gelmez.'
+};
 const pct = (a, b) => Math.min(100, Math.round(a / b * 100));
 function shuffle(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
 const bar = (v, max, name) => `<div class="bar" role="progressbar" aria-label="${name}" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="${max}"><i style="width:${pct(v, max)}%"></i></div>`;
-const focusTop = () => { scrollTo(0, 0); $('h1').focus({ preventScroll: true }); };
+const focusTop = (y = 0) => { scrollTo(0, y); $('h1').focus({ preventScroll: true }); };
+// Dersler, Tekrar ve Profil ekranları kaldığın kaydırma yerine döner.
+const scrollMem = {}; let shown = null;
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 /* ---------- Ekranlar ---------- */
 const navBar = cur => `<nav aria-label="Ana gezinme">${[['ana', 'Dersler', ICON.path], ['tekrar', 'Tekrar', ICON.rep], ['profil', 'Profil', ICON.me]].map(([h, n, i]) =>
@@ -1105,19 +1142,25 @@ const unlocked = l => { const j = +l.id.split('-')[1]; return j === 1 || `${l.un
 // Pedler sırayla x = 32 ve 88'e, 96 px arayla dizilir.
 const roadPath = n => { let d = 'M32 48'; for (let k = 1; k < n; k++) d += `V${96 * k - 24}L${k % 2 ? 88 : 32} ${96 * k + 32}V${96 * k + 48}`; return d; };
 
+// Her ünite gerçek bir lehim maskesi renginde; yazılar beyaz kalır, hepsi en az 4.5:1 kontrast verir.
+const MASKS = ['#15564c', '#1d4f91', '#5b3a8c', '#8f2a2a', '#26292d', '#0e6372', '#85295a', '#283a7a', '#4d5a1e', '#3e3790', '#7a4a0e'];
+const dark = h => '#' + h.slice(1).match(/../g).map(x => (parseInt(x, 16) * .72 | 0).toString(16).padStart(2, '0')).join('');
+const zTag = z => `<span class="zt z${z}">${ZN[z]}</span>`;
+
 function home() {
   const t = dayNum(), x = todayXp(S, t), st = liveStreak(S, t), nx = LESSONS.find(l => !(l.id in S.done));
-  const [hi, sub] = !S.xp ? ['Merhaba, ben Pırıl', 'İlk derste yükten başlıyoruz.'] : x >= GOAL ? ['Bugünkü hedef tamam', 'İstersen bir ders daha çöz.']
+  const [hi, sub] = !S.xp ? ['Akımlı’ya hoş geldin', 'İlk derste yükten başlıyoruz.'] : x >= GOAL ? ['Bugünkü hedef tamam', 'İstersen bir ders daha çöz.']
     : st ? ['Devam edelim', `Hedefe ${GOAL - x} XP kaldı.`] : ['Yeniden yakalım', 'Bir derslik 3 dakikan var mı?'];
   return `<main class="scr"><div class="stat"><span>${ICON.seri}${st} günlük seri</span><span>${ICON.xp}${S.xp} XP</span><div class="goal">${bar(x, GOAL, 'Günlük hedef')}Bugün ${x} / ${GOAL} XP</div></div>
   <div class="hello">${mascot(x >= GOAL ? 'iyi' : 'normal')}<div><h1 tabindex="-1">${hi}</h1><p>${sub}</p></div></div>
   ${UNITS.map((u, i) => {
     const ls = LESSONS.filter(l => l.unit === i);
-    return `<section class="pcb"><header><b aria-hidden="true">U${i + 1}</b><h2>${u.name}</h2><small>${ls.filter(l => l.id in S.done).length}/${ls.length}</small></header>
+    const m = MASKS[i % MASKS.length];
+    return `<section class="pcb" style="--mask:${m};--mask2:${dark(m)}"><header><b aria-hidden="true">U${i + 1}</b><h2>${u.name}</h2><small>${ls.filter(l => l.id in S.done).length}/${ls.length}</small></header>
     <div class="road"><svg viewBox="0 0 150 ${96 * ls.length}" height="${96 * ls.length}" aria-hidden="true"><path d="${roadPath(ls.length)}" fill="none" stroke="var(--copper)" stroke-width="7" stroke-linejoin="round"/></svg>
     ${ls.map((l, j) => {
       const done = l.id in S.done, open = unlocked(l);
-      return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="ders-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${ZN[l.z]} · ${l.qs.length} soru` : `${ZN[l.z]} · önceki dersi bitir`}</small></em></button>`;
+      return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="ders-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${zTag(l.z)} · ${l.qs.length} soru` : `${zTag(l.z)} · önceki dersi bitir`}</small></em></button>`;
     }).join('')}</div></section>`;
   }).join('')}</main>${navBar('ana')}`;
 }
@@ -1125,7 +1168,7 @@ function home() {
 const byZ = z => Object.keys(QUESTIONS).filter(id => QUESTIONS[id].z === z);
 function review() {
   const n = S.wrong.length;
-  return `<main class="scr"><h1 tabindex="-1">Tekrar</h1><h2>Zorluğa göre çalış</h2><p class="note">Seçtiğin düzeyden karışık 8 soru gelir.</p><div class="lvl">${[1, 2, 3].map(z => `<button data-go="pratik-${z}">${ZN[z]}<small>${byZ(z).length} soru</small></button>`).join('')}</div><h2>Yanlışların</h2>${n ? `<p>${n} soru seni bekliyor. Doğru cevaplayana kadar burada kalırlar.</p><button class="btn" data-go="tekrar-coz">Tekrara başla</button>
+  return `<main class="scr"><h1 tabindex="-1">Tekrar</h1><h2>Zorluğa göre çalış</h2><p class="note">Seçtiğin düzeyden karışık 8 soru gelir.</p><div class="lvl">${[1, 2, 3].map(z => `<button class="z${z}" data-go="pratik-${z}">${zTag(z)}<small>${byZ(z).length} soru</small></button>`).join('')}</div><h2>Yanlışların</h2>${n ? `<p>${n} soru seni bekliyor. Doğru cevaplayana kadar burada kalırlar.</p><button class="btn" data-go="tekrar-coz">Tekrara başla</button>
   <ul class="list">${S.wrong.map(id => `<li>${tx(QUESTIONS[id].q)}<small>${LESSONS.find(l => id.startsWith(l.id + '-')).name}</small></li>`).join('')}</ul>`
     : `<div class="end">${mascot('iyi')}<h2>Bekleyen soru yok</h2><p>Derslerde yanlış yaptığın sorular burada birikir.</p></div>`}</main>${navBar('tekrar')}`;
 }
@@ -1136,7 +1179,17 @@ function profile() {
   return `<main class="scr"><h1 tabindex="-1">Profil</h1><dl class="tbl"><dt>Toplam XP</dt><dd>${S.xp}</dd><dt>Bugün</dt><dd>${todayXp(S, t)} / ${GOAL} XP</dd><dt>Seri</dt><dd>${liveStreak(S, t)} gün</dd><dt>En uzun seri</dt><dd>${S.bestStreak} gün</dd>
   <dt>Kaçırma hakkı</dt><dd>${S.freeze ? 'Var' : `${S.refill} gün sonra`}</dd><dt>Biten ders</dt><dd>${Object.keys(S.done).length} / ${LESSONS.length}</dd></dl>
   <p class="note">Bir gün kaçırırsan serin bozulmaz. Kullandığın hak, 7 günlük seriyle geri gelir.</p>${saveOk ? '' : '<p class="note err">Bu tarayıcı kayda izin vermiyor. İlerlemen sayfa kapanınca silinir.</p>'}
+  <h2>Hatırlatıcı</h2><label class="sel"><span>Bildirim sıklığı</span><select id="rem">${['Kapalı', 'Her gün', '2 günde bir'].map((n, i) => `<option value="${i}" ${S.rem === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+  <p class="note" id="remst" aria-live="polite"></p><button class="btn alt" id="remtest" hidden>Deneme bildirimi gönder</button>
   <h2>Rozetler (${got}/${BADGES.length})</h2><ul class="bdg">${BADGES.map(([n, d, f]) => `<li>${badgeSvg(f(S))}<span><b>${n}</b>${d}${f(S) ? '. Kazanıldı' : ''}</span></li>`).join('')}</ul></main>${navBar('profil')}`;
+}
+
+function bindReminder() {
+  const sel = $('#rem'), st = $('#remst'), test = $('#remtest');
+  const show = r => { st.textContent = S.rem ? REM_NOTE[r] : 'Kapalı. Açarsan, o gün ders çözmediğinde telefonuna kısa bir hatırlatma gelir.'; st.classList.toggle('err', !!S.rem && r !== 'tamam'); test.hidden = !S.rem || r === 'yok' || r === 'izin'; };
+  sel.onchange = async () => { S.rem = +sel.value; save(); show(S.rem ? await armReminder(true) : 'tamam'); };
+  test.onclick = async () => (await swReg())?.showNotification('Akımlı', { body: 'Bildirimler çalışıyor. Hatırlatmalar böyle görünecek.', icon: 'icon-192.png', tag: 'deneme' });
+  (S.rem ? armReminder(false) : Promise.resolve('tamam')).then(show);
 }
 
 /* ---------- Soru oturumu ---------- */
@@ -1205,7 +1258,7 @@ const SIMVIEW = {
 function question() {
   const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false;
   app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
-  <div><p class="kind">${ZN[q.z]} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
+  <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
   $('#ok').onclick = check;
   focusTop();
@@ -1245,13 +1298,19 @@ function finish() {
 /* ---------- Yönlendirme: Android geri tuşu hash geçmişiyle çalışır ---------- */
 function route() {
   const h = location.hash.slice(1), l = LESSONS.find(x => 'ders-' + x.id === h);
+  if (shown) scrollMem[shown] = scrollY;
+  shown = null;
   if (l && unlocked(l)) return start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
   if (h === 'tekrar-coz' && S.wrong.length) return start(S.wrong, null);
   const pz = /^pratik-([123])$/.exec(h);
   if (pz) { const ids = byZ(+pz[1]), p = shuffle(ids.length).slice(0, 8); return start(p.map(i => ids[i]), null, true); }
   C = null;
-  app.innerHTML = h === 'profil' ? profile() : h.startsWith('tekrar') ? review() : home();
-  focusTop();
+  shown = h === 'profil' ? 'profil' : h.startsWith('tekrar') ? 'tekrar' : 'ana';
+  app.innerHTML = { profil: profile, tekrar: review, ana: home }[shown]();
+  if (shown === 'profil') bindReminder();
+  focusTop(scrollMem[shown] || 0);
+  // Uygulama yeni açıldığında sıradaki ders ekranın ortasına gelir.
+  if (shown === 'ana' && !(shown in scrollMem) && S.xp) $('.node.next')?.scrollIntoView({ block: 'center' });
 }
 app.addEventListener('click', e => {
   const b = e.target.closest('[data-go]');
@@ -1263,6 +1322,8 @@ addEventListener('hashchange', route);
 const vv = window.visualViewport;
 if (vv) vv.onresize = vv.onscroll = () => document.documentElement.style.setProperty('--kb', (vv.scale > 1.01 ? 0 : Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop))) + 'px');
 route();
+shareState();
+if (S.rem) armReminder(false); // kayıt silinmişse açılışta yeniden kurar
 </script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
