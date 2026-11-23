@@ -3,8 +3,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef3ee"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1c1a">
 <meta name="description" content="Günde 3 dakikalık elektronik dersleri">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px)}</style>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Pırıl"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Pırıl Elektronik</title>
 <style>
 /* Düzen: ana sayfada her ünite bir baskı devre kartı, dersler bakır yolla bağlı lehim pedleri. Diğer ekranlar sade. */
@@ -12,7 +12,7 @@
   --bg:#eef3ee; --card:#fff; --ink:#12302c; --soft:#4b6661; --line:#c9d6cf;
   --mask:#15564c; --mask2:#0f463e; --silk:#eaf5ee; --copper:#d08a4a; --tin:#c9d4d0;
   --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc;
-  --disp:"Roboto Condensed","sans-serif-condensed","Arial Narrow","Segoe UI",sans-serif;
+  --disp:"Roboto Condensed","sans-serif-condensed","Avenir Next Condensed","Arial Narrow","Segoe UI",sans-serif;
   --body:Roboto,"Segoe UI",system-ui,sans-serif; --mono:"Roboto Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -118,7 +118,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .ckt .part.good .hit{fill:var(--good);fill-opacity:.2;stroke:var(--good);stroke-dasharray:none}
 .ckt .part.bad .hit{fill:var(--bad);fill-opacity:.2;stroke:var(--bad);stroke-dasharray:none}
 .num{display:flex;gap:10px;align-items:center}
-.num input{flex:1;min-width:0;height:56px;font:700 24px var(--mono);padding:0 14px;background:var(--card);border:2px solid var(--line);border-radius:10px}
+.num input{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:56px;font:700 24px var(--mono);padding:0 14px;background:var(--card);border:2px solid var(--line);border-radius:10px}
 .num b{font:700 20px var(--mono)}
 .note{font-size:14px;color:var(--soft)}
 .note.err,.note .err{color:var(--bad);font-weight:600}
@@ -136,7 +136,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .read b{display:block;font:700 24px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
 
 /* Alt eylem ve geri bildirim */
-.foot{position:sticky;bottom:0;z-index:5;display:grid;gap:10px;background:var(--bg);border-top:1px solid var(--line);margin-inline:calc(-1*var(--gl)) calc(-1*var(--gr));
+.foot{position:sticky;bottom:var(--kb,0px);z-index:5;display:grid;gap:10px;background:var(--bg);border-top:1px solid var(--line);margin-inline:calc(-1*var(--gl)) calc(-1*var(--gr));
   padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .foot.good{background:var(--goodbg)}
 .foot.bad{background:var(--badbg)}
@@ -171,6 +171,7 @@ dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:ri
 @media (hover:hover) and (pointer:fine){.opt:not([disabled]):hover{border-color:var(--copper)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<style>:root{padding-top:env(safe-area-inset-top,0px)}#app{min-height:calc(100dvh - env(safe-area-inset-top,0px))}</style>
 </head><body>
 <div id="app"></div>
 <script>
@@ -806,10 +807,13 @@ app.addEventListener('click', e => {
   if ('#' + b.dataset.go === location.hash) route(); else location.hash = b.dataset.go;
 });
 addEventListener('hashchange', route);
+// iOS klavyesi sayfayı küçültmez; alt çubuğu klavyenin üstüne taşı. Android'de fark 0 çıkar.
+const vv = window.visualViewport;
+if (vv) vv.onresize = vv.onscroll = () => document.documentElement.style.setProperty('--kb', (vv.scale > 1.01 ? 0 : Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop))) + 'px');
 route();
 </script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
-navigator.storage?.persist?.().catch(() => {}); // Chrome'dan kaydı silmemesini ister
+navigator.storage?.persist?.().catch(() => {}); // tarayıcıdan kaydı silmemesini ister
 </script>
 </body></html>
