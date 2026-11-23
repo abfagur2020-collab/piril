@@ -71,9 +71,9 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .pcb header h2{flex:1;min-width:0}
 .pcb header small{font:13px var(--mono)}
 .road{position:relative}
-.road>svg{position:absolute;left:0;top:0;width:150px;height:288px;pointer-events:none}
+.road>svg{position:absolute;left:0;top:0;width:150px;pointer-events:none}
 .node{display:flex;align-items:center;gap:14px;width:100%;height:96px;text-align:left;color:inherit;position:relative;border-radius:10px}
-.node:nth-of-type(2){padding-left:56px}
+.node:nth-of-type(even){padding-left:56px}
 .node:focus-visible{outline-color:#fff;outline-offset:-3px}
 .pad{width:64px;height:64px;border-radius:50%;background:var(--copper);display:grid;place-items:center;flex:none;transition:transform .12s ease-out}
 .node:active:not([disabled]) .pad{transform:scale(.94)}
@@ -157,6 +157,9 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 dt,dd{padding-bottom:8px;border-bottom:1px solid var(--line);margin:0}
 dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding-left:16px}
 .list{list-style:none;margin:0;padding:0}
+.lvl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lvl button{min-height:64px;border:2px solid var(--line);border-radius:10px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700}
+.lvl small{font-weight:400;font-size:13px;color:var(--soft)}
 .list li{padding:12px 0;border-bottom:1px solid var(--line)}
 .list small{color:var(--soft);display:block;font-size:14px}
 .bdg{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:16px 12px}
@@ -180,8 +183,8 @@ dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:ri
 // Tip sonundaki "-" elemanı ters çevirir.
 
 const put = (el, x1, y1, x2, y2) => {
-  const [type, name, value = '', meas = ''] = el;
-  return [type, x1, y1, x2, y2, name + (value ? '\n' + value : '') + (meas ? '|' + meas : ''), name];
+  const [type, name, value = '', meas = '', side] = el;
+  return [type, x1, y1, x2, y2, name + (value ? '\n' + value : '') + (meas ? '|' + meas : ''), name, side];
 };
 
 // Seri çevrim: kaynak solda, son eleman sağda, kalanlar üstte.
@@ -457,12 +460,425 @@ const SIMS = {
 
 const COLORS = ['siyah', 'kahverengi', 'kırmızı', 'turuncu', 'sarı', 'yeşil', 'mavi', 'mor', 'gri', 'beyaz'];
 
-const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, qs: l.qs })));
-const QUESTIONS = Object.fromEntries(LESSONS.flatMap(l => l.qs.map((q, k) => [`${l.id}-${k + 1}`, q])));
+// İleri üniteler, eski ünitelerin zor dersleri ve zorluk düzeyleri. content.js'ten sonra yüklenir.
+// Zorluk: 1 kolay, 2 orta, 3 zor. Bir dersin z'si o dersin bütün sorularına geçer.
+
+const w = (...p) => { const r = []; for (let i = 0; i + 3 < p.length; i += 2) r.push(['W', p[i], p[i + 1], p[i + 2], p[i + 3]]); return r; };
+const side = (e, s) => { const c = [...e]; c[4] = s; return c; };
+
+// --- Op-amp şablonları ---
+const opInv = (z1, zf, o = {}) => [['VB', 390, 180, -30],
+  ['P', 40, 96, 0, 0, o.vi || 'V_i', '', 'l'], put(z1, 40, 96, 128, 96), ...w(128, 96, 160, 96), ['N', 128, 96], ...w(128, 96, 128, 40),
+  put(zf, 128, 40, 238, 40), ...w(238, 40, 238, 112), ['O', 160, 112, 0], ...w(216, 112, 268, 112), ['N', 238, 112],
+  ['P', 272, 112, 0, 0, o.vo || 'V_o', '', 'r'], ...w(160, 128, 146, 128, 146, 150), ['G', 146, 150]];
+const opNon = (r1, rf, o = {}) => [['VB', 390, 236, -30],
+  ['P', 40, 64, 0, 0, o.vi || 'V_i', '', 'l'], ...w(40, 64, 160, 64), ['O', 160, 80, o.flip ?? 1], ...w(160, 96, 124, 96, 124, 132), ['N', 124, 132],
+  put(side(rf, 'b'), 124, 132, 238, 132), ...w(238, 132, 238, 80, 216, 80), ...w(238, 80, 268, 80), ['N', 238, 80],
+  ['P', 272, 80, 0, 0, o.vo || 'V_o', '', 'r'], put(side(r1, 'l'), 124, 132, 124, 208), ['G', 124, 208]];
+const opDiff = (r1, r2, v1, v2) => [['VB', 390, 290, -30],
+  ['P', 40, 96, 0, 0, 'V_1\n' + v1, '', 'l'], put(['R', 'R1', r1], 40, 96, 122, 96), ...w(122, 96, 160, 96), ['N', 122, 96], ...w(122, 96, 122, 40),
+  put(['R', 'R2', r2], 122, 40, 238, 40), ...w(238, 40, 238, 112), ['O', 160, 112, 0], ...w(216, 112, 268, 112), ['N', 238, 112], ['P', 272, 112, 0, 0, 'V_o', '', 'r'],
+  ['P', 40, 180, 0, 0, 'V_2\n' + v2, '', 'l'], put(['R', 'R3', r1], 40, 180, 140, 180), ...w(140, 180, 140, 128, 160, 128), ['N', 140, 180],
+  put(['R', 'R4', r2], 140, 180, 140, 256), ['G', 140, 256]];
+const OPSUM = [['VB', 390, 206, -30],
+  ['P', 40, 96, 0, 0, 'V_1\n1 V', '', 'l'], put(['R', 'R1', '10 kΩ'], 40, 96, 122, 96), ...w(122, 96, 160, 96), ['N', 122, 96], ...w(122, 96, 122, 40),
+  put(['R', 'R_F', '20 kΩ'], 122, 40, 238, 40), ...w(238, 40, 238, 112), ['O', 160, 112, 0], ...w(216, 112, 268, 112), ['N', 238, 112], ['P', 272, 112, 0, 0, 'V_o', '', 'r'],
+  ['P', 40, 176, 0, 0, 'V_2\n2 V', '', 'l'], put(['R', 'R2', '20 kΩ'], 40, 176, 122, 176), ...w(122, 176, 122, 96), ...w(160, 128, 146, 128, 146, 150), ['G', 146, 150]];
+const INA = [['VB', 410, 312, -40],
+  ['P', 20, 44, 0, 0, 'V_1', '', 'l'], ...w(20, 44, 70, 44), ['O', 70, 60, 1], ...w(126, 60, 140, 60), ['N', 140, 60],
+  put(['R', 'R', '10 kΩ'], 140, 60, 140, 110), ['N', 140, 110], put(['R', 'R_G', '1 kΩ'], 140, 110, 140, 170), ['N', 140, 170], put(['R', 'R', '10 kΩ'], 140, 170, 140, 220),
+  ...w(70, 76, 70, 110, 140, 110), ['O', 70, 220, 0], ...w(70, 204, 70, 170, 140, 170), ...w(126, 220, 140, 220), ['N', 140, 220],
+  ['P', 20, 236, 0, 0, 'V_2', '', 'l'], ...w(20, 236, 70, 236),
+  put(['R', '', '10 kΩ'], 140, 60, 222, 60), ['N', 222, 60], put(['R', '', '10 kΩ'], 222, 60, 300, 60), ...w(300, 60, 300, 140), ...w(222, 60, 222, 124, 235, 124),
+  ['O', 235, 140, 0], ...w(291, 140, 322, 140), ['N', 300, 140], ['P', 326, 140, 0, 0, 'V_o', '', 'r'],
+  put(['R', '', '10 kΩ', '', 'b'], 140, 220, 222, 220), ['N', 222, 220], ...w(222, 220, 222, 156, 235, 156), put(['R', '', '10 kΩ'], 222, 220, 222, 290), ['G', 222, 290]];
+
+// --- Anahtarlama ve SMPS şablonları ---
+const hbridge = (o = {}) => [['VB', 330, 262],
+  ...w(84, 24, 236, 24), ['T', 160, 14, 0, 0, '+24 V'],
+  ['NM', 50, 80, 0, 0, 'Q1', 'Q1'], ...w(84, 24, 84, 50), ...w(84, 110, 84, 150), ['NM', 50, 180, 0, 0, 'Q2', 'Q2'], ...w(84, 210, 84, 236),
+  ['NM', 270, 80, 1, 0, 'Q3', 'Q3'], ...w(236, 24, 236, 50), ...w(236, 110, 236, 150), ['NM', 270, 180, 1, 0, 'Q4', 'Q4'], ...w(236, 210, 236, 236),
+  ...w(84, 236, 236, 236), ['G', 160, 236], put(['M', 'Motor', o.m || ''], 84, 130, 236, 130), ['N', 84, 130], ['N', 236, 130],
+  ['T', 70, 134, 0, 0, o.ra || 'A', '', 'l'], ['T', 250, 134, 0, 0, o.rb || 'B', '', 'r']];
+const LOWSIDE = [['VB', 330, 240, -40],
+  ['T', 180, 14, 0, 0, '+24 V'], ...w(150, 24, 210, 24), put(['I', 'Bobin', '', '', 'l'], 150, 24, 150, 110), put(['D', 'D'], 210, 110, 210, 24), ...w(150, 110, 210, 110), ['N', 150, 110],
+  ['NM', 116, 150, 0, 0, 'Q', 'Q'], ...w(150, 110, 150, 120), ...w(150, 180, 150, 200), ['G', 150, 200],
+  ['P', 20, 150, 0, 0, 'PWM', '', 'l'], put(['R', 'R_G', '10 Ω'], 24, 150, 95, 150), ['N', 95, 150], ...w(95, 150, 116, 150), put(['R', 'R_PD', '10 kΩ', '', 'l'], 95, 150, 95, 214), ['G', 95, 214]];
+const buck = (o = {}) => [['VB', 360, 205],
+  ['V', 30, 180, 30, 50, 'V_in\n' + (o.vin || '12 V'), 'Kaynak'], put(['SO', 'S'], 30, 50, 120, 50), ['N', 120, 50], put(['D', 'D', '', '', 'l'], 120, 180, 120, 50),
+  put(['I', 'L', o.l || ''], 120, 50, 220, 50), ['N', 220, 50], put(['C', 'C', o.c || '', '', 'l'], 220, 50, 220, 180), ...w(220, 50, 290, 50),
+  put(['R', 'R_L', o.r || ''], 290, 50, 290, 180), ...w(30, 180, 290, 180), ...(o.t ? [['T', 128, 80, 0, 0, o.t]] : [])];
+const BOOST = [['VB', 360, 205],
+  ['V', 30, 180, 30, 50, 'V_in\n5 V'], put(['I', 'L'], 30, 50, 130, 50), ['N', 130, 50], put(['SO', 'S', '', '', 'l'], 130, 50, 130, 180),
+  put(['D', 'D'], 130, 50, 220, 50), ['N', 220, 50], put(['C', 'C', '', '', 'l'], 220, 50, 220, 180), ...w(220, 50, 290, 50), put(['R', 'R_L', ''], 290, 50, 290, 180), ...w(30, 180, 290, 180)];
+const BBINV = [['VB', 360, 205],
+  ['V', 30, 180, 30, 50, 'V_in\n12 V'], put(['SO', 'S'], 30, 50, 120, 50), ['N', 120, 50], put(['I', 'L', '', '', 'l'], 120, 50, 120, 180),
+  put(['D', 'D'], 220, 50, 120, 50), ['N', 220, 50], put(['C', 'C', '', '', 'l'], 220, 50, 220, 180), ...w(220, 50, 290, 50), put(['R', 'R_L', '', '−V_o'], 290, 50, 290, 180), ...w(30, 180, 290, 180)];
+const FLYBACK = [['VB', 360, 222],
+  ['V', 30, 190, 30, 40, 'V_in\n48 V'], ...w(30, 40, 110, 40), ['TR', 110, 40, 150, 120], put(['SO', 'S', '', '', 'l'], 110, 120, 110, 190), ...w(30, 190, 110, 190),
+  put(['D', 'D'], 150, 40, 230, 40), ...w(150, 120, 150, 190), ['N', 230, 40], put(['C', 'C', '', '', 'l'], 230, 40, 230, 190), ...w(230, 40, 295, 40),
+  put(['R', 'R_L', ''], 295, 40, 295, 190), ...w(150, 190, 295, 190), ['T', 130, 214, 0, 0, 'N_p : N_s = 4 : 1']];
+const PRECHARGE = [['VB', 300, 232],
+  ['V', 30, 200, 30, 80, 'Paket\n110 V'], put(['SO', 'K1', 'ana'], 30, 80, 210, 80), ...w(60, 80, 60, 30), ['N', 60, 80], ['N', 210, 80],
+  put(['SO', 'K2', '', '|kapalı'], 60, 30, 130, 30), put(['R', 'R_pre', '47 Ω', '110 V'], 130, 30, 210, 30), ...w(210, 30, 210, 80, 250, 80),
+  put(['C', 'C_bus', '1 mF', '0 V', 'l'], 250, 80, 250, 200), ...w(30, 200, 250, 200)];
+
+// --- Karmaşık direnç devreleri ---
+const BRIDGE = [['VB', 300, 212],
+  ['V', 20, 190, 20, 40, '10 V'], ...w(20, 40, 230, 40), ...w(20, 190, 230, 190),
+  put(['R', 'R1', '1 kΩ'], 110, 40, 110, 115), put(['R', 'R2', '2 kΩ'], 110, 115, 110, 190), put(['R', 'R3', '2 kΩ'], 230, 40, 230, 115), put(['R', 'R4', '2 kΩ'], 230, 115, 230, 190),
+  ['N', 110, 40], ['N', 110, 190], ...w(110, 115, 146, 115), ['P', 150, 115, 0, 0, 'a', '', 'r'], ...w(230, 115, 194, 115), ['P', 190, 115, 0, 0, 'b', '', 'l']];
+const LADDER = [['VB', 345, 232],
+  ['V', 20, 210, 20, 60, '16 V'], put(['R', 'R1', '1 kΩ'], 20, 60, 100, 60), put(['R', 'R2', '2 kΩ'], 100, 60, 100, 210), put(['R', 'R3', '1 kΩ'], 100, 60, 190, 60),
+  put(['R', 'R4', '2 kΩ'], 190, 60, 190, 210), put(['R', 'R5', '1 kΩ'], 190, 60, 280, 60), put(['R', 'R6', '1 kΩ'], 280, 60, 280, 210), ...w(20, 210, 280, 210),
+  ['N', 100, 60], ['N', 190, 60], ['N', 100, 210], ['N', 190, 210], ['T', 100, 30, 0, 0, 'A'], ['T', 190, 30, 0, 0, 'B'], ['T', 280, 30, 0, 0, 'C']];
+const TWOSRC = [['VB', 320, 212],
+  ['V', 20, 190, 20, 40, 'V_1\n12 V'], put(['R', 'R1', '2 kΩ'], 20, 40, 130, 40), put(['R', 'R3', '6 kΩ'], 130, 40, 130, 190), put(['R', 'R2', '3 kΩ'], 130, 40, 240, 40),
+  ['V', 240, 190, 240, 40, 'V_2\n6 V'], ...w(20, 190, 240, 190), ['N', 130, 40], ['N', 130, 190]];
+const RCTH = [['VB', 320, 212],
+  ['V', 20, 190, 20, 40, '12 V'], put(['R', 'R1', '6 kΩ'], 20, 40, 130, 40), put(['R', 'R2', '3 kΩ'], 130, 40, 130, 190), ...w(130, 40, 230, 40),
+  put(['C', 'C', '100 µF'], 230, 40, 230, 190), ...w(20, 190, 230, 190), ['N', 130, 40], ['N', 130, 190]];
+const NORTON = [['V', 40, 180, 40, 40, '12 V'], put(['R', 'R1', '6 kΩ'], 40, 40, 160, 40), put(['R', 'R2', '3 kΩ'], 160, 40, 160, 180), put(['R', 'R3', '4 kΩ'], 160, 40, 285, 40),
+  ...w(40, 180, 285, 180), ['N', 160, 40], ['N', 160, 180], ['N', 285, 40], ['N', 285, 180], ['T', 296, 45, 0, 0, 'a'], ['T', 296, 185, 0, 0, 'b']];
+const TWOBAT = loop('12 V', [['R', 'R', '1 kΩ'], ['V-', 'V_2', '5 V']]); // V- : + ucu üstte, kaynaklar karşı karşıya
+const WIRING = loop('12 V', [['F', 'Sigorta', '', '0 V'], ['R', 'Kablo', '', '3 V'], ['L', 'Lamba', '', '9 V']]);
+
+const ZOR = [
+  { name: 'Güç dengesi ve iç direnç', qs: [
+    { t: 'num', q: 'Bir kesitten geçen akım i(t) = 2t A (t saniye). İlk 3 saniyede geçen yük kaç C?', a: 9, u: 'C',
+      e: 'Akım değişiyorsa yük, akımın zamana göre integralidir.', f: 'Q = ∫₀³ 2t dt = t² |₀³ = 9 C' },
+    { t: 'num', q: 'İki kaynak birbirine karşı bağlı. 5 V kaynağın soğurduğu (şarj olarak aldığı) güç kaç mW?', c: TWOBAT, a: 35, u: 'mW',
+      e: 'Net gerilim 12 − 5 = 7 V. Akım 5 V kaynağına + ucundan girer, yani bu kaynak güç alır.', f: 'I = (12 − 5) / 1 kΩ = 7 mA, P = 5 × 7 = 35 mW' },
+    { t: 'mc', q: 'Pasif işaret kuralıyla akım bir elemanın + ucundan giriyor ve P = V·I = −2 W çıkıyor. Bu ne demek?', o: ['Eleman devreye 2 W güç veriyor', 'Eleman 2 W güç harcıyor', 'Ölçüm hatası, güç negatif olamaz', 'Akım yönü yanlış seçilmiş, sonuç geçersiz'], a: 0,
+      e: 'Pasif işaret kuralında pozitif güç harcanan, negatif güç verilen güçtür. Kaynaklar genelde negatif çıkar.', f: 'P < 0 → eleman güç üretir' },
+    { t: 'num', q: 'Üçgen biçimli bir akım darbesi 0\'dan 4 A tepeye çıkıp toplam 10 ms\'de sıfıra iniyor. Taşınan yük kaç mC?', a: 20, u: 'mC',
+      e: 'Yük, akım–zaman eğrisinin altındaki alandır.', f: 'Q = ½ × 4 A × 10 ms = 20 mC' },
+    { t: 'ariza', q: 'Lamba sönük yanıyor. Gerilim düşümlerine göre sorunlu elemana dokun.', c: WIRING, a: 'Kablo',
+      e: 'Sağlam kablo ve bağlantıda düşüm birkaç yüz mV olur. 3 V düşüm kötü temas veya ince kablo demektir, lambaya 9 V kalır.', f: '12 V = 0 + 3 + 9 V (KVL)' },
+    { t: 'num', q: 'Bir akü boşta 12,6 V, 20 A çekilirken 11,4 V ölçülüyor. İç direnci kaç mΩ?', a: 60, u: 'mΩ',
+      e: 'Yük altındaki gerilim düşümü iç dirençte oluşur.', f: 'r = (12,6 − 11,4) / 20 = 60 mΩ' } ] },
+  { name: 'Köprü, sıcaklık ve güç', qs: [
+    { t: 'num', q: 'Köprü dengede değil. V_ab kaç V?', c: BRIDGE, a: 10 * 2 / 3 - 5, u: 'V',
+      e: 'İki kol ayrı birer gerilim bölücüdür. a ve b gerilimlerini ayrı bul, farkını al.', f: 'V_a = 10 × 2/3 = 6,67 V, V_b = 10 × 2/4 = 5 V → V_ab = 1,67 V' },
+    { t: 'num', q: 'Bakır sargı 20 °C\'de 10 Ω. α = 0,00393 1/°C ise 100 °C\'de direnci kaç Ω?', a: 10 * (1 + 0.00393 * 80), u: 'Ω',
+      e: 'Metalin direnci sıcaklıkla yaklaşık doğrusal artar. Motor ve trafo sargılarında kayıp sıcakta büyür.', f: 'R = 10 (1 + 0,00393 × 80) = 13,1 Ω' },
+    { t: 'num', q: 'Thévenin eşdeğeri 12 V ve 3 Ω olan kaynaktan yüke aktarılabilecek en büyük güç kaç W?', a: 12, u: 'W',
+      e: 'En büyük güç, yük direnci Thévenin direncine eşitken aktarılır. Bu durumda verim %50\'dir.', f: 'P_max = V² / (4R) = 144 / 12 = 12 W' },
+    { t: 'mc', q: 'Küçük değerli bir şöntte neden 4 uçlu (Kelvin) ölçüm yapılır?', o: ['Prob ve bağlantı dirençleri ölçüme girmesin diye', 'Daha fazla akım geçsin diye', 'Şönt daha az ısınsın diye', 'Ölçü aleti korunsun diye'], a: 0,
+      e: 'mΩ\'luk şöntte lehim ve iz direnci şöntün kendisi kadar olabilir. Ayrı gerilim uçları akım taşımadığı için düşüm içermez.', f: 'V_ölçülen = I·R_şönt (akım ve gerilim yolu ayrı)' },
+    { t: 'num', q: '12 V ile seri bağlı 3 LED (her biri V_F = 2,1 V) 20 mA ile sürülecek. Seri direnç kaç Ω?', a: (12 - 6.3) / 0.02, u: 'Ω',
+      e: 'Seri LED\'lerin gerilimleri toplanır, kalan gerilim dirençte düşer.', f: 'R = (12 − 3 × 2,1) / 0,02 = 285 Ω' },
+    { t: 'ariza', q: 'Kaynaktan 4 mA çekiliyor. Ölçülen gerilimlere göre arızalı dirence dokun.', c: par('12 V', [[['R', 'R1', '1 kΩ', '4 V'], ['R', 'R2', '2 kΩ', '8 V']], [['R', 'R3', '1 kΩ', '0 V'], ['R', 'R4', '2 kΩ', '12 V']]]), a: 'R4',
+      e: 'Sağ kolda akım yok: R3\'te düşüm 0 V, kopuk R4 kaynağın tamamını görüyor. R3 kısa devre olsaydı sağ koldan 6 mA akar, toplam 10 mA olurdu.', f: 'Sol kol: 12 / 3 kΩ = 4 mA → sağ kol 0 mA' } ] },
+  { name: 'Düğüm, süperpozisyon, merdiven', qs: [
+    { t: 'num', q: 'R3 üzerindeki gerilim kaç V?', c: TWOSRC, a: 8, u: 'V',
+      e: 'Tek bilinmeyen düğüm gerilimi. Düğüm denklemi kur: çıkan akımların toplamı sıfır.', f: '(V − 12)/2 + (V − 6)/3 + V/6 = 0 → V = 8 V' },
+    { t: 'num', q: 'Süperpozisyon: yalnız 6 V kaynağı etkinken (12 V kısa devre) R3 gerilimi kaç V?', c: TWOSRC, a: 2, u: 'V',
+      e: 'Kısa devre edilen kaynakla R1, R3\'e paralel olur.', f: 'R1 ∥ R3 = 1,5 kΩ → V = 6 × 1,5 / (3 + 1,5) = 2 V' },
+    { t: 'num', q: 'Merdiven devresinde C düğümünün gerilimi kaç V?', c: LADDER, a: 2, u: 'V',
+      e: 'Sağdan sola indirge: her basamak 2 kΩ ∥ 2 kΩ = 1 kΩ olur. Her düğüm bir öncekinin yarısıdır.', f: 'R_eş = 2 kΩ → V_A = 8 V, V_B = 4 V, V_C = 2 V' },
+    { t: 'num', q: 'Kaynak kısa devre edilince a–b uçlarından görülen Thévenin direnci kaç kΩ?', c: BRIDGE, a: 2 / 3 + 1, u: 'kΩ',
+      e: 'Kaynak kısa devreyken üst ve alt raylar birleşir. a\'dan R1 ∥ R2, b\'den R3 ∥ R4 görülür ve ikisi seridir.', f: 'R_Th = (1 ∥ 2) + (2 ∥ 2) = 0,667 + 1 = 1,67 kΩ' },
+    { t: 'num', q: 'a–b uçlarının Norton akımı kaç mA?', c: NORTON, a: 4 / 6, u: 'mA',
+      e: 'Önce Thévenin eşdeğerini bul: R3 açık uçta akım taşımaz.', f: 'V_Th = 4 V, R_Th = (6 ∥ 3) + 4 = 6 kΩ → I_N = 4/6 = 0,667 mA' },
+    { t: 'ariza', q: 'Ölçülen: V_A = 8,73 V, V_B = 5,82 V, V_C = 0 V. Sağlam devrede 8, 4 ve 2 V olmalıydı. Arızalı dirence dokun.', c: LADDER, a: 'R5',
+      e: 'V_C = 0 ama B yükseldi: son basamak devreden çıkmış. R5 açıkken B\'de yalnız R4 kalır, yük hafifler, A ve B yükselir. R6 kısa devre olsaydı yük artar, A ve B düşerdi.', f: 'R5 açık: B = 2 kΩ, A = (1 + 2) ∥ 2 = 1,2 kΩ → V_A = 16 × 1,2 / 2,2 = 8,73 V' } ] },
+  { name: 'Thévenin ile RC ve zamanlama', qs: [
+    { t: 'num', q: 'Kondansatörün gördüğü zaman sabiti kaç saniye?', c: RCTH, a: 0.2, u: 's',
+      e: 'τ = R_Th·C. Kaynağı kısa devre edince C, R1 ∥ R2 görür.', f: 'R_Th = 6 ∥ 3 = 2 kΩ → τ = 2 kΩ × 100 µF = 0,2 s' },
+    { t: 'num', q: 'Boş kondansatör t = 0\'da devreye giriyor. t = 0,2 s\'de gerilimi kaç V?', c: RCTH, a: 4 * (1 - Math.exp(-1)), u: 'V',
+      e: 'Son değer Thévenin gerilimidir (4 V), bir zaman sabiti geçmiştir.', f: 'v = 4 (1 − e⁻¹) = 2,53 V' },
+    { t: 'num', q: 'Kondansatör 2 V\'tan başlayıp 47 kΩ üzerinden 10 V\'a doluyor, C = 10 µF. 6 V\'a kaç saniyede ulaşır?', a: 0.47 * Math.LN2, u: 's',
+      e: 'Başlangıç sıfır değil. Genel çözümü kullan.', f: 'v = 10 − 8e^(−t/τ), τ = 0,47 s → t = τ·ln(8/4) = 0,326 s' },
+    { t: 'num', q: '555 kararsız (astable) modda R_A = 1 kΩ, R_B = 10 kΩ, C = 100 nF. Çıkış frekansı kaç Hz?', a: 1 / (Math.LN2 * 21e3 * 100e-9), u: 'Hz',
+      e: 'C, R_A + R_B üzerinden dolar, yalnız R_B üzerinden boşalır. Eşikler V_CC\'nin 1/3 ve 2/3\'üdür.', f: 'f = 1 / (ln2 (R_A + 2R_B) C) ≈ 1,44 / (21 kΩ × 100 nF) = 687 Hz' },
+    { t: 'num', q: 'Birinci dereceden RC alçak geçiren filtrede f = 3·f_c iken genlik oranı |V_o / V_i| kaç?', a: 1 / Math.sqrt(10), u: 'V/V',
+      e: 'Genlik 1/√(1 + (f/f_c)²) ile düşer.', f: '|H| = 1 / √(1 + 9) = 0,316' },
+    { t: 'ariza', q: 'Uzun süre sonra V_C = 12 V ölçülüyor ve kaynaktan akım çekilmiyor. Sağlam devrede 4 V olmalıydı. Arızalı elemana dokun.', c: RCTH, a: 'R2',
+      e: 'Akım 0 ve kondansatör kaynağın tamamına dolmuş: bölücünün alt bacağı yok. R2 açık devre. R1 kısa devre olsaydı R2\'den 4 mA akardı.', f: 'Beklenen V_C = 12 × 3 / 9 = 4 V' } ] },
+  { name: 'Kutuplama ve küçük sinyal', qs: [
+    { t: 'num', q: 'Köprü doğrultucu ve 4700 µF kondansatör 1 A yük besliyor, şebeke 50 Hz. Tepeden tepeye dalgalanma yaklaşık kaç V?', a: 1 / (2 * 50 * 4700e-6), u: 'V',
+      e: 'Tam dalga doğrultmada kondansatör saniyede 100 kez tazelenir.', f: 'ΔV ≈ I / (2fC) = 1 / (100 × 4,7 mF) = 2,13 V' },
+    { t: 'num', q: 'R_L çıkarılıyor (yüksüz durum). Zener\'in harcadığı güç kaç mW?', c: ZENER, a: (12 - 5.1) / 330 * 5.1 * 1000, u: 'mW',
+      e: 'Yük yokken R_S akımının tamamı zenerden geçer. Zener gücü bu en kötü durumda seçilir.', f: 'I_Z = 6,9 / 330 = 20,9 mA → P = 5,1 × 20,9 = 107 mW' },
+    { t: 'num', q: 'β = 100, V_BE = 0,7 V. Baz akımını ihmal etmeden (Thévenin ile) I_C kaç mA?', c: bjtDiv(), a: 100 * 2.3 / (7.5e3 + 101e3) * 1e3, u: 'mA',
+      e: 'Bölücüyü Thévenin eşdeğerine çevir. R_E, baz tarafına (β + 1) katı görünür.', f: 'V_Th = 3 V, R_Th = 7,5 kΩ → I_B = 2,3 / (7,5 + 101) kΩ = 21,2 µA → I_C = 2,12 mA' },
+    { t: 'num', q: 'Ortak emetörlü katta R_E kondansatörle tam köprülenmiş. I_C = 2 mA, V_T = 25 mV, R_C = R_L = 2,2 kΩ. Gerilim kazancının büyüklüğü kaç?', a: 0.08 * 1100, u: 'V/V',
+      e: 'Küçük sinyal kazancı g_m ile kollektördeki toplam direncin çarpımıdır. Yük R_C\'ye paraleldir.', f: 'g_m = I_C / V_T = 80 mS → |A_v| = 80 mS × (2,2 ∥ 2,2) kΩ = 88' },
+    { t: 'num', q: 'npn transistör 12 V\'tan 120 Ω\'luk röle bobinini sürecek. 3,3 V çıkışlı MCU, zorlanmış β = 10, V_BE = 0,7 V, V_CE(doy) = 0,2 V. R_B kaç Ω olmalı?', a: (3.3 - 0.7) / ((12 - 0.2) / 120 / 10), u: 'Ω',
+      e: 'Anahtar olarak kullanırken transistörü kesin doyuma sokmak için β\'nın çok altında bir oran seçilir.', f: 'I_C = 11,8 / 120 = 98,3 mA → I_B = 9,83 mA → R_B = 2,6 / 9,83 mA = 264 Ω' },
+    { t: 'ariza', q: 'Gerilimlere göre arızalı dirence dokun.', c: bjtDiv({ vb: '2,84 V', vc: '12 V', ve: '2,14 V' }), a: 'RC',
+      e: 'Emetörde 2,14 V var, transistör akım geçiriyor. Akım akarken kollektör hâlâ 12 V ise R_C üzerinde düşüm yok: R_C kısa devre.', f: 'Beklenen V_C = 12 − 2,12 mA × 2,2 kΩ = 7,34 V' } ] }
+];
+ZOR.forEach((l, i) => UNITS[i].lessons.push({ ...l, z: 3 }));
+[[1, 1, 2], [1, 1, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2]].forEach((zs, i) => zs.forEach((z, j) => { UNITS[i].lessons[j].z = z; }));
+
+UNITS.push(
+  { name: 'Op-amp devreleri', lessons: [
+    { name: 'Eviren ve evirmeyen', z: 1, qs: [
+      { t: 'mc', q: 'İdeal op-amp\'in giriş uçlarından ne kadar akım akar?', o: ['0', 'Çıkış akımı kadar', '1 mA', 'Besleme akımı kadar'], a: 0,
+        e: 'İdeal op-amp\'in giriş direnci sonsuzdur. Devre analizinin iki kuralından biri budur.', f: 'I₊ = I₋ = 0' },
+      { t: 'num', q: 'Eviren yükseltecin gerilim kazancının büyüklüğü kaç?', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ']), a: 10, u: 'V/V',
+        e: 'R1\'den gelen akımın tamamı R_F\'den geçer, çünkü op-amp girişi akım çekmez.', f: '|A| = R_F / R1 = 100 / 10 = 10' },
+      { t: 'num', q: 'Çıkış gerilimi kaç V?', c: opNon(['R', 'R1', '10 kΩ'], ['R', 'R_F', '47 kΩ'], { vi: 'V_i\n0,5 V' }), a: 0.5 * 5.7, u: 'V',
+        e: 'Evirmeyen yükselteçte kazanç 1 + R_F / R1\'dir, işaret değişmez.', f: 'V_o = 0,5 × (1 + 47/10) = 2,85 V' },
+      { t: 'mc', q: 'Kazancı 1 olan gerilim izleyici neden kullanılır?', o: ['Yüksek giriş, düşük çıkış direnciyle kaynağı yükten ayırmak için', 'Gerilimi yükseltmek için', 'Gürültüyü artırmak için', 'Akımı sınırlamak için'], a: 0,
+        e: 'Gerilim değişmez ama zayıf bir kaynak (sensör, bölücü) artık yükün akımını taşımak zorunda kalmaz.', f: 'R_giriş → ∞, R_çıkış → 0' },
+      { t: 'mc', q: 'Sanal kısa devre (V₊ ≈ V₋) varsayımı ne zaman geçerlidir?', o: ['Negatif geri besleme varken ve çıkış doymamışken', 'Her zaman', 'Yalnız pozitif geri beslemede', 'Op-amp beslemesizken'], a: 0,
+        e: 'Çok büyük açık çevrim kazancı, negatif geri beslemeyle girişler arası farkı sıfıra yaklaştırır. Çıkış doyunca bu bağ kopar.', f: 'V₊ − V₋ = V_o / A → 0' },
+      { t: 'sim', sim: 'opamp', q: 'Evirmeyen yükselteçte V_i = 0,5 V. Çıkışı 5 V yap (±0,1 V).',
+        e: 'Kazanç 10 olmalı: R_F / R1 = 9. Kazanç büyürse çıkış ±12 V beslemede doyar.', f: 'V_o = 0,5 (1 + R_F/R1), örneğin R1 = 10 kΩ, R_F = 90 kΩ' } ] },
+    { name: 'Fark ve toplama', z: 2, qs: [
+      { t: 'num', q: 'Toplayıcının çıkış geriliminin büyüklüğü kaç V?', c: OPSUM, a: 4, u: 'V',
+        e: '− girişi sanal topraktır. Her girişin akımı ayrı hesaplanır, hepsi R_F\'den geçer.', f: '|V_o| = R_F (V₁/R1 + V₂/R2) = 20 (1/10 + 2/20) = 4 V' },
+      { t: 'num', q: 'Fark yükseltecinin çıkışı kaç V?', c: opDiff('10 kΩ', '50 kΩ', '1,2 V', '1,5 V'), a: 1.5, u: 'V',
+        e: 'Oranlar eşitken devre yalnız farkı yükseltir: V_o = (R2/R1)(V₂ − V₁).', f: 'V_o = 5 × (1,5 − 1,2) = 1,5 V' },
+      { t: 'num', q: 'Aynı devrede op-amp\'in + girişindeki gerilim kaç V?', c: opDiff('10 kΩ', '50 kΩ', '1,2 V', '1,5 V'), a: 1.5 * 50 / 60, u: 'V',
+        e: '+ girişi akım çekmez; V₂, R3–R4 bölücüsüyle bölünür.', f: 'V₊ = 1,5 × 50 / 60 = 1,25 V' },
+      { t: 'mc', q: 'Fark yükseltecinde R2/R1 ile R4/R3 oranları eşit değilse ne olur?', o: ['Ortak mod gerilimi de çıkışa geçer, CMRR düşer', 'Kazanç sonsuz olur', 'Devre kesin osilasyona girer', 'Hiçbir etkisi olmaz'], a: 0,
+        e: 'Dirençlerin %1\'lik uyumsuzluğu bile ortak mod reddini birkaç on dB\'e düşürür. Bu yüzden hazır entegre fark yükselteci kullanılır.', f: 'CMRR = A_fark / A_ortak' },
+      { t: 'num', q: 'Enstrümantasyon yükseltecinde son katın kazancı 1 ve V_2 − V_1 = 20 mV. V_o kaç V?', c: INA, a: 0.02 * 21, u: 'V',
+        e: 'İlk kat farkı 1 + 2R/R_G kadar yükseltir; tek direnç (R_G) kazancı ayarlar.', f: 'V_o = (1 + 2R/R_G)(V_2 − V_1) = 21 × 20 mV = 0,42 V' },
+      { t: 'ariza', q: 'V_i = 0,5 V iken çıkış −11,5 V\'ta doymuş. V₋ = 0,5 V ve V_i kaynağından akım çekilmiyor. Arızalı elemana dokun.', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ'], { vi: 'V_i\n0,5 V', vo: 'V_o|−11,5 V' }), a: 'R_F',
+        e: 'Kaynaktan akım çekilmiyorsa R1\'den akım geçmiyor ve V₋ = V_i. Geri besleme kopmuş: R_F açık devre, op-amp açık çevrimde doyar. R1 açık olsaydı devre izleyiciye döner ve V₋ = 0 olurdu.', f: 'Beklenen V_o = −(100/10) × 0,5 = −5 V' } ] },
+    { name: 'Türev ve integral', z: 3, qs: [
+      { t: 'num', q: 'Girişe sabit 2,5 V uygulanıyor. Çıkış eğiminin büyüklüğü kaç V/ms?', c: opInv(['R', 'R', '10 kΩ'], ['C', 'C', '100 nF']), a: 2.5, u: 'V/ms',
+        e: 'Sabit giriş, kondansatöre sabit akım verir; çıkış doğrusal rampa olur.', f: '|dV_o/dt| = V_i / (RC) = 2,5 / 1 ms = 2,5 V/ms' },
+      { t: 'num', q: 'İntegral alıcıda R = 4,7 kΩ, C = 100 nF. Girişe ±2 V, 1 kHz kare dalga uygulanıyor. Çıkış üçgeninin tepeden tepeye değeri kaç V?', a: 2 / 4.7e-4 * 0.5e-3, u: 'V',
+        e: 'Her yarım periyotta çıkış sabit eğimle bir yöne gider.', f: 'ΔV = (V/RC) × T/2 = (2 / 0,47 ms) × 0,5 ms = 2,13 V' },
+      { t: 'num', q: 'Girişe eğimi 4 V/ms olan rampa uygulanıyor. Çıkış geriliminin büyüklüğü kaç V?', c: opInv(['C', 'C', '10 nF'], ['R', 'R_F', '100 kΩ']), a: 4, u: 'V',
+        e: 'Türev alıcıda kondansatör akımı giriş eğimiyle orantılıdır.', f: '|V_o| = R_F·C·dV_i/dt = 1 ms × 4 V/ms = 4 V' },
+      { t: 'mc', q: 'Pratik integral alıcıda C\'ye paralel büyük bir direnç neden konur?', o: ['Ofset ve bias akımının çıkışı yavaşça doyuma sürmesini önlemek için', 'Kazancı artırmak için', 'Kondansatörü aşırı gerilimden korumak için', 'Bant genişliğini sonsuz yapmak için'], a: 0,
+        e: 'DC\'de ideal integral alıcının kazancı sonsuzdur; küçük bir ofset bile zamanla birikir. Paralel direnç DC kazancı R_F/R ile sınırlar.', f: 'A_DC = R_F / R' },
+      { t: 'num', q: 'C = 10 nF\'a paralel R_F = 1 MΩ konmuş. Devre hangi frekansın üstünde integral alıcı gibi davranır (köşe frekansı, Hz)?', a: 1 / (2 * Math.PI * 1e6 * 10e-9), u: 'Hz',
+        e: 'Köşenin altında devre eviren yükselteç, üstünde integral alıcıdır.', f: 'f = 1 / (2π R_F C) = 15,9 Hz' },
+      { t: 'num', q: 'Girişi topraklanmış integral alıcıda op-amp ofseti 2 mV, R = 100 kΩ, C = 100 nF, doyum 10 V. Çıkış yaklaşık kaç saniyede doyar?', a: 10 / (2e-3 / (100e3 * 100e-9)), u: 's',
+        e: 'Ofset gerilimi girişte sabit bir gerilim gibi integre edilir. En kötü durum hesabı budur.', f: 'Eğim = 2 mV / 10 ms = 0,2 V/s → t = 10 / 0,2 = 50 s' } ] } ] },
+
+  { name: 'Geri besleme', lessons: [
+    { name: 'Kapalı çevrim kazancı', z: 1, qs: [
+      { t: 'num', q: 'Açık çevrim kazancı A = 1000, geri besleme oranı β = 0,1. Kapalı çevrim kazancı kaç?', a: 1000 / 101, u: 'V/V',
+        e: 'Çevrim kazancı Aβ büyükken kapalı çevrim kazancı 1/β\'ya yaklaşır.', f: 'A_f = A / (1 + Aβ) = 1000 / 101 = 9,90' },
+      { t: 'mc', q: 'Negatif geri besleme kazancı ve bant genişliğini nasıl etkiler?', o: ['Kazanç düşer, bant genişliği artar', 'İkisi de artar', 'İkisi de düşer', 'Kazanç artar, bant genişliği düşer'], a: 0,
+        e: 'Tek kutuplu yükselteçte kazanç–bant genişliği çarpımı sabittir; kazançtan verip bant genişliği alırsın.', f: 'A_f · f_H ≈ A · f_p' },
+      { t: 'num', q: 'Evirmeyen yükselteçte R1 = 1 kΩ, R_F = 9 kΩ. Geri besleme oranı β kaç?', c: opNon(['R', 'R1', '1 kΩ'], ['R', 'R_F', '9 kΩ']), a: 0.1, u: 'V/V',
+        e: 'β, çıkışın − girişine geri dönen kesridir.', f: 'β = R1 / (R1 + R_F) = 1 / 10 = 0,1' },
+      { t: 'mc', q: 'Aβ çarpımına ne ad verilir?', o: ['Çevrim kazancı', 'Kapalı çevrim kazancı', 'Ortak mod kazancı', 'Geri besleme direnci'], a: 0,
+        e: 'Döngüyü bir noktadan kesip bir tur dolaşınca görülen kazançtır. Kararlılık bundan okunur.', f: 'T = Aβ' },
+      { t: 'mc', q: 'Gerilim örnekleyip seri karıştıran (seri-şönt) geri besleme giriş ve çıkış direncini nasıl değiştirir?', o: ['Giriş direnci artar, çıkış direnci azalır', 'İkisi de azalır', 'İkisi de artar', 'Giriş azalır, çıkış artar'], a: 0,
+        e: 'Evirmeyen op-amp yükselteci bu tiptir. İki direnç de (1 + Aβ) kadar değişir.', f: 'R_if = R_i (1 + Aβ), R_of = R_o / (1 + Aβ)' },
+      { t: 'sira', q: 'Geri beslemeli bir yükselteci analiz etme adımlarını sırala.', o: ['Örnekleme ve karıştırma tipini belirle', 'Geri besleme ağından β\'yı hesapla', 'Çevrim kazancı Aβ\'yı bul', 'A_f = A / (1 + Aβ) ile kapalı çevrim kazancını yaz'],
+        e: 'Tip, β\'nın hangi büyüklükler arasında tanımlandığını belirler. β olmadan çevrim kazancı, çevrim kazancı olmadan A_f bulunamaz.', f: 'tip → β → Aβ → A_f' } ] },
+    { name: 'Bant genişliği ve hatalar', z: 2, qs: [
+      { t: 'num', q: 'Op-amp\'in kazanç–bant genişliği çarpımı 1 MHz. Kazancı 20 olan evirmeyen yükseltecin bant genişliği kaç kHz?', a: 50, u: 'kHz',
+        e: 'Tek kutuplu op-amp\'te GBW sabittir.', f: 'f_H = GBW / A = 1 MHz / 20 = 50 kHz' },
+      { t: 'num', q: 'Eğim hızı (slew rate) 0,5 V/µs. 5 V tepeli sinüs bozulmadan en fazla kaç kHz olabilir?', a: 0.5e6 / (2 * Math.PI * 5) / 1e3, u: 'kHz',
+        e: 'Sinüsün en büyük eğimi sıfır geçişindedir: 2πf·V_p.', f: 'f_max = SR / (2π V_p) = 0,5 V/µs / (2π × 5) = 15,9 kHz' },
+      { t: 'num', q: 'Açık çevrim kazancı %10 değişiyor ve 1 + Aβ = 100. Küçük değişim yaklaşımıyla kapalı çevrim kazancı yüzde kaç değişir?', a: 0.1, u: '%',
+        e: 'Geri besleme, A\'daki değişimi (1 + Aβ) kadar küçültür. Buna duyarsızlaştırma denir.', f: 'ΔA_f/A_f = (ΔA/A) / (1 + Aβ) = 10 / 100 = %0,1' },
+      { t: 'num', q: 'Kazancı 101 olan evirmeyen yükselteçte op-amp ofseti 2 mV. Girişi topraklıyken çıkıştaki hata kaç mV?', a: 202, u: 'mV',
+        e: 'Ofset, + girişine seri küçük bir kaynak gibidir ve evirmeyen kazançla yükselir.', f: 'V_o = 101 × 2 mV = 202 mV' },
+      { t: 'num', q: 'Eviren yükselteçte R_F = 1 MΩ, op-amp bias akımı 100 nA, + giriş doğrudan toprakta. Çıkıştaki hata kaç mV?', a: 100, u: 'mV',
+        e: '− girişin bias akımı R_F üzerinden akar.', f: 'V_o = I_B · R_F = 100 nA × 1 MΩ = 100 mV' },
+      { t: 'mc', q: 'Bias akımının çıkıştaki etkisini azaltmak için + girişle toprak arasına hangi direnç konur?', o: ['R1 ∥ R_F değerinde bir direnç', 'R1 + R_F değerinde', '1 Ω', 'Sonsuz (açık devre)'], a: 0,
+        e: 'İki girişin gördüğü direnç eşitlenince eşit bias akımlarının etkileri birbirini götürür; geriye ofset akımı kalır.', f: 'R_p = R1 ∥ R_F' } ] },
+    { name: 'Kararlılık ve Schmitt', z: 3, qs: [
+      { t: 'num', q: 'Eviren Schmitt tetikleyicide çıkış ±10 V. Histerezis genişliği kaç V?', c: opNon(['R', 'R1', '10 kΩ'], ['R', 'R2', '90 kΩ'], { flip: 0 }), a: 2, u: 'V',
+        e: 'Pozitif geri besleme + girişini çıkışın bir kesrine bağlar. Çıkış durum değiştirince eşik de değişir.', f: 'V_eşik = ±10 × 10 / (10 + 90) = ±1 V → genişlik 2 V' },
+      { t: 'num', q: 'Çevrim kazancının 1 (0 dB) olduğu frekansta faz −125°. Faz payı kaç derece?', a: 55, u: '°',
+        e: 'Faz payı, döngünün −180°\'ye ne kadar uzak olduğudur. 45°\'nin altı aşma ve çınlama demektir.', f: 'PM = 180° − 125° = 55°' },
+      { t: 'num', q: 'Çevrim kazancının bir kutbu çok düşük frekansta, ikincisi kesim frekansının 3 katında. Faz payı yaklaşık kaç derece?', a: 90 - Math.atan(1 / 3) * 180 / Math.PI, u: '°',
+        e: 'İlk kutup kesimde −90° verir. İkinci kutbun katkısı arctan(f_c / f_p2)\'dir.', f: 'PM = 180 − 90 − arctan(1/3) = 71,6°' },
+      { t: 'mc', q: 'Op-amp çıkışına büyük kapasitif yük bağlanınca osilasyon riski neden artar?', o: ['Çıkış direnciyle yeni bir kutup oluşur ve faz payı azalır', 'Kazanç düşer', 'Besleme gerilimi artar', 'Giriş ofseti sıfırlanır'], a: 0,
+        e: 'R_o ve C_L, geri besleme yoluna ek bir faz gecikmesi koyar. Çözüm genelde çıkışa seri küçük bir izolasyon direncidir.', f: 'f_p = 1 / (2π R_o C_L)' },
+      { t: 'num', q: 'Wien köprülü osilatörde R = 10 kΩ, C = 16 nF. Salınım frekansı kaç Hz?', a: 1 / (2 * Math.PI * 10e3 * 16e-9), u: 'Hz',
+        e: 'Bu frekansta köprünün fazı sıfırdır ve kazancı 1/3\'tür; yükselteç kazancı 3 olmalıdır.', f: 'f = 1 / (2πRC) = 995 Hz' },
+      { t: 'sira', q: 'Bir döngünün kararlılığını Bode diyagramıyla denetleme adımlarını sırala.', o: ['Çevrim kazancı Aβ(f)\'yi çiz', 'Kazancın 0 dB olduğu kesim frekansını bul', 'O frekanstaki fazı oku', 'Faz payı = 180° + faz; 45°\'nin üstünde mi bak'],
+        e: 'Kapalı çevrim kazancına değil, çevrim kazancına bakılır.', f: 'PM = 180° + ∠Aβ(f_c)' } ] } ] },
+
+  { name: 'Anahtarlama ve H köprüsü', lessons: [
+    { name: 'MOSFET anahtar', z: 1, qs: [
+      { t: 'mc', q: 'N kanallı MOSFET\'i low-side anahtar olarak tam iletime sokmak için ne gerekir?', o: ['V_GS, V_th\'den yeterince büyük olmalı (ör. 10 V)', 'V_GS = 0 V', 'Drain\'e negatif gerilim', 'Gate\'e sürekli akım vermek'], a: 0,
+        e: 'V_th, MOSFET\'in yeni iletmeye başladığı gerilimdir. Datasheet\'teki R_DS(on), belirtilen V_GS\'te (ör. 10 V) ölçülür.', f: 'Tam iletim: V_GS ≫ V_th' },
+      { t: 'num', q: 'I = 10 A, R_DS(on) = 8 mΩ. İletim kaybı kaç W?', a: 0.8, u: 'W',
+        e: 'İletimdeki MOSFET bir direnç gibidir.', f: 'P = I² · R = 100 × 0,008 = 0,8 W' },
+      { t: 'mc', q: 'Bobine ters paralel bağlı D diyotunun görevi nedir?', c: LOWSIDE, o: ['Kapanışta bobin akımına yol verip gerilim sıçramasını önlemek', 'Bobini hızlı çekmek', 'Ters polariteden korumak', 'PWM frekansını artırmak'], a: 0,
+        e: 'Endüktans akımı aniden kesilemez. Yol yoksa v = L·di/dt çok büyür ve MOSFET çığ kırılmasına girer.', f: 'v = L · di/dt' },
+      { t: 'mc', q: 'Gate ile source arasındaki R_PD direnci neden konur?', c: LOWSIDE, o: ['Sürücü yokken (reset, kopuk kablo) gate\'i 0 V\'ta tutup MOSFET\'i kapalı tutmak için', 'Gate akımını artırmak için', 'Anahtarlamayı hızlandırmak için', 'Drain akımını ölçmek için'], a: 0,
+        e: 'Yüzen gate, kaçak ve kuplajla yükselip MOSFET\'i yarı iletime sokabilir. MCU açılırken pinler bir süre yüksek empedanstadır.', f: 'Güvenli durum: V_GS = 0' },
+      { t: 'ariza', q: 'MOSFET birkaç anahtarlamada yandı. Kapanışta V_DS\'de 85 V tepe ölçülüyor (besleme 24 V). Sorunlu elemana dokun.', c: LOWSIDE, a: 'D',
+        e: 'Diyot sağlamken V_DS en fazla 24 V + V_F ≈ 25 V olur. 85 V, bobin akımının gidecek yeri olmadığını gösterir: D açık devre ya da takılmamış.', f: 'Yol yoksa di/dt çok büyük → v = L·di/dt' },
+      { t: 'num', q: '24 V besleme %35 görev oranıyla PWM ediliyor. Yüke düşen ortalama gerilim kaç V?', a: 8.4, u: 'V',
+        e: 'Ortalama gerilim, iletim süresinin periyoda oranıyla orantılıdır.', f: 'V_ort = D · V = 0,35 × 24 = 8,4 V' } ] },
+    { name: 'H köprüsü', z: 2, qs: [
+      { t: 'mc', q: 'Motor akımının A\'dan B\'ye akması için hangi MOSFET\'ler iletimde olmalı?', c: hbridge(), o: ['Q1 ve Q4', 'Q1 ve Q2', 'Q3 ve Q4', 'Q2 ve Q3'], a: 0,
+        e: 'Akım + raydan Q1 ile A\'ya, motordan B\'ye, Q4 ile toprağa gider. Çaprazdaki çift yönü belirler.', f: '+24 V → Q1 → A → motor → B → Q4 → toprak' },
+      { t: 'mc', q: 'Aynı koldaki Q1 ve Q2 aynı anda iletime girerse ne olur?', c: hbridge(), o: ['Besleme kısa devre olur (shoot-through), MOSFET\'ler yanabilir', 'Motor hızlanır', 'Motor ters döner', 'Hiçbir şey olmaz'], a: 0,
+        e: 'Bu yüzden sürücüler bir MOSFET kapanıp diğeri açılmadan önce ölü zaman (dead time) bırakır.', f: 'I = 24 V / (R_DS1 + R_DS2) → yüzlerce amper' },
+      { t: 'mc', q: 'Q1 ve Q3 kesimdeyken Q2 ve Q4 birlikte iletime alınırsa dönen motor nasıl davranır?', c: hbridge(), o: ['Uçları kısa devre olur, dinamik fren yapar', 'Tam hızla döner', 'Ters yönde hızlanır', 'Bus\'ı şarj eder'], a: 0,
+        e: 'Dönen motor zıt EMK üretir; kısa devre edilen uçlardan akan akım frenleyici tork verir.', f: 'I = E / R_a, T = K_t · I (frenleyici)' },
+      { t: 'sim', sim: 'hb', q: 'Kilitli ters faz (locked anti-phase) PWM ile motor ortalama gerilimini +9,6 V yap (±0,3 V).',
+        e: 'Bu yöntemde köprü sürekli yön değiştirir; %50 görev oranı 0 V verir.', f: 'V_ort = (2D − 1)·V, örneğin 24 V, D = %70 → 9,6 V' },
+      { t: 'num', q: 'İletimdeki iki MOSFET\'in her biri 15 mΩ, motor akımı 8 A. Köprünün toplam iletim kaybı kaç W?', a: 2 * 64 * 0.015, u: 'W',
+        e: 'Akım her an iki MOSFET\'ten seri geçer.', f: 'P = 2 · I² · R = 2 × 64 × 0,015 = 1,92 W' },
+      { t: 'ariza', q: 'Q1 ve Q4\'e iletim komutu verildi. A = 24 V, B = 24 V ölçülüyor ve motor akımı 0 A. Arızalı MOSFET\'e dokun.', c: hbridge({ ra: '|24 V', rb: '|24 V' }), a: 'Q4',
+        e: 'Q1 iletimde, A = 24 V. Q4 iletseydi B toprağa yakın olurdu. B = 24 V ve akım 0 ise Q4 iletmiyor. Q3 kısa devre olsaydı B yine 24 V olur ama Q4 üzerinden büyük akım akardı.', f: 'Beklenen: V_A − V_B ≈ 24 V' } ] },
+    { name: 'Sürüş ve kayıplar', z: 3, qs: [
+      { t: 'mc', q: 'Yarım köprüde üst MOSFET hızlı açılınca alt MOSFET\'in gate\'inde gerilim sıçraması görülüyor. En doğrudan çözüm hangisi?', o: ['Alt MOSFET için güçlü kapatma yolu: küçük R_g,off veya Miller clamp', 'Gate direncini 10 kat büyütmek', 'Ölü zamanı sıfırlamak', 'Besleme gerilimini yükseltmek'], a: 0,
+        e: 'Faz düğümündeki dv/dt, C_gd üzerinden alt gate\'e akım basar. Bu akım kapatma yolu direncinde gerilim oluşturur; V_th\'yi aşarsa shoot-through olur.', f: 'V_GS ≈ C_gd · dV/dt · (R_g,off + R_sürücü)' },
+      { t: 'num', q: 'R_DS(on) 25 °C\'de 8 mΩ ve 110 °C\'de 1,6 katına çıkıyor. 10 A\'de sıcak durumdaki iletim kaybı kaç W?', a: 100 * 0.008 * 1.6, u: 'W',
+        e: 'Isıl hesap en kötü durumda, sıcak R_DS(on) ile yapılır. 25 °C değeriyle yapılan hesap kaybı küçük gösterir.', f: 'P = 10² × 8 mΩ × 1,6 = 1,28 W' },
+      { t: 'num', q: '48 V, 10 A anahtarlanıyor; t_r + t_f = 60 ns, f_sw = 100 kHz. Yaklaşık anahtarlama kaybı kaç W?', a: 0.5 * 48 * 10 * 60e-9 * 1e5, u: 'W',
+        e: 'Geçiş sırasında gerilim ve akım aynı anda vardır. Kayıp frekansla doğru orantılıdır.', f: 'P ≈ ½ · V · I · (t_r + t_f) · f = ½ × 48 × 10 × 60 ns × 100 kHz = 1,44 W' },
+      { t: 'num', q: 'High-side MOSFET\'in Q_g\'si 100 nC. Bootstrap kondansatöründe her açılışta en fazla 0,5 V düşüm isteniyor. Minimum C_boot kaç nF?', a: 200, u: 'nF',
+        e: 'Gate yükü bootstrap kondansatöründen çekilir. Pratikte bu minimumun birkaç katı seçilir.', f: 'C ≥ Q_g / ΔV = 100 nC / 0,5 V = 200 nF' },
+      { t: 'num', q: 'V_dc = 48 V, ölü zaman 500 ns, f_sw = 20 kHz. Ölü zamanın yarattığı ortalama gerilim hatası kaç V?', a: 48 * 500e-9 * 20e3, u: 'V',
+        e: 'Ölü zamanda çıkış gerilimi akım yönüne göre diyot tarafından belirlenir. Düşük hızda motor akımını bozar.', f: 'ΔV ≈ V_dc · t_d · f_sw = 48 × 500 ns × 20 kHz = 0,48 V' },
+      { t: 'num', q: 'MOSFET 5 W harcıyor. R_th,jc = 0,8, R_th,cs = 0,5, R_th,sa = 6 °C/W, ortam 40 °C. Jonksiyon sıcaklığı kaç °C?', a: 40 + 5 * 7.3, u: '°C',
+        e: 'Isıl dirençler seri toplanır. Termal ped (R_th,cs) çoğu zaman ihmal edilemez.', f: 'T_j = 40 + 5 × (0,8 + 0,5 + 6) = 76,5 °C' } ] } ] },
+
+  { name: 'Anahtarlamalı güç kaynakları', lessons: [
+    { name: 'Buck dönüştürücü', z: 1, qs: [
+      { t: 'num', q: 'İdeal buck dönüştürücü 12 V\'tan 5 V üretiyor. Görev oranı yüzde kaç?', c: buck({ vin: '12 V' }), a: 500 / 12, u: '%',
+        e: 'CCM\'de buck çıkışı, giriş geriliminin görev oranı kadarıdır.', f: 'D = V_o / V_in = 5 / 12 = %41,7' },
+      { t: 'mc', q: 'CCM\'de çalışan buck dönüştürücüde endüktör akımının ortalaması neye eşittir?', o: ['Çıkış (yük) akımına', 'Giriş akımına', 'Sıfıra', 'Tepe akımın iki katına'], a: 0,
+        e: 'Kalıcı durumda kondansatörün ortalama akımı sıfırdır; endüktör akımı ortalamada yüke gider.', f: 'Ī_L = I_o' },
+      { t: 'mc', q: 'S kesime girince endüktör akımı hangi yoldan akmaya devam eder?', c: buck({ vin: '12 V' }), o: ['D diyotu üzerinden', 'Kaynak üzerinden', 'Kondansatörden toprağa', 'Akım hemen sıfırlanır'], a: 0,
+        e: 'Endüktör akımı aniden değişemez; anahtarlama düğümünü negatife çekerek diyotu iletime sokar.', f: 'v_L = −V_o (kesimde)' },
+      { t: 'num', q: 'Dönüştürücü 15 W veriyor ve girişten 16,5 W çekiyor. Verim yüzde kaç?', a: 1500 / 16.5, u: '%',
+        e: 'Aradaki 1,5 W ısıya dönüşür: anahtar, diyot, endüktör ve kondansatör kayıpları.', f: 'η = 15 / 16,5 = %90,9' },
+      { t: 'sim', sim: 'buck', q: 'Buck çıkışını 5 V yap (±0,1 V).',
+        e: 'İdeal buck\'ta çıkış görev oranıyla doğru orantılıdır.', f: 'V_o = D · V_in, örneğin 12 V × %42 = 5,04 V' },
+      { t: 'num', q: 'İdeal buck 12 V\'tan 5 V, 3 A veriyor. Girişten çekilen ortalama akım kaç A?', a: 15 / 12, u: 'A',
+        e: 'Kayıpsız dönüştürücüde giriş ve çıkış gücü eşittir. Buck gerilimi düşürür, akımı artırır.', f: 'I_in = 5 × 3 / 12 = 1,25 A' } ] },
+    { name: 'Boost ve buck-boost', z: 2, qs: [
+      { t: 'num', q: 'Boost dönüştürücü 5 V\'tan 12 V üretiyor. Görev oranı yüzde kaç?', c: BOOST, a: (1 - 5 / 12) * 100, u: '%',
+        e: 'Boost\'ta V_o = V_in / (1 − D).', f: 'D = 1 − 5/12 = %58,3' },
+      { t: 'num', q: 'Buck: 12 V → 5 V, L = 10 µH, f_sw = 500 kHz. Endüktör akımının tepeden tepeye dalgalanması kaç A?', a: 7 * (5 / 12) / (10e-6 * 5e5), u: 'A',
+        e: 'İletim süresince endüktöre V_in − V_o uygulanır.', f: 'ΔI = (V_in − V_o)·D / (L·f) = 7 × 0,417 / (10 µH × 500 kHz) = 0,583 A' },
+      { t: 'num', q: 'Boost dönüştürücüde D = 0,6, yük akımı 1 A. Endüktörün ortalama akımı kaç A?', a: 2.5, u: 'A',
+        e: 'Boost\'ta endüktör akımı yalnız (1 − D) süresince yüke gider.', f: 'Ī_L = I_o / (1 − D) = 1 / 0,4 = 2,5 A' },
+      { t: 'num', q: 'Eviren buck-boost dönüştürücüde D = 0,4, V_in = 12 V. Çıkış geriliminin büyüklüğü kaç V?', c: BBINV, a: 8, u: 'V',
+        e: 'Çıkış girişe göre ters işaretlidir; D = 0,5\'te büyüklük girişe eşittir.', f: '|V_o| = V_in · D / (1 − D) = 12 × 0,4 / 0,6 = 8 V' },
+      { t: 'mc', q: 'Hafif yükte buck dönüştürücü DCM\'e geçiyor. Bunun işareti nedir?', o: ['Endüktör akımı her periyotta bir süre sıfırda kalır', 'Endüktör akımı hiç sıfıra inmez', 'Çıkış D·V_in\'e tam eşit kalır', 'Anahtar hiç kapanmaz'], a: 0,
+        e: 'Ortalama akım, dalgalanmanın yarısının altına inince akım sıfıra değer. DCM\'de V_o artık yalnız D\'ye değil yüke de bağlıdır.', f: 'DCM sınırı: I_o < ΔI_L / 2' },
+      { t: 'ariza', q: 'Görev oranı %42 komut ediliyor ama anahtarlama düğümü sürekli 12 V, çıkış da 12 V. Arızalı elemana dokun.', c: buck({ vin: '12 V', t: '|V_SW = 12 V' }), a: 'S',
+        e: 'Anahtar hiç kesime girmiyor: S kısa devre. Çıkış girişe yapışır ve 5 V\'luk yük aşırı gerilim görür. D kısa devre olsaydı anahtarlama düğümü 0 V\'ta kalırdı.', f: 'Beklenen V_o = 0,42 × 12 = 5 V' } ] },
+    { name: 'Flyback ve kontrol', z: 3, qs: [
+      { t: 'num', q: 'Flyback CCM\'de D = 0,4. Çıkış gerilimi kaç V? (Diyot düşümünü ihmal et.)', c: FLYBACK, a: 48 * (0.4 / 0.6) / 4, u: 'V',
+        e: 'Flyback, sarım oranı eklenmiş bir buck-boost\'tur.', f: 'V_o = V_in · D / (1 − D) · N_s/N_p = 48 × 0,667 / 4 = 8 V' },
+      { t: 'num', q: 'Aynı flyback\'te anahtar kesimdeyken üzerindeki gerilim kaç V olur? (Kaçak endüktans sıçramasını ihmal et.)', c: FLYBACK, a: 48 + 4 * 8, u: 'V',
+        e: 'Kesimde çıkış gerilimi primere sarım oranıyla yansır ve girişe eklenir. Gerçekte kaçak endüktans bunun üstüne sıçrama ekler; MOSFET buna göre seçilir.', f: 'V_DS = V_in + n·V_o = 48 + 4 × 8 = 80 V' },
+      { t: 'num', q: 'Buck çıkışında ΔI_L = 0,6 A, f_sw = 500 kHz, C = 22 µF (ESR ihmal). Çıkış gerilim dalgalanması kaç mV?', a: 0.6 / (8 * 5e5 * 22e-6) * 1e3, u: 'mV',
+        e: 'Dalgalanma akımı kondansatörden geçer; üçgen akımın kondansatörde ürettiği gerilim budur.', f: 'ΔV = ΔI / (8 f C) = 0,6 / (8 × 500 kHz × 22 µF) = 6,8 mV' },
+      { t: 'num', q: 'Buck: 12 V → 5 V, 500 kHz. 0,2 A yükte bile CCM\'de kalmak için en küçük L kaç µH?', a: 7 * (5 / 12) / (2 * 0.2 * 5e5) * 1e6, u: 'µH',
+        e: 'CCM sınırında ortalama akım, dalgalanmanın yarısına eşittir.', f: 'L_min = (V_in − V_o)·D / (2 I_o f) = 7 × 0,417 / (2 × 0,2 × 500 kHz) = 14,6 µH' },
+      { t: 'mc', q: 'CCM boost ve flyback\'te döngü kesim frekansı neden düşük tutulur?', o: ['Sağ yarı düzlem sıfırı (RHPZ) faz geciktirir ve kompanze edilemez', 'Anahtarlama frekansı yüksek olduğu için', 'Çıkış kondansatörü büyük olduğu için', 'Endüktör doyduğu için'], a: 0,
+        e: 'Görev oranı artınca enerji önce endüktörde birikir, çıkış bir an düşer. Bu ters tepki RHPZ\'dir; kesim, en kötü RHPZ\'nin birkaç kat altında seçilir.', f: 'f_RHPZ = (1 − D)² R / (2π L) (boost)' },
+      { t: 'mc', q: 'Tepe akım modlu kontrolde D > 0,5 iken akım dalga biçimi bir geniş bir dar darbe veriyor. Çözüm nedir?', o: ['Eğim kompanzasyonu: akım sinyaline rampa eklemek', 'Kondansatörü büyütmek', 'Anahtarlama frekansını düşürmek', 'Endüktörü küçültmek'], a: 0,
+        e: 'Bu alt harmonik salınımdır. Eklenen rampa, endüktör akımı iniş eğiminin en az yarısı olmalıdır.', f: 'S_e ≥ ½ · S_f' } ] } ] },
+
+  { name: 'Batarya yönetimi (BMS)', lessons: [
+    { name: 'Hücre ve paket', z: 1, qs: [
+      { t: 'num', q: '10S (10 seri) Li-ion (NMC) paket tam doluyken kaç V olur?', a: 42, u: 'V',
+        e: 'Paket gerilimi hücre gerilimlerinin toplamıdır. Gerilim sınıfı seçimi nominale değil tam dolu değere göre yapılır.', f: 'V = 10 × 4,2 = 42 V' },
+      { t: 'num', q: 'Her biri 3 Ah olan hücrelerle 10S4P paket kuruluyor. Paket kapasitesi kaç Ah?', a: 12, u: 'Ah',
+        e: 'Paralel hücreler kapasiteyi, seri hücreler gerilimi artırır.', f: 'C = 4 × 3 = 12 Ah' },
+      { t: 'num', q: '36 V nominal, 12 Ah paketin enerjisi kaç Wh?', a: 432, u: 'Wh',
+        e: 'Enerji, nominal gerilim ile kapasitenin çarpımıdır.', f: 'E = 36 × 12 = 432 Wh' },
+      { t: 'mc', q: 'BMS\'in temel görevi nedir?', o: ['Hücre gerilimini, akımı ve sıcaklığı izleyip güvenli aralık dışında akımı kesmek', 'Motor hızını kontrol etmek', 'Paket gerilimini sabit tutmak', 'Şarj cihazının yerine geçmek'], a: 0,
+        e: 'Li-ion hücreler aşırı şarj, aşırı deşarj, aşırı akım ve yanlış sıcaklıkta kalıcı hasar görür veya termal kaçağa girer.', f: 'İzle → karşılaştır → kes' },
+      { t: 'num', q: '12 Ah paket 2C ile deşarj ediliyor. Akım kaç A?', a: 24, u: 'A',
+        e: 'C oranı, akımın kapasiteye oranıdır. 1C, paketi bir saatte boşaltan akımdır.', f: 'I = 2 × 12 = 24 A' },
+      { t: 'mc', q: 'NMC kimyalı Li-ion hücrenin tipik tam şarj gerilimi kaçtır?', o: ['4,2 V', '3,65 V', '3,2 V', '5,0 V'], a: 0,
+        e: '3,65 V LFP hücrelerin tam şarj gerilimidir. Kesin değer hücrenin datasheet\'inden alınır.', f: 'NMC ≈ 4,2 V, LFP ≈ 3,65 V' } ] },
+    { name: 'Ölçüm ve balans', z: 2, qs: [
+      { t: 'num', q: 'Pasif balansta 4,2 V\'luk hücreye 42 Ω direnç bağlanıyor. Dirençte harcanan güç kaç W?', c: loop('4,2 V', [['SO', 'S'], ['R', 'R_bal', '42 Ω']]), a: 4.2 * 4.2 / 42, u: 'W',
+        e: 'Pasif balans fazla enerjiyi ısıya çevirir. BMS kartında bu ısı dağıtılmalıdır.', f: 'P = V² / R = 17,64 / 42 = 0,42 W' },
+      { t: 'num', q: 'Hücreler arasında 0,5 Ah fark var ve balans akımı 100 mA. Dengeleme kaç saat sürer?', a: 5, u: 'h',
+        e: 'Pasif balans yavaştır. Büyük paketlerde aktif balans tercih edilir.', f: 't = 0,5 Ah / 0,1 A = 5 h' },
+      { t: 'num', q: 'Paket akımı 0,5 mΩ şöntle ölçülüyor. 100 A\'de şöntte harcanan güç kaç W?', a: 5, u: 'W',
+        e: 'Küçük direnç bile yüksek akımda ciddi ısı üretir. Ölçüm gerilimi 50 mV\'tur.', f: 'P = I² · R = 10 000 × 0,0005 = 5 W' },
+      { t: 'mc', q: 'Yalnız akım sayarak (Coulomb sayma) SOC hesaplamanın zayıf yanı nedir?', o: ['Akım ofseti ve başlangıç hatası zamanla birikir', 'Çok fazla işlem gücü ister', 'Akım ölçülemez', 'Yalnız LFP\'de çalışır'], a: 0,
+        e: 'Açık çevrimli bir integraldir; küçük ofset bile günlerce birikir. Dinlenmiş OCV ile periyodik düzeltilir.', f: 'SOC = SOC₀ − ∫I dt / C' },
+      { t: 'mc', q: 'LFP pakette gerilimden SOC tahmini neden zordur?', o: ['OCV eğrisi orta SOC aralığında çok düzdür', 'LFP hücrelerin gerilimi ölçülemez', 'LFP\'nin iç direnci sıfırdır', 'LFP gerilimi sıcaklıktan etkilenmez'], a: 0,
+        e: '%20–80 aralığında gerilim yalnız birkaç on mV değişir; ölçüm hatası ve histerezis bunu yutar.', f: 'dV/dSOC ≈ 0 (orta bölge)' },
+      { t: 'num', q: '50 Ah paket %80 SOC\'tan başlayıp 1,5 saat boyunca 10 A veriyor. Yeni SOC yüzde kaç?', a: 50, u: '%',
+        e: 'Çekilen yükü kapasiteye oranla ve düş.', f: 'ΔQ = 10 × 1,5 = 15 Ah = %30 → SOC = %50' } ] },
+    { name: 'Koruma ve ön şarj', z: 3, qs: [
+      { t: 'num', q: 'K2 kapandığı anda R_pre\'den geçen tepe akım kaç A?', c: PRECHARGE, a: 110 / 47, u: 'A',
+        e: 'İlk anda boş kondansatör kısa devre gibidir; gerilimin tamamı dirençtedir.', f: 'I_pk = 110 / 47 = 2,34 A' },
+      { t: 'num', q: 'Ön şarj direnci 100 Ω, C_bus = 1 mF. Bus geriliminin %95\'e ulaşması kaç saniye sürer?', a: 0.1 * Math.log(20), u: 's',
+        e: 'Ana kontaktör ancak gerilim farkı küçükken kapatılır; yoksa kontaklar kaynayabilir.', f: 't = τ · ln 20 = 0,1 s × 3,0 = 0,30 s' },
+      { t: 'num', q: '110 V\'luk paket 1 mF\'lık bus\'ı ön şarj ediyor. Ön şarj direncinde harcanan toplam enerji kaç J?', a: 0.5 * 1e-3 * 110 * 110, u: 'J',
+        e: 'Bu enerji direnç değerinden bağımsızdır. Direnç, bu darbe enerjisine göre seçilir.', f: 'E = ½ C V² = 0,5 × 1 mF × 110² = 6,05 J' },
+      { t: 'num', q: 'Batarya bağlantısı koptu, motor 2 kW geri besleme veriyor. 1 mF\'lık bus 110 V\'tayken gerilim kaç V/ms yükselir?', a: 2000 / (1e-3 * 110) / 1e3, u: 'V/ms',
+        e: 'Gücün gidecek tek yeri bus kondansatörüdür. Birkaç ms\'de onlarca volt yükselir; aşırı gerilim koruması hızlı olmalıdır.', f: 'dV/dt = P / (C·V) = 2000 / (1 mF × 110 V) = 18,2 V/ms' },
+      { t: 'mc', q: 'Paket tam doluyken motor rejeneratif fren yapıyor ve BMS şarj akımını kesiyor. Ne olur, ne yapılmalı?', o: ['DC bus pompalanır; fren kıyıcı veya rejen sınırı gerekir', 'Hiçbir şey olmaz, kondansatör emer', 'Motor hızlanır', 'Paket boşalır'], a: 0,
+        e: 'Akımın gidecek yeri kalmaz; MOSFET\'lerin gövde diyotları motoru doğrultucu yapar. Sürücü ile BMS haberleşmeli, rejen tam doluyken kısılmalıdır.', f: 'dV/dt = P / (C·V)' },
+      { t: 'ariza', q: 'K2 kapalı, aradan 5 s geçti. R_pre uçlarında hâlâ 110 V, C_bus 0 V. İnverter bağlı değil. Arızalı elemana dokun.', c: PRECHARGE, a: 'C_bus',
+        e: 'Sağlam devrede birkaç τ sonra C_bus 110 V\'a ulaşır ve R_pre\'de 0 V kalır. Sürekli 110 V, C_bus\'ın kısa devre olduğunu gösterir. R_pre sürekli V²/R = 257 W ile ısınır; ön şarj zaman aşımıyla kesilmelidir.', f: 'τ = 47 Ω × 1 mF = 47 ms → 5 s ≫ 5τ' } ] } ] },
+
+  { name: 'Elektrik motorları', lessons: [
+    { name: 'DC motor', z: 1, qs: [
+      { t: 'num', q: 'Motorun zıt EMK sabiti K_e = 0,05 V/(rad/s). 300 rad/s\'de zıt EMK kaç V?', a: 15, u: 'V',
+        e: 'Dönen motor jeneratör gibi gerilim üretir; hızla doğru orantılıdır.', f: 'E = K_e · ω = 0,05 × 300 = 15 V' },
+      { t: 'num', q: 'Kalıcı durumda armatür akımı kaç A? (Endüktans kalıcı durumda etkisiz.)', c: loop('24 V', [['R', 'R_a', '0,5 Ω'], ['I', 'L_a', '2 mH'], ['M', 'E', '20 V']]), a: 8, u: 'A',
+        e: 'Akımı, kaynak ile zıt EMK arasındaki fark ve armatür direnci belirler.', f: 'I = (24 − 20) / 0,5 = 8 A' },
+      { t: 'num', q: 'K_t = 0,05 Nm/A olan motor 8 A çekiyor. Ürettiği tork kaç Nm?', a: 0.4, u: 'Nm',
+        e: 'SI birimlerinde K_t ve K_e sayısal olarak eşittir.', f: 'T = K_t · I = 0,05 × 8 = 0,4 Nm' },
+      { t: 'mc', q: 'DC motor kalkışta neden en yüksek akımı çeker?', o: ['Hız sıfırken zıt EMK sıfırdır, akımı yalnız R_a sınırlar', 'Sargı soğuk olduğu için', 'Mıknatıs zayıf olduğu için', 'Fırçalar kısa devre olduğu için'], a: 0,
+        e: 'Sürücünün akım sınırı ve sigorta seçimi kalkış ve kilitli rotor akımına göre yapılır.', f: 'I_kalkış = V / R_a' },
+      { t: 'mc', q: 'Fırçalı DC motorun dönüş yönü nasıl değiştirilir?', o: ['Uç geriliminin polaritesi ters çevrilir', 'Gerilim artırılır', 'Frekans değiştirilir', 'Fırçalar çıkarılır'], a: 0,
+        e: 'Akım yönü değişince tork yönü de değişir. H köprüsü bunu elektronik olarak yapar.', f: 'T = K_t · I, I < 0 → T < 0' },
+      { t: 'num', q: '3000 rpm kaç rad/s eder?', a: 3000 * 2 * Math.PI / 60, u: 'rad/s',
+        e: 'Bir tur 2π radyan, bir dakika 60 saniyedir.', f: 'ω = 3000 × 2π / 60 = 314 rad/s' } ] },
+    { name: 'BLDC ve asenkron', z: 2, qs: [
+      { t: 'num', q: '4 kutuplu asenkron motor 50 Hz şebekede. Senkron hız kaç rpm?', a: 1500, u: 'rpm',
+        e: 'Döner alan, kutup çifti başına bir elektriksel periyotta bir tur atar.', f: 'n_s = 120 f / P = 120 × 50 / 4 = 1500 rpm' },
+      { t: 'num', q: 'Aynı motor yükte 1440 rpm dönüyor. Kayma yüzde kaç?', a: 4, u: '%',
+        e: 'Rotor alandan biraz yavaş döner; bu fark rotorda akım ve tork oluşturur.', f: 's = (1500 − 1440) / 1500 = %4' },
+      { t: 'num', q: '7 kutup çiftli BLDC motor 3000 rpm dönüyor. Elektriksel frekans kaç Hz?', a: 350, u: 'Hz',
+        e: 'Sürücü, mekanik hızın kutup çifti katı frekansla komütasyon yapar.', f: 'f_e = p · n / 60 = 7 × 3000 / 60 = 350 Hz' },
+      { t: 'mc', q: 'Üç Hall sensörlü BLDC motorda konum çözünürlüğü kaç elektriksel derecedir?', o: ['60°', '120°', '30°', '1°'], a: 0,
+        e: 'Üç sensör altı farklı durum verir: 360° / 6. 6 adımlı sürüş için yeterlidir, FOC için ara değer tahmini gerekir.', f: '360° / 6 = 60°' },
+      { t: 'num', q: 'Kv = 1000 rpm/V olan motor 11,1 V\'ta yüksüz yaklaşık kaç rpm döner?', a: 11100, u: 'rpm',
+        e: 'Kv, yüksüz hızın gerilime oranıdır. Yük altında hız düşer.', f: 'n = 1000 × 11,1 = 11 100 rpm' },
+      { t: 'num', q: '1,8° adım açılı step motor 1/16 mikro adımla sürülüyor. Bir tur kaç mikro adımdır?', a: 3200, u: 'adım',
+        e: 'Tam adımda tur 360/1,8 = 200 adımdır; mikro adım bunu böler.', f: '200 × 16 = 3200' } ] },
+    { name: 'Sürücü ve verim', z: 3, qs: [
+      { t: 'num', q: '48 V motorun sargı direnci 0,4 Ω. Akım sınırı olmayan bir sürücüde kalkış akımı kaç A olur?', a: 120, u: 'A',
+        e: 'Bu yüzden sürücülerde donanımsal akım sınırı ve yumuşak kalkış vardır.', f: 'I = 48 / 0,4 = 120 A' },
+      { t: 'num', q: 'DC motor 24 V\'ta 8 A çekiyor, R_a = 0,5 Ω. Yalnız bakır kaybı hesaba katılırsa verim yüzde kaç?', a: (192 - 32) / 192 * 100, u: '%',
+        e: 'Gerçek verim sürtünme ve demir kayıplarıyla daha düşüktür; bu bir üst sınırdır.', f: 'P_in = 192 W, P_cu = 8² × 0,5 = 32 W → η = 160 / 192 = %83,3' },
+      { t: 'num', q: 'Kv = 100 rpm/V olan motorun tork sabiti (DC bara akımı tanımıyla) kaç mNm/A?', a: 60 / (2 * Math.PI * 100) * 1000, u: 'mNm/A',
+        e: 'K_e\'yi rad/s cinsine çevir. SI\'da K_t = K_e. Sinüs akım tanımında sayı biraz farklı çıkar; datasheet\'in tanımına bak.', f: 'K_t = 60 / (2π Kv) = 0,0955 Nm/A = 95,5 mNm/A' },
+      { t: 'mc', q: 'Yüzey mıknatıslı motorda (SPMSM) FOC ile torku doğrudan hangi akım bileşeni belirler?', o: ['i_q', 'i_d', 'i_α', 'Faz akımlarının toplamı'], a: 0,
+        e: 'i_q mıknatıs akısına dik bileşendir. i_d normalde sıfır tutulur; alan zayıflatmada negatif yapılır.', f: 'T = 3/2 · p · λ_m · i_q' },
+      { t: 'num', q: 'Eylemsizliği 2×10⁻³ kg·m² olan rotor 300 rad/s dönüyor. Durana kadar geri kazanılabilecek en fazla enerji kaç J?', a: 0.5 * 2e-3 * 300 * 300, u: 'J',
+        e: 'Bu enerji frenlemede bus\'a döner. Batarya alamıyorsa fren direncinde yakılmalıdır.', f: 'E = ½ J ω² = 0,5 × 2×10⁻³ × 90 000 = 90 J' },
+      { t: 'mc', q: 'Asenkron motoru düşük frekansta sürerken gerilim neden frekansla birlikte düşürülür (V/f)?', o: ['Akıyı sabit tutup çekirdeğin doymasını önlemek için', 'Hızı artırmak için', 'Kayma sıfır olsun diye', 'Rotor akımını sıfırlamak için'], a: 0,
+        e: 'Akı, gerilimin frekansa oranıyla orantılıdır. Çok düşük frekansta sargı direnci düşümü için gerilim biraz artırılır (boost).', f: 'Φ ∝ V / f' } ] } ] }
+);
+
+// Ek simülasyonlar
+Object.assign(SIMS, {
+  opamp: { s: [['R1', 'R1', 1, 20, 0.5, 10, 'kΩ'], ['RF', 'R_F', 10, 200, 1, 10, 'kΩ']],
+    calc: v => ({ Vo: Math.min(12, 0.5 * (1 + v.RF / v.R1)) }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V']], glow: r => r.Vo / 12,
+    warn: r => r.Vo >= 12 ? 'Çıkış +12 V beslemede doydu.' : '' },
+  buck: { s: [['V', 'Giriş', 8, 24, 0.5, 24, 'V'], ['D', 'Görev oranı', 10, 90, 1, 50, '%']],
+    calc: v => ({ Vo: v.V * v.D / 100 }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V']], glow: r => r.Vo / 12 },
+  hb: { s: [['V', 'Bus gerilimi', 12, 48, 1, 48, 'V'], ['D', 'Görev oranı', 0, 100, 1, 10, '%']],
+    calc: v => ({ Vm: (2 * v.D / 100 - 1) * v.V }), key: 'Vm', min: 9.3, max: 9.9, out: [['Vm', 'Motor ortalaması', 'V']], glow: r => Math.abs(r.Vm) / 48 }
+});
+
+const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, z: l.z, qs: l.qs })));
+const QUESTIONS = Object.fromEntries(LESSONS.flatMap(l => l.qs.map((q, k) => [`${l.id}-${k + 1}`, { ...q, z: l.z }])));
+const ZN = ['', 'Kolay', 'Orta', 'Zor'];
 
 
 
-const XP_RIGHT = 4, XP_FINISH = 10, XP_PERFECT = 6, GOAL = 30;
+const XP_Z = [0, 4, 6, 8], XP_RIGHT = 4, XP_FINISH = 10, XP_PERFECT = 6, GOAL = 30;
 
 // Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
 const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
@@ -501,12 +917,13 @@ function addXp(s, n, today) {
   s.dayXp += n; s.xp += n;
 }
 
-function record(s, id, type, right, today) {
+function record(s, id, type, right, today, z = 1) {
   const i = s.wrong.indexOf(id);
   if (!right) { if (i < 0) s.wrong.push(id); return; }
   s.ok[type] = (s.ok[type] || 0) + 1;
+  s.ok['z' + z] = (s.ok['z' + z] || 0) + 1;
   if (i >= 0) { s.wrong.splice(i, 1); s.fixed++; }
-  addXp(s, XP_RIGHT, today);
+  addXp(s, XP_Z[z], today);
 }
 
 function finishLesson(s, lid, right, total, today) {
@@ -549,7 +966,8 @@ const BADGES = [
   ['Arıza avcısı', '7 arıza bul', s => (s.ok.ariza || 0) >= 7],
   ['Tamirci', 'Tekrar\'da 10 yanlışı düzelt', s => s.fixed >= 10],
   ['Beş yüz', '500 XP topla', s => s.xp >= 500],
-  ['Tam devre', '15 dersin hepsini bitir', s => Object.keys(s.done).length >= 15]
+  ['Zor iş', 'Zor düzeyde 20 soru çöz', s => (s.ok.z3 || 0) >= 20],
+  ['Tam devre', '38 dersin hepsini bitir', s => Object.keys(s.done).length >= 38]
 ];
 
 
@@ -598,37 +1016,62 @@ const SYM = {
   LED: '<path class="ln" d="M-22 0h12M10 0h12M10-11v22M-10-11L10 0-10 11zM-2-14l7-9M6-13l7-9"/><path class="fl" d="M7-25l-5 2 3 3zM15-24l-5 2 3 3z"/>',
   Z: '<path class="ln" d="M-22 0h12M10 0h12M5-13l5 3v20l5 3"/><path class="fl" d="M-10-11L10 0-10 11z"/>',
   L: '<path class="ln" d="M-22 0h7M15 0h7M-10-10l20 20M10-10l-20 20"/><circle class="ln" r="15"/>',
-  S: '<path class="ln" d="M-22 0h6M16 0h6M-16 0L16-3"/><circle class="fl" cx="-16" r="3.500"/><circle class="fl" cx="16" r="3.500"/>'
+  S: '<path class="ln" d="M-22 0h6M16 0h6M-16 0L16-3"/><circle class="fl" cx="-16" r="3.500"/><circle class="fl" cx="16" r="3.500"/>',
+  SO: '<path class="ln" d="M-22 0h6M16 0h6M-16 0L13-15"/><circle class="fl" cx="-16" r="3.500"/><circle class="fl" cx="16" r="3.500"/>',
+  I: '<path class="ln" d="M-22 0a5.500 5.500 0 0 1 11 0a5.500 5.500 0 0 1 11 0a5.500 5.500 0 0 1 11 0a5.500 5.500 0 0 1 11 0"/>',
+  F: '<path class="ln" d="M-22 0h44M-16-7h32v14h-32z"/>',
+  M: '<path class="ln" d="M-22 0h5M17 0h5"/><circle class="ln" r="17"/>'
+};
+// Bloklar: [tip, x, y, seçenek, 0, etiket, kimlik]. Q/QP: baz (x,y), kollektör/emetör (x+40, y±28).
+// NM: gate (x,y), drain (x+34,y-30), source (x+34,y+30); seçenek 1 aynalar. O: girişler (x,y±16), çıkış (x+56,y); seçenek 1 → üst giriş "+".
+const bjtBody = (x, y) => `<path class="ln" d="M${x} ${y}h14M${x + 14} ${y - 17}v34M${x + 14} ${y - 8}l26-20M${x + 14} ${y + 8}l26 20"/>`;
+const BLOCK = {
+  Q: (x, y) => [bjtBody(x, y) + `<path class="fl" d="M${x + 40} ${y + 28}l-11-2 6-8z"/>`, x + 4, y - 30, 44, 60, x + 46, y, 'start'],
+  QP: (x, y) => [bjtBody(x, y) + `<path class="fl" d="M${x + 17} ${y - 10}l5-9 6 8z"/>`, x + 4, y - 30, 44, 60, x + 46, y, 'start'],
+  NM: (x, y, m) => [`<g transform="translate(${x} ${y})${m ? ' scale(-1 1)' : ''}"><path class="ln" d="M0 0h12M12-14v28M18-18v10M18-5v10M18 8v10M18-13h16v-17M18 13h16v17M18 0h16v13M34-24h16v48h-16M44-5h12"/><path class="fl" d="M19 0l8-4v8zM50-5l-6 10h12z"/></g>`, m ? x - 60 : x, y - 30, 60, 60, m ? x - 4 : x + 4, y - 24, m ? 'start' : 'end'],
+  O: (x, y, f) => [`<path class="ln" d="M${x} ${y - 34}V${y + 34}L${x + 56} ${y}z"/><path class="ln" d="M${x + 6} ${y - 16}h10M${x + 6} ${y + 16}h10M${x + 11} ${y + (f ? -21 : 11)}v10"/>`, x - 2, y - 36, 60, 72, x + 34, y + 36, 'start'],
+  X: (x, y, w, h, t) => [`<rect class="ln" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/>` + label(t, x + w / 2, y + h / 2, 'middle')],
+  TR: (x, y, x2, y2) => [`<path class="ln" d="M${x} ${y}v8a8 8 0 0 1 0 16a8 8 0 0 1 0 16a8 8 0 0 1 0 16a8 8 0 0 1 0 16v8M${x2} ${y}v8a8 8 0 0 0 0 16a8 8 0 0 0 0 16a8 8 0 0 0 0 16a8 8 0 0 0 0 16v8M${(x + x2) / 2 - 2} ${y + 8}V${y2 - 8}M${(x + x2) / 2 + 2} ${y + 8}V${y2 - 8}"/><circle class="fl" cx="${x - 9}" cy="${y + 12}" r="3"/><circle class="fl" cx="${x2 + 9}" cy="${y2 - 12}" r="3"/>`]
 };
 
 // pick: kimlikli elemanlar seçilebilir. glow: LED/lamba parlaklığı (0–1).
+// Etiket yönü e[7]: l, r, t, b. ['VB', genişlik, yükseklik, x0] görünüm kutusunu elle verir.
 function circuit(els, { pick = false, glow = null } = {}) {
   let wires = '', parts = '';
-  const xs = els.flatMap(e => e[0] === 'T' ? [] : e[0] === 'N' || e[0] === 'G' || e[0] === 'Q' ? [e[1]] : [e[1], e[3]]);
-  const ys = els.flatMap(e => e[0] === 'T' || e[0] === 'Q' ? [] : e[0] === 'G' ? [e[2] + 12] : e[0] === 'N' ? [e[2]] : [e[2], e[4]]);
-  const verts = els.filter(e => SYM[e[0].replace('-', '')] && e[1] === e[3]).map(e => e[1]);
-  const maxX = Math.max(...xs), right = Math.max(...verts);
+  const two = els.filter(e => SYM[e[0].replace('-', '')]), vb = els.find(e => e[0] === 'VB');
+  const xs = els.flatMap(e => e[0] === 'W' || two.includes(e) ? [e[1], e[3]] : e[0] === 'T' || e[0] === 'VB' ? [] : [e[1]]);
+  const ys = els.flatMap(e => e[0] === 'W' || two.includes(e) ? [e[2], e[4]] : e[0] === 'G' ? [e[2] + 12] : e[0] === 'N' ? [e[2]] : []);
+  const verts = two.filter(e => e[1] === e[3]).map(e => e[1]), maxX = Math.max(...xs), right = Math.max(...verts), hasQ = els.some(e => e[0] === 'Q');
   // En sağdaki dikey elemanın solunda yer varsa etiketi içeri yazılır.
-  const inward = verts.length === 2 && !els.some(e => e[0] === 'Q') && right > 200;
-  for (const [t0, x1, y1, x2, y2, txt = '', id] of els) {
+  const inward = !vb && verts.length === 2 && !hasQ && right > 200;
+  const wrap = (id, name, x, y, w, h, body) => pick && id ? `<g class="part" role="radio" aria-checked="false" tabindex="0" data-id="${esc(id)}" aria-label="${esc(name)}"><rect class="hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/>${body}</g>` : body;
+  for (const [t0, x1, y1, x2, y2, txt = '', id, side] of els) {
+    const name = txt.replace(/\n/g, ' ').replace('|', ', ölçülen ');
+    if (t0 === 'VB') continue;
     if (t0 === 'W') { wires += `<path class="ln" d="M${x1} ${y1}L${x2} ${y2}"/>`; continue; }
     if (t0 === 'N') { wires += `<circle class="fl" cx="${x1}" cy="${y1}" r="4"/>`; continue; }
     if (t0 === 'G') { wires += `<path class="ln" d="M${x1} ${y1}v6m-12 0h24m-19 5h14m-9 5h4"/>`; continue; }
-    if (t0 === 'T') { wires += label(txt, x1, y1, txt[0] === '|' ? 'start' : 'middle'); continue; }
-    if (t0 === 'Q') { wires += `<path class="ln" d="M${x1} ${y1}h14M${x1 + 14} ${y1 - 17}v34M${x1 + 14} ${y1 - 8}l26-20M${x1 + 14} ${y1 + 8}l26 20"/><path class="fl" d="M${x1 + 40} ${y1 + 28}l-11-2 6-8z"/>`; continue; }
+    if (t0 === 'P') { wires += `<circle class="ln" cx="${x1}" cy="${y1}" r="4"/>` + (side === 't' ? label(txt, x1, y1 - 16, 'middle') : label(txt, x1 + (side === 'l' ? -9 : 9), y1, side === 'l' ? 'end' : 'start')); continue; }
+    if (t0 === 'T') { wires += label(txt, x1, y1, side === 'l' ? 'end' : side === 'r' || (txt[0] === '|' && !side) ? 'start' : 'middle'); continue; }
+    if (BLOCK[t0]) {
+      const [g, hx, hy, hw, hh, lx, ly, an] = BLOCK[t0](x1, y1, x2, y2, txt);
+      parts += wrap(id, name, hx, hy, hw, hh, g + (lx !== undefined && txt ? label(txt, lx, ly, an) : ''));
+      continue;
+    }
     const rev = t0.endsWith('-'), t = rev ? t0.slice(0, -1) : t0, horiz = y1 === y2, h = Math.hypot(x2 - x1, y2 - y1) / 2;
-    const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2, ang = Math.round(Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI) + (rev ? 180 : 0), left = !horiz && inward && x1 === right;
+    const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2, ang = Math.round(Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI) + (rev ? 180 : 0), left = !horiz && (side === 'l' || (inward && x1 === right && !side));
     let lab;
-    if (horiz) { const [a, m] = txt.split('|'); lab = label(a.replace('\n', ' '), cx, cy - (t === 'LED' ? 36 : 22), 'middle') + (m ? label('|' + m, cx, cy + 24, 'middle') : ''); }
-    else lab = label(txt, left ? cx - (rev ? 38 : 26) : cx + (t === 'LED' && !rev ? 30 : 22), cy, left ? 'end' : 'start');
+    if (horiz) {
+      const [a, m] = txt.split('|'), below = side === 'b';
+      lab = label(a.replace('\n', ' '), cx, cy + (below ? 24 : t === 'LED' ? -36 : t === 'M' ? -28 : -22), 'middle') + (m ? label('|' + m, cx, cy + (below ? 41 : t === 'M' ? 30 : 24), 'middle') : '');
+    } else lab = label(txt, left ? cx - (rev ? 38 : 26) : cx + (t === 'LED' && !rev ? 30 : t === 'M' ? 24 : 22), cy, left ? 'end' : 'start');
     const lit = glow !== null && (t === 'LED' || t === 'L') ? `<circle cx="${cx}" cy="${cy}" r="${16 + 14 * glow}" fill="var(--led)" opacity="${.85 * glow}"/>` : '';
-    const body = `${lit}<g transform="translate(${cx} ${cy}) rotate(${ang})"><path class="ln" d="M${-h} 0H-22M22 0H${h}"/>${SYM[t]}</g>${lab}`;
-    if (!pick || !id) { parts += body; continue; }
-    const hw = Math.min(h - 3, 52), hh = horiz ? 36 : Math.min(h - 3, 42), bx = horiz ? cx - hw : left ? cx - 82 : cx - 22, bw = horiz ? hw * 2 : left ? 104 : els.some(e => e[0] === 'Q') ? 96 : 78;
-    const name = txt.replace(/\n/g, ' ').replace('|', ', ölçülen ') + (rev ? ', ters yönde' : '');
-    parts += `<g class="part" role="radio" aria-checked="false" tabindex="0" data-id="${esc(id)}" aria-label="${esc(name)}"><rect class="hit" x="${bx}" y="${cy - hh}" width="${bw}" height="${hh * 2}" rx="8"/>${body}</g>`;
+    const body = `${lit}<g transform="translate(${cx} ${cy}) rotate(${ang})"><path class="ln" d="M${-h} 0H-22M22 0H${h}"/>${SYM[t]}</g>${t === 'M' ? `<text x="${cx}" y="${cy + 5}" text-anchor="middle">M</text>` : ''}${lab}`;
+    const hw = Math.min(h - 3, 52), hh = horiz ? 36 : Math.min(h - 3, 42);
+    parts += wrap(id, name + (rev ? ', ters yönde' : ''), horiz ? cx - hw : left ? cx - 82 : cx - 22, cy - hh, horiz ? hw * 2 : left ? 104 : hasQ ? 96 : 78, hh * 2, body);
   }
-  return `<svg class="ckt" viewBox="0 0 ${Math.max(300, maxX + (right === maxX && !inward ? 70 : 34))} ${Math.max(...ys) + 20}" ${pick ? 'role="radiogroup" aria-label="Devre elemanları"' : 'role="img" aria-label="Devre şeması"'}>${wires}${parts}</svg>`;
+  const box = vb ? `${vb[3] || 0} 0 ${vb[1]} ${vb[2]}` : `0 0 ${Math.max(300, maxX + (right === maxX && !inward ? 70 : 34))} ${Math.max(...ys) + 20}`;
+  return `<svg class="ckt" viewBox="${box}" ${pick ? 'role="radiogroup" aria-label="Devre elemanları"' : 'role="img" aria-label="Devre şeması"'}>${wires}${parts}</svg>`;
 }
 
 const HEX = { siyah: '#1c1c1c', kahverengi: '#7a4520', 'kırmızı': '#cf2a27', turuncu: '#f0821e', 'sarı': '#f4d11f', 'yeşil': '#2e9a44', mavi: '#2a5fc4', mor: '#8339b0', gri: '#8b8f92', beyaz: '#f7f7f7', 'altın': '#c9a227', 'gümüş': '#c3c7ca' };
@@ -659,6 +1102,9 @@ const navBar = cur => `<nav aria-label="Ana gezinme">${[['ana', 'Dersler', ICON.
 // Üniteler açık; ünite içinde dersler sırayla açılır.
 const unlocked = l => { const j = +l.id.split('-')[1]; return j === 1 || `${l.unit + 1}-${j - 1}` in S.done; };
 
+// Pedler sırayla x = 32 ve 88'e, 96 px arayla dizilir.
+const roadPath = n => { let d = 'M32 48'; for (let k = 1; k < n; k++) d += `V${96 * k - 24}L${k % 2 ? 88 : 32} ${96 * k + 32}V${96 * k + 48}`; return d; };
+
 function home() {
   const t = dayNum(), x = todayXp(S, t), st = liveStreak(S, t), nx = LESSONS.find(l => !(l.id in S.done));
   const [hi, sub] = !S.xp ? ['Merhaba, ben Pırıl', 'İlk derste yükten başlıyoruz.'] : x >= GOAL ? ['Bugünkü hedef tamam', 'İstersen bir ders daha çöz.']
@@ -667,18 +1113,19 @@ function home() {
   <div class="hello">${mascot(x >= GOAL ? 'iyi' : 'normal')}<div><h1 tabindex="-1">${hi}</h1><p>${sub}</p></div></div>
   ${UNITS.map((u, i) => {
     const ls = LESSONS.filter(l => l.unit === i);
-    return `<section class="pcb"><header><b aria-hidden="true">U${i + 1}</b><h2>${u.name}</h2><small>${ls.filter(l => l.id in S.done).length}/3</small></header>
-    <div class="road"><svg viewBox="0 0 150 288" aria-hidden="true"><path d="M32 48V72L88 128V160L32 216V240" fill="none" stroke="var(--copper)" stroke-width="7" stroke-linejoin="round"/></svg>
+    return `<section class="pcb"><header><b aria-hidden="true">U${i + 1}</b><h2>${u.name}</h2><small>${ls.filter(l => l.id in S.done).length}/${ls.length}</small></header>
+    <div class="road"><svg viewBox="0 0 150 ${96 * ls.length}" height="${96 * ls.length}" aria-hidden="true"><path d="${roadPath(ls.length)}" fill="none" stroke="var(--copper)" stroke-width="7" stroke-linejoin="round"/></svg>
     ${ls.map((l, j) => {
       const done = l.id in S.done, open = unlocked(l);
-      return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="ders-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${l.qs.length} soru` : 'Önceki dersi bitir'}</small></em></button>`;
+      return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="ders-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${ZN[l.z]} · ${l.qs.length} soru` : `${ZN[l.z]} · önceki dersi bitir`}</small></em></button>`;
     }).join('')}</div></section>`;
   }).join('')}</main>${navBar('ana')}`;
 }
 
+const byZ = z => Object.keys(QUESTIONS).filter(id => QUESTIONS[id].z === z);
 function review() {
   const n = S.wrong.length;
-  return `<main class="scr"><h1 tabindex="-1">Tekrar</h1>${n ? `<p>${n} soru seni bekliyor. Doğru cevaplayana kadar burada kalırlar.</p><button class="btn" data-go="tekrar-coz">Tekrara başla</button>
+  return `<main class="scr"><h1 tabindex="-1">Tekrar</h1><h2>Zorluğa göre çalış</h2><p class="note">Seçtiğin düzeyden karışık 8 soru gelir.</p><div class="lvl">${[1, 2, 3].map(z => `<button data-go="pratik-${z}">${ZN[z]}<small>${byZ(z).length} soru</small></button>`).join('')}</div><h2>Yanlışların</h2>${n ? `<p>${n} soru seni bekliyor. Doğru cevaplayana kadar burada kalırlar.</p><button class="btn" data-go="tekrar-coz">Tekrara başla</button>
   <ul class="list">${S.wrong.map(id => `<li>${tx(QUESTIONS[id].q)}<small>${LESSONS.find(l => id.startsWith(l.id + '-')).name}</small></li>`).join('')}</ul>`
     : `<div class="end">${mascot('iyi')}<h2>Bekleyen soru yok</h2><p>Derslerde yanlış yaptığın sorular burada birikir.</p></div>`}</main>${navBar('tekrar')}`;
 }
@@ -695,7 +1142,7 @@ function profile() {
 /* ---------- Soru oturumu ---------- */
 let C = null; // etkin oturum; lid yoksa Tekrar
 const KIND = { mc: 'Çoktan seçmeli', num: 'Hesapla', oku: 'Renk kodu', kur: 'Renk kodu', ariza: 'Arızayı bul', sira: 'Sırala', sim: 'Simülasyon' };
-function start(ids, lid) { C = { queue: [...ids], total: ids.length, n: 0, right: 0, lid, xp0: S.xp, had: BADGES.map(b => b[2](S)) }; question(); }
+function start(ids, lid, practice) { C = { queue: [...ids], total: ids.length, n: 0, right: 0, lid, practice, xp0: S.xp, had: BADGES.map(b => b[2](S)) }; question(); }
 const answer = (v, ready = true) => { C.ans = v; $('#ok').disabled = !ready; };
 const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>` : '';
 const optList = (q, badge) => `<div class="opts">${C.perm.map(i => `<button class="opt" aria-pressed="false" data-i="${i}">${badge ? '<kbd></kbd>' : ''}<span>${tx(q.o[i])}</span></button>`).join('')}</div>`;
@@ -749,13 +1196,16 @@ const SIMVIEW = {
   led: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['R', 'R', `${fmt(v.R)} Ω`], ['LED', 'LED', '2 V']]), { glow }),
   bolucu: v => circuit([...loop('12 V', [['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R2', `${fmt(v.R2)} kΩ`]]), ['N', 280, 40], ['N', 280, 180]]),
   rc: (v, r) => rcCurve(r.T),
-  bjt: (v, r, glow) => circuit(bjtFixed(`${fmt(v.RB)} kΩ`, `${fmt(v.RC)} kΩ`, 'L'), { glow })
+  bjt: (v, r, glow) => circuit(bjtFixed(`${fmt(v.RB)} kΩ`, `${fmt(v.RC)} kΩ`, 'L'), { glow }),
+  opamp: v => circuit(opNon(['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R_F', `${fmt(v.RF)} kΩ`], { vi: 'V_i\n0,5 V' })),
+  buck: v => circuit(buck({ vin: `${fmt(v.V)} V`, t: `|D = %${fmt(v.D)}` })),
+  hb: v => circuit(hbridge({ m: `D = %${fmt(v.D)}` }))
 };
 
 function question() {
   const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false;
   app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
-  <div><p class="kind">${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
+  <div><p class="kind">${ZN[q.z]} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
   $('#ok').onclick = check;
   focusTop();
@@ -766,7 +1216,7 @@ function check() {
   const q = C.q, id = C.queue[0], ok = grade(q, C.ans, SIMS);
   if (ok === null) { const e = $('#nerr'); e.textContent = 'Bunu sayı olarak okuyamadım. Yalnızca rakam yaz, örneğin 2,5.'; e.className = 'note err'; $('#n').focus(); return; }
   C.checked = true; C.queue.shift();
-  record(S, id, q.t, ok, dayNum());
+  record(S, id, q.t, ok, dayNum(), q.z);
   if (ok) C.right++;
   if (ok || C.lid) C.n++; else C.queue.push(id); // Tekrar'da yanlış soru kuyruğun sonuna döner
   if (C.lid && !C.queue.length) finishLesson(S, C.lid, C.right, C.total, dayNum());
@@ -779,14 +1229,14 @@ function check() {
   const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
   const foot = $('.foot');
   foot.className = 'foot ' + (ok ? 'good' : 'bad');
-  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_RIGHT} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_Z[q.z]} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
   $('#nx').onclick = () => C.queue.length ? question() : finish();
   $('#nx').focus({ preventScroll: true });
 }
 
 function finish() {
   const t = dayNum(), wrong = C.lid ? C.total - C.right : 0, fresh = BADGES.filter((b, i) => !C.had[i] && b[2](S));
-  app.innerHTML = `<main class="scr"><div class="end">${mascot(wrong < 3 ? 'iyi' : 'normal')}<h1 tabindex="-1">${!C.lid ? 'Tekrar temizlendi' : wrong ? 'Ders tamam' : 'Hatasız bitirdin'}</h1>
+  app.innerHTML = `<main class="scr"><div class="end">${mascot(wrong < 3 ? 'iyi' : 'normal')}<h1 tabindex="-1">${!C.lid ? (C.practice ? 'Antrenman tamam' : 'Tekrar temizlendi') : wrong ? 'Ders tamam' : 'Hatasız bitirdin'}</h1>
   <dl class="tbl"><dt>Kazanılan</dt><dd>${S.xp - C.xp0} XP</dd>${C.lid ? `<dt>Doğru</dt><dd>${C.right} / ${C.total}</dd>` : ''}<dt>Bugün</dt><dd>${todayXp(S, t)} / ${GOAL} XP</dd><dt>Seri</dt><dd>${liveStreak(S, t)} gün</dd>${fresh.map(b => `<dt>Yeni rozet</dt><dd>${b[0]}</dd>`).join('')}</dl></div></main>
   <div class="foot">${wrong ? '<button class="btn" data-go="tekrar-coz">Yanlışları tekrar et</button><button class="btn alt" data-go="ana">Derslere dön</button>' : '<button class="btn" data-go="ana">Derslere dön</button>'}</div>`;
   focusTop();
@@ -797,6 +1247,8 @@ function route() {
   const h = location.hash.slice(1), l = LESSONS.find(x => 'ders-' + x.id === h);
   if (l && unlocked(l)) return start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
   if (h === 'tekrar-coz' && S.wrong.length) return start(S.wrong, null);
+  const pz = /^pratik-([123])$/.exec(h);
+  if (pz) { const ids = byZ(+pz[1]), p = shuffle(ids.length).slice(0, 8); return start(p.map(i => ids[i]), null, true); }
   C = null;
   app.innerHTML = h === 'profil' ? profile() : h.startsWith('tekrar') ? review() : home();
   focusTop();
