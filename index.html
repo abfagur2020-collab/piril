@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef3ee"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1c1a">
+<meta name="description" content="Günde 3 dakikalık elektronik dersleri">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px)}</style>
+<title>Pırıl Elektronik</title>
+<style>
+/* Düzen: ana sayfada her ünite bir baskı devre kartı, dersler bakır yolla bağlı lehim pedleri. Diğer ekranlar sade. */
+:root{
+  --bg:#eef3ee; --card:#fff; --ink:#12302c; --soft:#4b6661; --line:#c9d6cf;
+  --mask:#15564c; --mask2:#0f463e; --silk:#eaf5ee; --copper:#d08a4a; --tin:#c9d4d0;
+  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc;
+  --disp:"Roboto Condensed","sans-serif-condensed","Arial Narrow","Segoe UI",sans-serif;
+  --body:Roboto,"Segoe UI",system-ui,sans-serif; --mono:"Roboto Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
+  --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
+  --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input{font:inherit;color:inherit;touch-action:manipulation}
+button{user-select:none;-webkit-user-select:none;cursor:pointer;border:0;background:none;padding:0}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1:focus{outline:none}
+h1,h2{font-family:var(--disp);line-height:1.2;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:26px}
+h2{font-size:20px}
+p{margin:0}
+sub{font-size:.72em;line-height:0}
+#app{--gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));max-width:520px;margin:0 auto;
+  min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.scr{flex:1;display:flex;flex-direction:column;gap:16px;padding-block:16px;min-width:0}
+
+/* Alt gezinme */
+nav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg);border-top:1px solid var(--line);
+  margin-inline:calc(-1*var(--gl)) calc(-1*var(--gr));padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;color:var(--soft);position:relative}
+nav button[aria-current]{color:var(--ink);font-weight:700}
+nav button[aria-current]::before{content:"";position:absolute;top:-1px;width:44px;height:3px;background:var(--copper)}
+nav button:focus-visible{outline-offset:-4px}
+nav svg{width:24px;height:24px}
+nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radius:10px;padding:0 5px;background:var(--bad);color:var(--bg);font-size:12px;line-height:20px;text-align:center}
+
+/* Durum şeridi */
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;align-items:center}
+.stat span{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat span+span{justify-content:flex-end}
+.stat svg{width:22px;height:22px;flex:none}
+.goal{grid-column:1/-1;font-size:14px;color:var(--soft);display:flex;flex-direction:column;gap:4px}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--led);border-radius:5px;transition:width .3s}
+.hello{display:flex;align-items:center;gap:12px}
+.hello svg{width:84px;flex:none}
+.hello div{min-width:0}
+.hello p{color:var(--soft)}
+
+/* Ünite kartı */
+.pcb{background:var(--mask);color:var(--silk);border-radius:14px;padding:16px;box-shadow:inset 0 0 0 2px var(--mask2);min-width:0}
+.pcb header{display:flex;gap:10px;align-items:baseline;margin-bottom:8px}
+.pcb header b{font:700 14px var(--mono);border:1.5px solid currentColor;padding:0 6px;border-radius:2px}
+.pcb header h2{flex:1;min-width:0}
+.pcb header small{font:13px var(--mono)}
+.road{position:relative}
+.road>svg{position:absolute;left:0;top:0;width:150px;height:288px;pointer-events:none}
+.node{display:flex;align-items:center;gap:14px;width:100%;height:96px;text-align:left;color:inherit;position:relative;border-radius:10px}
+.node:nth-of-type(2){padding-left:56px}
+.node:focus-visible{outline-color:#fff;outline-offset:-3px}
+.pad{width:64px;height:64px;border-radius:50%;background:var(--copper);display:grid;place-items:center;flex:none;transition:transform .12s ease-out}
+.node:active:not([disabled]) .pad{transform:scale(.94)}
+.pad i{width:34px;height:34px;border-radius:50%;background:var(--mask2);display:grid;place-items:center;font:700 16px var(--mono);color:var(--silk)}
+.node.done .pad{background:var(--tin)}
+.node.done .pad i{background:var(--led);color:var(--ledink)}
+.node.next .pad{box-shadow:0 0 0 5px var(--mask),0 0 0 8px var(--led)}
+.node[disabled]{cursor:default}
+.node[disabled] .pad{background:#5c8a7f}
+.node em{font-style:normal;min-width:0}
+.node strong{display:block;font-size:17px;line-height:1.25}
+.node small{font-size:14px}
+
+/* Ders */
+.top{display:flex;align-items:center;gap:8px}
+.top .bar{flex:1}
+.top output{font:14px var(--mono);color:var(--soft)}
+.x{width:44px;height:44px;margin-left:-10px;display:grid;place-items:center;flex:none;border-radius:8px}
+.x svg{width:24px;height:24px}
+.kind{font:13px var(--mono);color:var(--soft)}
+.q{font-family:var(--body);font-size:20px;font-weight:600;line-height:1.35}
+.opts{display:grid;gap:10px}
+.opt{width:100%;min-height:54px;padding:10px 14px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:10px;display:flex;gap:12px;align-items:center;font-size:17px;transition:transform .1s ease-out}
+.opt:active:not([disabled]){transform:scale(.985)}
+.opt[aria-pressed=true]{border-color:var(--copper);background:var(--sel)}
+.opt.good{border-color:var(--good);background:var(--goodbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg)}
+.opt>span{min-width:0}
+.opt kbd{font:700 15px var(--mono);width:30px;height:30px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
+.opt[aria-pressed=true] kbd{background:var(--led);border-color:var(--led);color:var(--ledink)}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+.fig svg{display:block;width:100%;max-width:400px;margin:auto;height:auto}
+.ckt{color:var(--ink);font-family:var(--body);font-size:14px}
+.ckt .ln{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ckt .fl{fill:currentColor}
+.ckt text{fill:currentColor}
+.ckt text.me{fill:var(--bad);font-weight:700;font-family:var(--mono);font-size:13px}
+.ckt .hit{fill:transparent;stroke:var(--line);stroke-width:1.5;stroke-dasharray:4 4}
+.ckt .part{cursor:pointer;outline:none}
+.ckt .part:focus-visible .hit{stroke:var(--focus);stroke-width:3;stroke-dasharray:none}
+.ckt .part[aria-checked=true] .hit{fill:var(--led);fill-opacity:.28;stroke:var(--copper);stroke-dasharray:none;stroke-width:2.5}
+.ckt .part.good .hit{fill:var(--good);fill-opacity:.2;stroke:var(--good);stroke-dasharray:none}
+.ckt .part.bad .hit{fill:var(--bad);fill-opacity:.2;stroke:var(--bad);stroke-dasharray:none}
+.num{display:flex;gap:10px;align-items:center}
+.num input{flex:1;min-width:0;height:56px;font:700 24px var(--mono);padding:0 14px;background:var(--card);border:2px solid var(--line);border-radius:10px}
+.num b{font:700 20px var(--mono)}
+.note{font-size:14px;color:var(--soft)}
+.note.err,.note .err{color:var(--bad);font-weight:600}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slots button{min-height:52px;padding:4px;border:2px solid var(--line);border-radius:10px;background:var(--card);font-size:14px;line-height:1.25}
+.slots button[aria-pressed=true]{border-color:var(--copper);background:var(--sel)}
+.pal{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pal button{min-height:62px;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:8px;min-width:0}
+.pal i{width:40px;height:34px;border-radius:6px;border:1.5px solid var(--soft)}
+.sl{display:grid;grid-template-columns:1fr auto;gap:0 12px}
+.sl b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.sl input{grid-column:1/-1;width:100%;height:44px;margin:0;accent-color:var(--copper)}
+.read{display:flex;gap:8px 28px;flex-wrap:wrap}
+.read div{font-size:14px;color:var(--soft)}
+.read b{display:block;font:700 24px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* Alt eylem ve geri bildirim */
+.foot{position:sticky;bottom:0;z-index:5;display:grid;gap:10px;background:var(--bg);border-top:1px solid var(--line);margin-inline:calc(-1*var(--gl)) calc(-1*var(--gr));
+  padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.foot.good{background:var(--goodbg)}
+.foot.bad{background:var(--badbg)}
+.btn{width:100%;min-height:52px;border-radius:10px;background:var(--led);color:var(--ledink);font-weight:700;font-size:17px;padding:8px 16px;transition:transform .1s ease-out}
+.btn:active:not([disabled]){transform:scale(.98)}
+.btn[disabled]{background:var(--line);color:var(--soft);cursor:default}
+.btn.alt{background:none;border:2px solid var(--line);color:var(--ink)}
+.fb{display:grid;grid-template-columns:72px 1fr;gap:0 12px}
+.fb>svg{width:72px}
+.fb>div{min-width:0;display:grid;gap:4px;align-content:center}
+.foot.good h2{color:var(--good)}
+.foot.bad h2{color:var(--bad)}
+.fb p{font-size:15px;line-height:1.4}
+.fb code{font:14px/1.45 var(--mono);overflow-wrap:anywhere}
+.end{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+.end>svg{width:150px}
+.tbl{display:grid;grid-template-columns:1fr auto;gap:8px 0;margin:0;width:100%;text-align:left}
+dt,dd{padding-bottom:8px;border-bottom:1px solid var(--line);margin:0}
+dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding-left:16px}
+.list{list-style:none;margin:0;padding:0}
+.list li{padding:12px 0;border-bottom:1px solid var(--line)}
+.list small{color:var(--soft);display:block;font-size:14px}
+.bdg{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:16px 12px}
+.bdg li{display:flex;gap:10px;min-width:0;font-size:14px;line-height:1.35;color:var(--soft)}
+.bdg li>span{min-width:0}
+.bdg svg{width:40px;height:40px;flex:none}
+.bdg b{display:block;color:var(--ink);font-size:15px}
+.hop{animation:hop .5s ease-out}
+.glow{animation:glow 2.6s ease-in-out infinite}
+@keyframes hop{0%{transform:translateY(8px)}45%{transform:translateY(-8px)}100%{transform:none}}
+@keyframes glow{50%{opacity:.18}}
+@media (hover:hover) and (pointer:fine){.opt:not([disabled]):hover{border-color:var(--copper)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head><body>
+<div id="app"></div>
+<script>
+// Soru kimliği konumdan gelir (ünite-ders-soru). Yeni soruyu dersin sonuna ekle, yoksa kayıtlı tekrarlar kayar.
+// Devre elemanı: [tip, x1, y1, x2, y2, etiket, kimlik]. Etikette "|" sonrası ölçü değeridir.
+// Tip sonundaki "-" elemanı ters çevirir.
+
+const put = (el, x1, y1, x2, y2) => {
+  const [type, name, value = '', meas = ''] = el;
+  return [type, x1, y1, x2, y2, name + (value ? '\n' + value : '') + (meas ? '|' + meas : ''), name];
+};
+
+// Seri çevrim: kaynak solda, son eleman sağda, kalanlar üstte.
+function loop(v, els) {
+  const top = els.slice(0, -1), last = els[els.length - 1], step = 240 / (top.length || 1);
+  return [
+    ['V', 40, 180, 40, 40, v, 'Kaynak'],
+    ...(top.length ? top.map((e, i) => put(e, 40 + i * step, 40, 40 + (i + 1) * step, 40)) : [['W', 40, 40, 280, 40]]),
+    put(last, 280, 40, 280, 180),
+    ['W', 280, 180, 40, 180]
+  ];
+}
+
+// Paralel kollar: her kol yukarıdan aşağı 1 veya 2 eleman.
+function par(v, branches) {
+  const gap = branches.length > 2 ? 80 : 110, xs = branches.map((_, i) => 40 + gap * (i + 1));
+  const end = xs[xs.length - 1];
+  return [
+    ['V', 40, 180, 40, 40, v, 'Kaynak'],
+    ['W', 40, 40, end, 40], ['W', 40, 180, end, 180],
+    ...branches.flatMap((b, i) => b.map((e, j) => put(e, xs[i], 40 + j * 140 / b.length, xs[i], 40 + (j + 1) * 140 / b.length))),
+    ...xs.slice(0, -1).flatMap(x => [['N', x, 40], ['N', x, 180]])
+  ];
+}
+
+const KARMA = [
+  ['V', 40, 180, 40, 40, '10 V'], ['R', 40, 40, 160, 40, 'R1\n1 kΩ'], ['R', 160, 40, 160, 180, 'R2\n2 kΩ'],
+  ['W', 160, 40, 250, 40], ['R', 250, 40, 250, 180, 'R3\n2 kΩ'], ['W', 40, 180, 250, 180], ['N', 160, 40], ['N', 160, 180]
+];
+const THEVENIN = [
+  ['V', 40, 180, 40, 40, '12 V'], ['R', 40, 40, 190, 40, 'R1\n6 kΩ'], ['R', 190, 40, 190, 180, 'R2\n3 kΩ'],
+  ['W', 190, 40, 285, 40], ['W', 40, 180, 285, 180], ['N', 190, 40], ['N', 190, 180], ['N', 285, 40], ['N', 285, 180],
+  ['T', 296, 45, 0, 0, 'a'], ['T', 296, 185, 0, 0, 'b']
+];
+const ZENER = [
+  ['V', 40, 180, 40, 40, '12 V'], ['R', 40, 40, 165, 40, 'R_S\n330 Ω'], ['Z', 165, 180, 165, 40, 'V_Z\n5,1 V'],
+  ['W', 165, 40, 270, 40], ['R', 270, 40, 270, 180, 'R_L\n1 kΩ'], ['W', 40, 180, 270, 180], ['N', 165, 40], ['N', 165, 180]
+];
+const bjtFixed = (rb, rc, load = 'R') => [
+  ['W', 60, 24, 190, 24], ['T', 100, 16, 0, 0, '+12 V'], ['R', 60, 24, 60, 120, 'R_B\n' + rb], ['W', 60, 120, 150, 120],
+  [load, 190, 24, 190, 92, 'R_C\n' + rc], ['Q', 150, 120], ['W', 190, 148, 190, 196], ['G', 190, 196]
+];
+const bjtDiv = (m = {}) => [
+  ['W', 60, 24, 190, 24], ['T', 100, 16, 0, 0, '+12 V'],
+  ['R', 60, 24, 60, 120, 'R1\n30 kΩ', 'R1'], ['R', 60, 120, 60, 216, 'R2\n10 kΩ', 'R2'], ['W', 60, 120, 150, 120], ['N', 60, 120],
+  ['R', 190, 24, 190, 92, 'RC\n2,2 kΩ', 'RC'], ['Q', 150, 120], ['R', 190, 148, 190, 216, 'RE\n1 kΩ', 'RE'],
+  ['W', 60, 216, 190, 216], ['G', 125, 216],
+  ...(m.vc ? [['T', 224, 104, 0, 0, '|V_C = ' + m.vc], ['T', 224, 146, 0, 0, '|V_E = ' + m.ve], ['T', 84, 136, 0, 0, '|V_B = ' + m.vb]] : [])
+];
+
+const UNITS = [
+  { name: 'Yük, akım, gerilim', lessons: [
+    { name: 'Elektrik yükü', qs: [
+      { t: 'mc', q: 'Elektronun yükü 1,6×10⁻¹⁹ C büyüklüğündedir. 1 C yük kaç elektrona karşılık gelir?', o: ['6,25×10¹⁸', '1,6×10¹⁹', '6,02×10²³', '6,25×10¹⁵'], a: 0,
+        e: 'Toplam yükü tek elektronun yüküne bölersin.', f: 'n = Q / e = 1 / 1,6×10⁻¹⁹ = 6,25×10¹⁸' },
+      { t: 'num', q: 'Bir cisme 3,2 µC yük aktarıldı. Kaç elektron hareket etti? Sonucu ×10¹³ cinsinden yaz.', a: 2, u: '×10¹³',
+        e: 'µC değerini C\'a çevir, sonra elektron yüküne böl.', f: 'n = 3,2×10⁻⁶ / 1,6×10⁻¹⁹ = 2×10¹³' },
+      { t: 'mc', q: 'Metal bir telde akımı hangi parçacıklar taşır?', o: ['Serbest elektronlar', 'Protonlar', 'Atom çekirdekleri', 'Nötronlar'], a: 0,
+        e: 'Çekirdekler kristal örgüde sabittir. Yükü, dış yörüngeden kopmuş serbest elektronlar taşır.', f: 'e = 1,6×10⁻¹⁹ C' },
+      { t: 'sira', q: 'Yükleri küçükten büyüğe sırala.', o: ['500 pC', '20 nC', '3 µC', '0,1 mC'],
+        e: 'Hepsini aynı birime çevir: 0,5 nC, 20 nC, 3000 nC, 100 000 nC.', f: '1 mC = 10³ µC = 10⁶ nC = 10⁹ pC' },
+      { t: 'num', q: 'Üzerinde 2000 mAh yazan tam dolu bir pil toplam kaç C yük verebilir?', a: 7200, u: 'C',
+        e: '1 Ah, 1 A akımın 3600 saniyede taşıdığı yüktür.', f: 'Q = I·t = 2 A × 3600 s = 7200 C' },
+      { t: 'mc', q: 'İki nokta yük arasındaki uzaklık 2 katına çıkarsa aralarındaki kuvvet ne olur?', o: ['Dörtte birine iner', 'Yarıya iner', 'İki katına çıkar', 'Değişmez'], a: 0,
+        e: 'Coulomb kuvveti uzaklığın karesiyle ters orantılıdır.', f: 'F = k·q₁·q₂ / r²' } ] },
+    { name: 'Akım', qs: [
+      { t: 'num', q: 'Bir telin kesitinden 5 saniyede 2 C yük geçiyor. Akım kaç mA?', a: 400, u: 'mA',
+        e: 'Akım, birim zamanda geçen yüktür. Sonucu A\'dan mA\'e çevir.', f: 'I = Q / t = 2 / 5 = 0,4 A = 400 mA' },
+      { t: 'mc', q: 'Pilin dışındaki devrede konvansiyonel akımın yönü nedir?', o: ['+ uçtan − uca', '− uçtan + uca', 'Elektronlarla aynı yönde', 'Sürekli yön değiştirir'], a: 0,
+        e: 'Konvansiyonel akım pozitif yükün yönüdür. Elektronlar tersine, − uçtan + uca gider.', f: 'I yönü = elektron yönünün tersi' },
+      { t: 'num', q: '20 mA akım 1 dakikada kaç C yük taşır?', a: 1.2, u: 'C',
+        e: 'mA\'i A\'e, dakikayı saniyeye çevir.', f: 'Q = I·t = 0,02 × 60 = 1,2 C' },
+      { t: 'mc', q: '3000 mAh\'lik pil 150 mA çeken bir devreyi ideal durumda kaç saat besler?', o: ['20 saat', '2 saat', '45 saat', '4,5 saat'], a: 0,
+        e: 'Kapasiteyi çekilen akıma bölersin.', f: 't = 3000 mAh / 150 mA = 20 h' },
+      { t: 'mc', q: 'Ampermetre devreye nasıl bağlanır ve ideal iç direnci kaçtır?', o: ['Seri, 0 Ω', 'Paralel, 0 Ω', 'Seri, sonsuz', 'Paralel, sonsuz'], a: 0,
+        e: 'Ölçülecek akım ampermetrenin içinden geçmeli ve cihaz bu akımı değiştirmemelidir.', f: 'R_A → 0 Ω, gerilim düşümü → 0 V' },
+      { t: 'sira', q: 'Multimetreyle akım ölçme adımlarını sırala.', o: ['Devrenin enerjisini kes', 'Devreyi ölçülecek noktadan aç', 'Multimetreyi açılan iki uç arasına seri bağla', 'Enerjiyi ver ve değeri oku'],
+        e: 'Akım ölçerken devre açılır ve cihaz yolun parçası olur. Enerji altında bağlantı yapılmaz.', f: 'Ampermetre = seri bağlantı' } ] },
+    { name: 'Gerilim ve güç', qs: [
+      { t: 'num', q: '2 C yükü taşımak için 6 J iş yapılıyor. İki nokta arasındaki gerilim kaç V?', a: 3, u: 'V',
+        e: 'Gerilim, birim yük başına yapılan iştir.', f: 'V = W / Q = 6 / 2 = 3 V' },
+      { t: 'mc', q: 'Bir direncin gerilimini ölçmek için voltmetre nasıl bağlanır ve ideal iç direnci kaçtır?', o: ['Paralel, sonsuz', 'Seri, sonsuz', 'Paralel, 0 Ω', 'Seri, 0 Ω'], a: 0,
+        e: 'Gerilim iki nokta arasında ölçülür. Voltmetre devreden akım çekmemelidir.', f: 'R_V → ∞, I_V → 0' },
+      { t: 'num', q: '12 V\'luk bir fan 0,5 A çekiyor. Gücü kaç W?', a: 6, u: 'W',
+        e: 'Güç, gerilim ile akımın çarpımıdır.', f: 'P = V·I = 12 × 0,5 = 6 W' },
+      { t: 'mc', q: '5 V, 2 A veren bir adaptör 1 saatte kaç Wh enerji aktarır?', o: ['10 Wh', '2,5 Wh', '7 Wh', '20 Wh'], a: 0,
+        e: 'Önce gücü bul, sonra süreyle çarp.', f: 'W = V·I·t = 5 × 2 × 1 h = 10 Wh' },
+      { t: 'ariza', q: 'Anahtar kapalı konumda ama lamba yanmıyor. Ölçülen gerilimlere göre arızalı elemana dokun.', c: loop('9 V', [['S', 'Anahtar', '', '9 V'], ['L', 'Lamba', '', '0 V']]), a: 'Anahtar',
+        e: 'Kapalı bir anahtarın uçlarında 0 V olmalı. Kaynağın tamamı anahtarda görünüyorsa kontak temas etmiyor demektir.', f: 'V_anahtar(kapalı) = 0 V olmalı, ölçülen 9 V' },
+      { t: 'num', q: '3,7 V\'luk pilden 100 mA, 30 dakika boyunca çekiliyor. Harcanan enerji kaç J?', a: 666, u: 'J',
+        e: 'Akımı A\'e, süreyi saniyeye çevir.', f: 'W = V·I·t = 3,7 × 0,1 × 1800 = 666 J' } ] } ] },
+
+  { name: 'Ohm yasası', lessons: [
+    { name: 'V = I·R', qs: [
+      { t: 'num', q: '470 Ω direnç 12 V\'a bağlanıyor. Akım kaç mA?', c: loop('12 V', [['R', 'R', '470 Ω']]), a: 12 / 470 * 1000, u: 'mA',
+        e: 'Akım, gerilimin dirence oranıdır.', f: 'I = V / R = 12 / 470 = 25,5 mA' },
+      { t: 'mc', q: 'Gerilim sabitken direnç iki katına çıkarsa akım ne olur?', o: ['Yarıya iner', 'İki katına çıkar', 'Dörtte birine iner', 'Değişmez'], a: 0,
+        e: 'Sabit gerilimde akım dirençle ters orantılıdır.', f: 'I = V / R' },
+      { t: 'num', q: 'Bir direncin uçlarında 5 V varken içinden 2 mA geçiyor. Direnç kaç kΩ?', a: 2.5, u: 'kΩ',
+        e: 'V\'u mA\'e bölersen sonuç doğrudan kΩ çıkar.', f: 'R = V / I = 5 / 2 mA = 2,5 kΩ' },
+      { t: 'num', q: '3,3 kΩ dirençten 1,5 mA geçiyor. Üzerindeki gerilim kaç V?', a: 4.95, u: 'V',
+        e: 'kΩ ile mA çarpımı doğrudan V verir.', f: 'V = I·R = 1,5 × 3,3 = 4,95 V' },
+      { t: 'sim', sim: 'ohm', q: 'Kaydırıcıları oynat. Lamba akımını 20 mA yap (±1 mA).',
+        e: 'Gerilimi artırmak veya direnci azaltmak akımı büyütür.', f: 'I = V / R, örneğin 10 V / 500 Ω = 20 mA' },
+      { t: 'mc', q: 'Bir direncin I–V grafiğinde (dikey eksen I, yatay eksen V) doğrunun eğimi neye eşittir?', o: ['1 / R', 'R', 'V·I', 'R²'], a: 0,
+        e: 'Eğim ΔI/ΔV, yani iletkenliktir. Dik doğru küçük direnç demektir.', f: 'G = ΔI / ΔV = 1 / R' } ] },
+    { name: 'Direnç renk kodları', qs: [
+      { t: 'oku', q: 'Bu direncin değeri kaç kΩ?', b: ['kahverengi', 'siyah', 'kırmızı', 'altın'], a: 1, u: 'kΩ',
+        e: 'İlk iki bant rakam, üçüncü bant 10\'un kuvvetidir.', f: 'kahverengi 1, siyah 0, kırmızı ×10² → 10 × 100 = 1 kΩ' },
+      { t: 'oku', q: 'Bu direncin değeri kaç Ω?', b: ['sarı', 'mor', 'kahverengi', 'altın'], a: 470, u: 'Ω',
+        e: 'Kahverengi çarpan bandı ×10 demektir.', f: 'sarı 4, mor 7, kahverengi ×10¹ → 47 × 10 = 470 Ω' },
+      { t: 'kur', q: '4,7 kΩ direncin ilk üç bandını seç.', a: ['sarı', 'mor', 'kırmızı'], v: 4700,
+        e: '4700 = 47 × 10². Rakamlar 4 ve 7, kuvvet 2.', f: '4 sarı, 7 mor, ×10² kırmızı' },
+      { t: 'kur', q: '10 kΩ direncin ilk üç bandını seç.', a: ['kahverengi', 'siyah', 'turuncu'], v: 10000,
+        e: '10 000 = 10 × 10³. Rakamlar 1 ve 0, kuvvet 3.', f: '1 kahverengi, 0 siyah, ×10³ turuncu' },
+      { t: 'mc', q: 'Altın tolerans bandı olan 1 kΩ direncin gerçek değeri hangi aralıktadır?', o: ['950–1050 Ω', '900–1100 Ω', '990–1010 Ω', '980–1020 Ω'], a: 0,
+        e: 'Altın bant ±%5 demektir. Gümüş bant ±%10\'dur.', f: '1000 ± 0,05 × 1000 = 950–1050 Ω' },
+      { t: 'oku', q: 'Bu direncin değeri kaç kΩ?', b: ['turuncu', 'turuncu', 'sarı', 'gümüş'], a: 330, u: 'kΩ',
+        e: 'Sarı çarpan bandı ×10⁴ demektir.', f: '33 × 10⁴ = 330 000 Ω = 330 kΩ' } ] },
+    { name: 'Güç ve LED direnci', qs: [
+      { t: 'num', q: '100 Ω direncin uçlarında 10 V var. Harcadığı güç kaç W?', a: 1, u: 'W',
+        e: 'Akımı bilmiyorsan gerilim ve dirençten gücü bulabilirsin.', f: 'P = V² / R = 100 / 100 = 1 W' },
+      { t: 'num', q: '9 V kaynakla, V_F = 2 V olan LED\'i 10 mA ile sürmek için seri direnç kaç Ω olmalı?', c: loop('9 V', [['R', 'R', '?'], ['LED', 'LED', '2 V']]), a: 700, u: 'Ω',
+        e: 'LED gerilimi kaynaktan çıkar, kalan gerilim dirençte düşer.', f: 'R = (9 − 2) / 0,01 = 700 Ω' },
+      { t: 'mc', q: '5 V kaynak, 220 Ω direnç ve V_F = 2 V olan LED seri bağlı. Akım yaklaşık kaç mA?', o: ['13,6 mA', '22,7 mA', '9,1 mA', '31,8 mA'], a: 0,
+        e: 'Dirençte kaynağın tamamı değil, 5 − 2 = 3 V düşer.', f: 'I = (5 − 2) / 220 = 13,6 mA' },
+      { t: 'sim', sim: 'led', q: 'LED\'i 15 mA ile sür (±1 mA). V_F = 2 V.',
+        e: 'LED\'de 2 V düşer, akımı kalan gerilim ve direnç belirler.', f: 'I = (V − 2) / R, örneğin (8 − 2) / 400 = 15 mA' },
+      { t: 'mc', q: '1 kΩ, ¼ W\'lık dirence en fazla yaklaşık kaç V uygulanabilir?', o: ['15,8 V', '4 V', '25 V', '250 V'], a: 0,
+        e: 'Güç sınırını V² / R = P eşitliğinden gerilime çevir.', f: 'V = √(P·R) = √(0,25 × 1000) = 15,8 V' },
+      { t: 'ariza', q: 'LED yanmıyor, devreden akım geçmiyor. Sorunlu elemana dokun.', c: loop('9 V', [['R', 'R', '330 Ω', '0 V'], ['LED-', 'LED', '', '9 V']]), a: 'LED',
+        e: 'Sembolün üçgeni akım yönüne ters bakıyor. Ters kutuplu LED akım geçirmez, kaynağın tamamı üzerinde görünür.', f: 'I = 0 → V_R = 0 V, V_LED = 9 V' } ] } ] },
+
+  { name: 'Seri ve paralel devreler', lessons: [
+    { name: 'Seri devre', qs: [
+      { t: 'num', q: '1 kΩ, 2,2 kΩ ve 4,7 kΩ seri bağlı. Eşdeğer direnç kaç kΩ?', a: 7.9, u: 'kΩ',
+        e: 'Seri dirençler doğrudan toplanır.', f: 'R = 1 + 2,2 + 4,7 = 7,9 kΩ' },
+      { t: 'num', q: 'R2 üzerindeki gerilim kaç V?', c: loop('12 V', [['R', 'R1', '1 kΩ'], ['R', 'R2', '2 kΩ']]), a: 8, u: 'V',
+        e: 'Gerilim, dirençlerle doğru orantılı bölünür.', f: 'V₂ = 12 × 2 / (1 + 2) = 8 V' },
+      { t: 'mc', q: 'Seri bağlı elemanlarda hangisi ortaktır?', o: ['Akım', 'Gerilim', 'Güç', 'Direnç'], a: 0,
+        e: 'Tek yol olduğu için her elemandan aynı akım geçer.', f: 'I₁ = I₂ = I₃' },
+      { t: 'sim', sim: 'bolucu', q: 'Gerilim bölücünün çıkışını 5 V yap (±0,1 V). Giriş 12 V.',
+        e: 'Çıkış, R2\'nin toplam dirençteki payına bağlıdır. 5 V için R2 / (R1 + R2) = 5/12 olmalı.', f: 'V_çıkış = 12 × R2 / (R1 + R2), örneğin R1 = 7 kΩ, R2 = 5 kΩ' },
+      { t: 'ariza', q: 'Dirençlerin her biri 1 kΩ. Ölçülen gerilimlere göre arızalı dirence dokun.', c: loop('12 V', [['R', 'R1', '', '0 V'], ['R', 'R2', '', '12 V'], ['R', 'R3', '', '0 V']]), a: 'R2',
+        e: 'R2 açık devre. Akım akmadığı için sağlam dirençlerde gerilim düşmez, kaynağın tamamı kopuk yerde görünür.', f: 'I = 0 → V₁ = V₃ = 0, V₂ = 12 V' },
+      { t: 'num', q: '9 V kaynağa seri bağlı üç elemanın ikisinde 2,5 V ve 3 V düşüyor. Üçüncüde kaç V düşer?', a: 3.5, u: 'V',
+        e: 'Kirchhoff gerilim yasası: kapalı çevrimde gerilimlerin toplamı sıfırdır.', f: 'V₃ = 9 − 2,5 − 3 = 3,5 V' } ] },
+    { name: 'Paralel devre', qs: [
+      { t: 'num', q: '6 kΩ ile 3 kΩ paralel bağlı. Eşdeğer direnç kaç kΩ?', a: 2, u: 'kΩ',
+        e: 'İki paralel direnç için çarpım bölü toplam kullanılır.', f: 'R = 6·3 / (6 + 3) = 2 kΩ' },
+      { t: 'mc', q: 'Paralel bağlı elemanlarda hangisi ortaktır?', o: ['Gerilim', 'Akım', 'Güç', 'Direnç'], a: 0,
+        e: 'Elemanların uçları aynı iki düğüme bağlıdır.', f: 'V₁ = V₂ = V₃' },
+      { t: 'num', q: 'Bir düğüme 50 mA giriyor. Çıkan üç koldan ikisinde 20 mA ve 12 mA var. Üçüncü kol kaç mA?', a: 18, u: 'mA',
+        e: 'Kirchhoff akım yasası: düğüme giren akım çıkana eşittir.', f: 'I₃ = 50 − 20 − 12 = 18 mA' },
+      { t: 'num', q: 'Kaynaktan çekilen toplam akım kaç mA?', c: par('12 V', [[['R', 'R1', '4 kΩ']], [['R', 'R2', '6 kΩ']], [['R', 'R3', '12 kΩ']]]), a: 6, u: 'mA',
+        e: 'Her kolda 12 V var. Kol akımlarını bul ve topla.', f: 'I = 12/4 + 12/6 + 12/12 = 3 + 2 + 1 = 6 mA' },
+      { t: 'ariza', q: 'Her direnç 1 kΩ, kol akımları ölçüldü. Arızalı dirence dokun.', c: par('12 V', [[['R', 'R1', '', '12 mA']], [['R', 'R2', '', '0 mA']], [['R', 'R3', '', '12 mA']]]), a: 'R2',
+        e: 'Paralel kolda kopan direnç yalnızca kendi akımını keser, diğer kollar çalışmaya devam eder.', f: 'Beklenen I = 12 V / 1 kΩ = 12 mA, R2\'de 0 mA' },
+      { t: 'mc', q: 'Dört adet 1 kΩ direnç paralel bağlanırsa eşdeğer direnç kaç Ω olur?', o: ['250 Ω', '4000 Ω', '500 Ω', '1000 Ω'], a: 0,
+        e: 'n adet eşit paralel direncin eşdeğeri R/n\'dir.', f: 'R = 1000 / 4 = 250 Ω' } ] },
+    { name: 'Karışık devreler', qs: [
+      { t: 'num', q: 'Kaynağın gördüğü eşdeğer direnç kaç kΩ?', c: KARMA, a: 2, u: 'kΩ',
+        e: 'Önce paralel R2 ve R3\'ü tek dirence indir, sonra R1 ile topla.', f: 'R = 1 + (2 ∥ 2) = 1 + 1 = 2 kΩ' },
+      { t: 'num', q: 'R2 direncinden geçen akım kaç mA?', c: KARMA, a: 2.5, u: 'mA',
+        e: 'Toplam akım 5 mA. R2 ve R3 eşit olduğu için akım ikiye bölünür.', f: 'I = 10 / 2 kΩ = 5 mA → I₂ = 2,5 mA' },
+      { t: 'sira', q: 'Seri-paralel devrede kol akımını bulma adımlarını sırala.', o: ['Paralel kolları tek dirence indir', 'Seri dirençlerle toplayıp eşdeğeri bul', 'Kaynak akımını I = V / R_eş ile bul', 'Paralel bloğun gerilimini hesapla', 'Kol akımını blok gerilimi / kol direnci ile bul'],
+        e: 'Önce devreyi küçült, kaynak akımını bul, sonra geri açarak kollara in.', f: 'R_eş → I → V_blok → I_kol' },
+      { t: 'mc', q: '9 mA, paralel 1 kΩ ve 2 kΩ dirençlere bölünüyor. 1 kΩ\'dan kaç mA geçer?', o: ['6 mA', '3 mA', '4,5 mA', '9 mA'], a: 0,
+        e: 'Akım bölücüde büyük akım küçük dirençten geçer.', f: 'I₁ = 9 × 2 / (1 + 2) = 6 mA' },
+      { t: 'num', q: 'a–b uçlarının Thévenin gerilimi kaç V?', c: THEVENIN, a: 4, u: 'V',
+        e: 'Uçlar açıkken V_Th, R2 üzerindeki bölücü gerilimidir.', f: 'V_Th = 12 × 3 / (6 + 3) = 4 V' },
+      { t: 'num', q: 'a–b uçlarının Thévenin direnci kaç kΩ?', c: THEVENIN, a: 2, u: 'kΩ',
+        e: 'Gerilim kaynağını kısa devre et. R1 ve R2 paralel kalır.', f: 'R_Th = 6 ∥ 3 = 2 kΩ' } ] } ] },
+
+  { name: 'Kondansatör ve RC', lessons: [
+    { name: 'Kondansatör', qs: [
+      { t: 'num', q: '100 µF kondansatör 12 V ile dolduruluyor. Depolanan yük kaç mC?', a: 1.2, u: 'mC',
+        e: 'Yük, sığa ile gerilimin çarpımıdır.', f: 'Q = C·V = 100 µF × 12 V = 1200 µC = 1,2 mC' },
+      { t: 'num', q: '1000 µF kondansatör 10 V\'a dolu. Depolanan enerji kaç mJ?', a: 50, u: 'mJ',
+        e: 'Enerji gerilimin karesiyle artar. ½ çarpanını unutma.', f: 'W = ½·C·V² = 0,5 × 10⁻³ × 100 = 50 mJ' },
+      { t: 'mc', q: 'DC devrede uzun süre sonra kondansatör nasıl davranır?', o: ['Açık devre gibi', 'Kısa devre gibi', '1 kΩ direnç gibi', 'Gerilim üreteci gibi sürekli akım verir'], a: 0,
+        e: 'Gerilim sabitlenince dv/dt = 0 olur ve akım kesilir.', f: 'i = C·dv/dt = 0' },
+      { t: 'num', q: '10 µF ve 22 µF paralel bağlı. Eşdeğer sığa kaç µF?', a: 32, u: 'µF',
+        e: 'Paralel kondansatörlerin sığaları toplanır. Dirençlerin tersidir.', f: 'C = 10 + 22 = 32 µF' },
+      { t: 'num', q: '6 µF ve 3 µF seri bağlı. Eşdeğer sığa kaç µF?', a: 2, u: 'µF',
+        e: 'Seri kondansatörler paralel dirençler gibi hesaplanır.', f: 'C = 6·3 / (6 + 3) = 2 µF' },
+      { t: 'mc', q: 'Üzerinde "104" yazan seramik kondansatörün değeri nedir?', o: ['100 nF', '10 nF', '104 pF', '1 µF'], a: 0,
+        e: 'İlk iki rakam değer, üçüncü rakam pF cinsinden 10\'un kuvvetidir.', f: '10 × 10⁴ pF = 100 000 pF = 100 nF' } ] },
+    { name: 'RC dolma', qs: [
+      { t: 'num', q: 'Devrenin zaman sabiti kaç saniye?', c: loop('5 V', [['S', 'Anahtar'], ['R', 'R', '10 kΩ'], ['C', 'C', '100 µF']]), a: 1, u: 's',
+        e: 'Zaman sabiti, direnç ile sığanın çarpımıdır.', f: 'τ = R·C = 10⁴ × 10⁻⁴ = 1 s' },
+      { t: 'num', q: 'Boş kondansatör 5 V kaynaktan R üzerinden doluyor. t = τ anında gerilimi kaç V?', a: 5 * (1 - Math.exp(-1)), u: 'V',
+        e: 'Bir zaman sabiti sonunda son değerin %63,2\'sine ulaşılır.', f: 'v = 5 (1 − e⁻¹) = 3,16 V' },
+      { t: 'mc', q: '5τ sonunda kondansatör son değerinin yaklaşık yüzde kaçına dolar?', o: ['%99,3', '%63,2', '%86,5', '%95,0'], a: 0,
+        e: 'Pratikte 5τ sonunda kondansatör dolmuş kabul edilir.', f: '1 − e⁻⁵ = 0,993' },
+      { t: 'sim', sim: 'rc', q: 'R ve C\'yi ayarla, zaman sabitini 0,5 s yap (±0,02 s).',
+        e: 'R veya C büyüdükçe eğri yavaşlar. kΩ × µF = ms.', f: 'τ = R·C, örneğin 10 kΩ × 50 µF = 500 ms' },
+      { t: 'num', q: 'Boş 1 µF kondansatör, 1 kΩ üzerinden 10 V\'a bağlanıyor. t = 2 ms\'de gerilimi kaç V?', a: 10 * (1 - Math.exp(-2)), u: 'V',
+        e: 'τ = 1 ms olduğu için t = 2τ\'dur.', f: 'v = 10 (1 − e⁻²) = 8,65 V' },
+      { t: 'ariza', q: 'Devre uzun süredir enerjili ve kondansatör dolmuş olmalıydı. Arızalı elemana dokun.', c: loop('9 V', [['R', 'R', '10 kΩ', '9 V'], ['C', 'C', '10 µF', '0 V']]), a: 'C',
+        e: 'Sağlam kondansatör uzun süre sonra 9 V\'a dolar ve R üzerinde 0 V kalır. Sürekli akım ve 0 V, kondansatörün kısa devre olduğunu gösterir.', f: 'Beklenen: V_C = 9 V, V_R = 0 V' } ] },
+    { name: 'Boşalma ve zamanlama', qs: [
+      { t: 'num', q: '12 V\'a dolu kondansatör R üzerinden boşalıyor. t = τ anında gerilimi kaç V?', a: 12 * Math.exp(-1), u: 'V',
+        e: 'Bir zaman sabiti sonunda başlangıç değerinin %36,8\'i kalır.', f: 'v = 12·e⁻¹ = 4,41 V' },
+      { t: 'num', q: 'R = 100 kΩ, C = 10 µF. Boşalırken gerilim kaç saniyede yarıya iner?', a: Math.LN2, u: 's',
+        e: 'e^(−t/τ) = 0,5 eşitliğinden t = τ·ln 2 çıkar.', f: 't = 0,693·τ = 0,693 × 1 s = 0,693 s' },
+      { t: 'sira', q: 'RC geçici durum çözümünün adımlarını sırala.', o: ['Anahtarlamadan önceki v_C(0⁻) değerini bul', 'Süreklilikten v_C(0⁺) = v_C(0⁻) yaz', 'Son değer v_C(∞) ve τ = R_Th·C\'yi bul', 'v(t) = v(∞) + [v(0⁺) − v(∞)]·e^(−t/τ) yaz', 'İstenen t değerini yerine koy'],
+        e: 'Kondansatör gerilimi aniden değişemez, bu yüzden başlangıç koşulu önce bulunur.', f: 'v(t) = v(∞) + [v(0⁺) − v(∞)]·e^(−t/τ)' },
+      { t: 'mc', q: 'Boş kondansatör, anahtar kapandığı ilk anda (t = 0⁺) nasıl davranır?', o: ['Kısa devre gibi', 'Açık devre gibi', 'Sonsuz direnç gibi', 'Ters kutuplu kaynak gibi'], a: 0,
+        e: 'Gerilimi aniden değişemez ve 0 V\'ta kalır. 0 V\'luk eleman kısa devre gibidir.', f: 'v_C(0⁺) = v_C(0⁻) = 0 V' },
+      { t: 'num', q: 'R = 1 kΩ, C = 100 nF alçak geçiren filtrenin kesim frekansı kaç kHz?', a: 1 / (2 * Math.PI * 1e3 * 1e-7) / 1e3, u: 'kHz',
+        e: 'Kesim frekansında çıkış, girişin 0,707 katına (−3 dB) iner.', f: 'f_c = 1 / (2πRC) = 1,59 kHz' },
+      { t: 'mc', q: 'C = 47 µF ile τ = 0,47 s elde etmek için R kaç kΩ olmalı?', o: ['10 kΩ', '1 kΩ', '22 kΩ', '100 kΩ'], a: 0,
+        e: 'τ = RC bağıntısından R\'yi çek.', f: 'R = τ / C = 0,47 / 47×10⁻⁶ = 10 kΩ' } ] } ] },
+
+  { name: 'Diyot ve transistör', lessons: [
+    { name: 'Diyot', qs: [
+      { t: 'mc', q: 'Silisyum diyotun ileri yönde iletimdeki yaklaşık gerilimi nedir?', o: ['0,7 V', '0,2 V', '1,8 V', '5 V'], a: 0,
+        e: 'Sabit gerilim modelinde silisyum için 0,7 V alınır. Schottky diyotta yaklaşık 0,3 V\'tur.', f: 'V_D ≈ 0,7 V (Si)' },
+      { t: 'num', q: 'Sabit gerilim modeliyle (V_D = 0,7 V) devre akımı kaç mA?', c: loop('5 V', [['R', 'R', '1 kΩ'], ['D', 'D', 'Si']]), a: 4.3, u: 'mA',
+        e: 'Diyotta 0,7 V düşer, kalan gerilim dirençtedir.', f: 'I = (5 − 0,7) / 1 kΩ = 4,3 mA' },
+      { t: 'ariza', q: 'Bir LED yanıyor, diğeri yanmıyor. Sorunlu elemana dokun.', c: par('5 V', [[['R', 'R1', '330 Ω'], ['LED', 'LED1']], [['R', 'R2', '330 Ω'], ['LED-', 'LED2']]]), a: 'LED2',
+        e: 'LED2\'nin üçgeni yukarı, yani akım yönüne ters bakıyor. Ters yönde iletime geçmez.', f: 'Akım anottan katoda akar' },
+      { t: 'num', q: 'Zener iletimde. R_S direncinden geçen akım kaç mA?', c: ZENER, a: (12 - 5.1) / 330 * 1000, u: 'mA',
+        e: 'Zener çıkışı 5,1 V\'ta sabitler, kalan gerilim R_S\'tedir.', f: 'I_S = (12 − 5,1) / 330 = 20,9 mA' },
+      { t: 'num', q: 'Zener iletimde. Zener akımı kaç mA?', c: ZENER, a: (12 - 5.1) / 330 * 1000 - 5.1, u: 'mA',
+        e: 'I_S, zener ile yük arasında bölünür.', f: 'I_Z = I_S − V_Z / R_L = 20,9 − 5,1 = 15,8 mA' },
+      { t: 'mc', q: '12 V rms sinüs, tek silisyum diyotla yarım dalga doğrultuluyor. Çıkış tepe değeri yaklaşık kaç V?', o: ['16,3 V', '12,0 V', '11,3 V', '17,0 V'], a: 0,
+        e: 'Önce tepe değerine çevir, sonra bir diyot düşümünü çıkar.', f: 'V_p = 12·√2 − 0,7 = 16,3 V' } ] },
+    { name: 'BJT temelleri', qs: [
+      { t: 'mc', q: 'npn transistörün aktif bölgede çalışması için jonksiyonlar nasıl kutuplanır?', o: ['BE ileri, BC ters', 'BE ters, BC ileri', 'İkisi de ileri', 'İkisi de ters'], a: 0,
+        e: 'İkisi ileriyse doyum, ikisi tersse kesim bölgesidir.', f: 'V_BE ≈ 0,7 V, V_CE > V_CE(doyum)' },
+      { t: 'num', q: 'β = 100, I_B = 20 µA. Aktif bölgede I_C kaç mA?', a: 2, u: 'mA',
+        e: 'Aktif bölgede kollektör akımı, baz akımının β katıdır.', f: 'I_C = β·I_B = 100 × 20 µA = 2 mA' },
+      { t: 'num', q: 'β = 200 olan transistörde I_C = 5 mA isteniyor. Aktif bölgede gereken I_B kaç µA?', a: 25, u: 'µA',
+        e: 'Kollektör akımını β\'ya böl.', f: 'I_B = I_C / β = 5 mA / 200 = 25 µA' },
+      { t: 'sim', sim: 'bjt', q: 'V_CE\'yi 6 V yap (±0,3 V). β = 100, V_BB = 5 V.',
+        e: 'R_B küçülürse I_B ve I_C artar, V_CE düşer. Lamba R_C\'nin yerindedir.', f: 'I_C = 100·(5 − 0,7)/R_B, V_CE = 12 − I_C·R_C' },
+      { t: 'mc', q: 'Doymuş bir npn transistörde V_CE yaklaşık kaçtır?', o: ['0,2 V', '0,7 V', 'V_CC / 2', 'V_CC'], a: 0,
+        e: 'Doyumda transistör kapalı anahtar gibi davranır.', f: 'V_CE(doyum) ≈ 0,2 V' },
+      { t: 'sira', q: 'BJT DC analizinde Q noktasını bulma adımlarını sırala.', o: ['Aktif bölgede olduğunu varsay, V_BE = 0,7 V al', 'Baz-emetör çevresinden I_B\'yi bul', 'I_C = β·I_B hesapla', 'Kollektör-emetör çevresinden V_CE\'yi bul', 'V_CE > 0,2 V mu, varsayımı denetle'],
+        e: 'Varsayım en sonda denetlenir. V_CE ≤ 0,2 V çıkarsa transistör doyumdadır ve hesap yenilenir.', f: 'I_B → I_C → V_CE → denetim' } ] },
+    { name: 'BJT kutuplama', qs: [
+      { t: 'num', q: 'Sabit kutuplamada I_B kaç µA? V_BE = 0,7 V.', c: bjtFixed('470 kΩ', '2,2 kΩ'), a: 11.3 / 470e3 * 1e6, u: 'µA',
+        e: 'Baz-emetör çevresi: V_CC = I_B·R_B + V_BE.', f: 'I_B = (12 − 0,7) / 470 kΩ = 24,0 µA' },
+      { t: 'num', q: 'β = 100, V_BE = 0,7 V. V_CE kaç V?', c: bjtFixed('470 kΩ', '2,2 kΩ'), a: 12 - 100 * 11.3 / 470e3 * 2200, u: 'V',
+        e: 'Önce I_C = β·I_B, sonra kollektör çevresi.', f: 'I_C = 2,40 mA, V_CE = 12 − 2,40 × 2,2 = 6,71 V' },
+      { t: 'mc', q: 'β = 100, V_BE = 0,7 V. Bu transistör hangi bölgede çalışır?', c: bjtFixed('22 kΩ', '1 kΩ'), o: ['Doyum', 'Aktif', 'Kesim', 'Ters aktif'], a: 0,
+        e: 'β·I_B = 51 mA, oysa R_C en fazla 11,8 mA\'e izin verir. Transistör doyar.', f: 'I_C(doyum) = (12 − 0,2) / 1 kΩ = 11,8 mA < β·I_B' },
+      { t: 'num', q: 'I_B ihmal edilirse I_E kaç mA? V_BE = 0,7 V.', c: bjtDiv(), a: 2.3, u: 'mA',
+        e: 'Baz gerilimi bölücüden 3 V. Emetör bundan 0,7 V aşağıdadır.', f: 'V_B = 12·10/40 = 3 V, I_E = (3 − 0,7) / 1 kΩ = 2,3 mA' },
+      { t: 'num', q: 'V_BE = 0,7 V. I_B ihmal edilip I_C ≈ I_E alınırsa V_CE kaç V?', c: bjtDiv(), a: 4.64, u: 'V',
+        e: 'Kollektör-emetör çevresinde hem R_C hem R_E gerilim düşürür.', f: 'V_CE = 12 − 2,3 × (2,2 + 1) = 4,64 V' },
+      { t: 'ariza', q: 'Kaynaktan hiç akım çekilmiyor (0 mA). Gerilimlere göre arızalı dirence dokun.', c: bjtDiv({ vb: '0 V', vc: '12 V', ve: '0 V' }), a: 'R1',
+        e: 'V_B = 0 V olduğu için transistör kesimde. Kaynak akımı da 0 ise R1 açık devredir. R2 kısa devre olsaydı R1\'den 0,4 mA akardı.', f: 'Beklenen V_B = 3 V, I(R1) = 12 / 40 kΩ = 0,3 mA' } ] } ] }
+];
+
+// Mini simülasyonlar: kaydırıcılar, hesap ve hedef aralığı.
+const SIMS = {
+  ohm: { s: [['V', 'Gerilim', 1, 12, 0.5, 3, 'V'], ['R', 'Lamba direnci', 100, 1000, 10, 900, 'Ω']],
+    calc: v => ({ I: v.V / v.R * 1e3 }), key: 'I', min: 19, max: 21, out: [['I', 'Akım', 'mA']], glow: r => r.I / 40 },
+  led: { s: [['V', 'Kaynak gerilimi', 3, 12, 0.5, 9, 'V'], ['R', 'Seri direnç', 100, 1000, 10, 1000, 'Ω']],
+    calc: v => ({ I: Math.max(0, v.V - 2) / v.R * 1e3 }), key: 'I', min: 14, max: 16, out: [['I', 'LED akımı', 'mA']], glow: r => r.I / 20,
+    warn: r => r.I > 30 ? 'Bu akım çoğu 5 mm LED için fazla.' : '' },
+  bolucu: { s: [['R1', 'R1', 1, 20, 0.5, 10, 'kΩ'], ['R2', 'R2', 1, 20, 0.5, 10, 'kΩ']],
+    calc: v => ({ Vo: 12 * v.R2 / (v.R1 + v.R2), I: 12 / (v.R1 + v.R2) }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V'], ['I', 'Akım', 'mA']], glow: r => r.Vo / 12 },
+  rc: { s: [['R', 'Direnç', 1, 100, 1, 10, 'kΩ'], ['C', 'Sığa', 1, 100, 1, 10, 'µF']],
+    calc: v => ({ T: v.R * v.C / 1e3 }), key: 'T', min: 0.48, max: 0.52, out: [['T', 'Zaman sabiti τ', 's']], glow: () => 0 },
+  bjt: { s: [['RB', 'R_B', 20, 200, 1, 200, 'kΩ'], ['RC', 'R_C (lamba)', 0.5, 3, 0.1, 1, 'kΩ']],
+    calc: v => { const ic = Math.min(100 * 4.3 / v.RB, 11.8 / v.RC); return { IC: ic, VCE: 12 - ic * v.RC }; },
+    key: 'VCE', min: 5.7, max: 6.3, out: [['IC', 'I_C', 'mA'], ['VCE', 'V_CE', 'V']], glow: r => r.IC / 12 }
+};
+
+const COLORS = ['siyah', 'kahverengi', 'kırmızı', 'turuncu', 'sarı', 'yeşil', 'mavi', 'mor', 'gri', 'beyaz'];
+
+const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, qs: l.qs })));
+const QUESTIONS = Object.fromEntries(LESSONS.flatMap(l => l.qs.map((q, k) => [`${l.id}-${k + 1}`, q])));
+
+
+
+const XP_RIGHT = 4, XP_FINISH = 10, XP_PERFECT = 6, GOAL = 30;
+
+// Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
+const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+
+const fresh = () => ({ xp: 0, done: {}, wrong: [], ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0 });
+
+function parseState(raw, validIds) {
+  const s = fresh();
+  let p;
+  try { p = JSON.parse(raw); } catch { return s; }
+  if (!p || typeof p !== 'object') return s;
+  for (const k in s) if (typeof p[k] === typeof s[k] && Array.isArray(p[k]) === Array.isArray(s[k]) && p[k] !== null) s[k] = p[k];
+  s.wrong = s.wrong.filter(id => validIds.includes(id));
+  return s;
+}
+
+function touchStreak(s, today) {
+  const gap = s.last < 0 ? Infinity : today - s.last;
+  if (gap <= 0) return; // aynı gün ya da saat geri alınmış
+  if (gap === 1 || (gap === 2 && s.freeze)) {
+    s.streak++;
+    if (gap === 2) { s.freeze = false; s.refill = 7; }
+    else if (!s.freeze && --s.refill <= 0) s.freeze = true;
+  } else { s.streak = 1; s.freeze = true; }
+  s.last = today;
+  s.bestStreak = Math.max(s.bestStreak, s.streak);
+}
+
+const liveStreak = (s, today) => s.last >= 0 && (today - s.last <= 1 || (today - s.last === 2 && s.freeze)) ? s.streak : 0;
+const todayXp = (s, today) => s.day === today ? s.dayXp : 0;
+
+function addXp(s, n, today) {
+  touchStreak(s, today);
+  if (s.day !== today) { s.day = today; s.dayXp = 0; }
+  if (s.dayXp < GOAL && s.dayXp + n >= GOAL) s.goalDays++;
+  s.dayXp += n; s.xp += n;
+}
+
+function record(s, id, type, right, today) {
+  const i = s.wrong.indexOf(id);
+  if (!right) { if (i < 0) s.wrong.push(id); return; }
+  s.ok[type] = (s.ok[type] || 0) + 1;
+  if (i >= 0) { s.wrong.splice(i, 1); s.fixed++; }
+  addXp(s, XP_RIGHT, today);
+}
+
+function finishLesson(s, lid, right, total, today) {
+  s.done[lid] = Math.max(s.done[lid] || 0, right);
+  if (right === total) s.perfect++;
+  addXp(s, XP_FINISH + (right === total ? XP_PERFECT : 0), today);
+}
+
+// "1.500" Türkçede 1500, klavyede 1,5 olabilir: iki yorum da aday.
+function parseNum(str) {
+  const t = String(str).replace(/\s/g, '').replace('−', '-');
+  if (!/^-?[\d.,]+$/.test(t) || !/\d/.test(t)) return [];
+  const c = new Set();
+  if (t.includes(',')) c.add(Number(t.replace(/\./g, '').replace(',', '.')));
+  else { c.add(Number(t)); if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) c.add(Number(t.replace(/\./g, ''))); }
+  return [...c].filter(Number.isFinite);
+}
+const within = (x, a) => Math.abs(x - a) <= 0.02 * Math.abs(a) + 1e-12;
+const fmt = n => Number(n).toLocaleString('tr-TR', { maximumSignificantDigits: 4 });
+
+// Doğruysa true, yanlışsa false, sayı okunamadıysa null.
+function grade(q, ans, SIMS) {
+  switch (q.t) {
+    case 'mc': return ans === q.a;
+    case 'ariza': return ans === q.a;
+    case 'sira': return ans.every((v, i) => v === i);
+    case 'kur': return ans.every((v, i) => v === q.a[i]);
+    case 'sim': { const m = SIMS[q.sim], x = m.calc(ans)[m.key]; return x >= m.min - 1e-9 && x <= m.max + 1e-9; }
+    default: { const c = parseNum(ans); return c.length ? c.some(x => within(x, q.a)) : null; }
+  }
+}
+
+const BADGES = [
+  ['İlk ışık', 'Bir ders bitir', s => Object.keys(s.done).length >= 1],
+  ['Hatasız', 'Bir dersi yanlışsız bitir', s => s.perfect >= 1],
+  ['Günün akımı', 'Günlük hedefe 3 kez ulaş', s => s.goalDays >= 3],
+  ['Üç gün', '3 günlük seri yap', s => s.bestStreak >= 3],
+  ['Tam hafta', '7 günlük seri yap', s => s.bestStreak >= 7],
+  ['Renk ustası', '8 renk kodu sorusu çöz', s => (s.ok.oku || 0) + (s.ok.kur || 0) >= 8],
+  ['Arıza avcısı', '7 arıza bul', s => (s.ok.ariza || 0) >= 7],
+  ['Tamirci', 'Tekrar\'da 10 yanlışı düzelt', s => s.fixed >= 10],
+  ['Beş yüz', '500 XP topla', s => s.xp >= 500],
+  ['Tam devre', '15 dersin hepsini bitir', s => Object.keys(s.done).length >= 15]
+];
+
+
+
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+// "V_CE" yazımını alt simgeye çevirir.
+const SUB = /(\p{L})_([\p{L}\d]+)/gu;
+const tx = s => esc(s).replace(SUB, '$1<sub>$2</sub>');
+
+function mascot(mood) { // iyi | normal | kotu
+  const sad = mood === 'kotu', g = { iyi: 1, normal: .75, kotu: .12 }[mood], tilt = sad ? 38 : -22, ey = sad ? 39 : 36;
+  const mouth = { iyi: 'M50 47q10 11 20 0', normal: 'M52 48q8 5 16 0', kotu: 'M52 52q8-7 16 0' }[mood];
+  return `<svg viewBox="0 0 120 120" aria-hidden="true" class="${mood === 'iyi' ? 'hop' : ''}">
+  <circle cx="60" cy="88" r="31" fill="#f6b932" opacity="${g * .38}" class="${sad ? '' : 'glow'}"/>
+  <g fill="#9fd6c6" fill-opacity=".8" stroke="#15564c" stroke-width="2"><ellipse cx="29" cy="68" rx="20" ry="9" transform="rotate(${-tilt} 29 68)"/><ellipse cx="91" cy="68" rx="20" ry="9" transform="rotate(${tilt} 91 68)"/></g>
+  <path d="M46 70h28v22a14 14 0 0 1-28 0z" fill="#6b5a2a" stroke="#15564c" stroke-width="2.5"/><path d="M47 71h26v21a13 13 0 0 1-26 0z" fill="#ffc93f" opacity="${g}"/>
+  <path d="M52 77v13" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="${g * .8}"/><path d="M42 64h36v7H42z" fill="#15564c"/>
+  <path d="M50 22V12l-8-7M70 22V12l8-7" fill="none" stroke="#d08a4a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="60" cy="40" r="25" fill="#1f7566" stroke="#15564c" stroke-width="2.5"/>
+  <circle cx="50" cy="36" r="8.500" fill="#fff"/><circle cx="70" cy="36" r="8.500" fill="#fff"/><circle cx="51" cy="${ey}" r="4" fill="#12302c"/><circle cx="69" cy="${ey}" r="4" fill="#12302c"/>
+  ${sad ? '<path d="M41 27l10-4M79 27l-10-4" stroke="#0c3a33" stroke-width="3" stroke-linecap="round"/>' : ''}
+  <path d="${mouth}" fill="none" stroke="#eaf5ee" stroke-width="3" stroke-linecap="round"/></svg>`;
+}
+
+const line24 = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON = {
+  path: line24('<circle cx="6" cy="5" r="2.5"/><circle cx="17" cy="12" r="2.5"/><circle cx="6" cy="19" r="2.5"/><path d="M8 6.5l7 4M15 13.5l-7 4"/>'),
+  rep: line24('<path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"/>'),
+  me: line24('<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>'),
+  x: line24('<path d="M5 5l14 14M19 5L5 19"/>'),
+  seri: line24('<path stroke="var(--copper)" d="M2 12h4l2-6 4 12 4-12 2 6h4"/>'),
+  xp: line24('<path fill="var(--led)" d="M7 3h10v10a5 5 0 0 1-10 0z"/><path d="M5 18h14M9.500 18v4M14.500 18v4"/>')
+};
+
+// Etiket: satırlar \n ile, ölçü değeri | ile ayrılır.
+function label(txt, x, y, anchor) {
+  const [a, m] = txt.split('|'), rows = [...(a ? a.split('\n').map(l => [l, '']) : []), ...(m ? [[m, 'me']] : [])];
+  return rows.map(([l, c], i) => `<text x="${x}" y="${y - (rows.length - 1) * 8.5 + 5 + i * 17}" text-anchor="${anchor}" class="${c}">${esc(l).replace(SUB, '$1<tspan dy="3" font-size="11">$2</tspan><tspan dy="-3">&#8203;</tspan>')}</text>`).join('');
+}
+// Semboller x ekseninde çizilir (ilk uç solda), sonra yerine döndürülür.
+const SYM = {
+  R: '<path class="ln" d="M-22 0l4-8 7 16 7-16 7 16 7-16 7 16 5-8"/>',
+  V: '<path class="ln" d="M-22 0h17M5 0h17M5-16v32M-5-8v16M14-12v-8M10-16h8"/>',
+  C: '<path class="ln" d="M-22 0h17M5 0h17M-5-14v28M5-14v28"/>',
+  D: '<path class="ln" d="M-22 0h12M10 0h12M10-11v22"/><path class="fl" d="M-10-11L10 0-10 11z"/>',
+  LED: '<path class="ln" d="M-22 0h12M10 0h12M10-11v22M-10-11L10 0-10 11zM-2-14l7-9M6-13l7-9"/><path class="fl" d="M7-25l-5 2 3 3zM15-24l-5 2 3 3z"/>',
+  Z: '<path class="ln" d="M-22 0h12M10 0h12M5-13l5 3v20l5 3"/><path class="fl" d="M-10-11L10 0-10 11z"/>',
+  L: '<path class="ln" d="M-22 0h7M15 0h7M-10-10l20 20M10-10l-20 20"/><circle class="ln" r="15"/>',
+  S: '<path class="ln" d="M-22 0h6M16 0h6M-16 0L16-3"/><circle class="fl" cx="-16" r="3.500"/><circle class="fl" cx="16" r="3.500"/>'
+};
+
+// pick: kimlikli elemanlar seçilebilir. glow: LED/lamba parlaklığı (0–1).
+function circuit(els, { pick = false, glow = null } = {}) {
+  let wires = '', parts = '';
+  const xs = els.flatMap(e => e[0] === 'T' ? [] : e[0] === 'N' || e[0] === 'G' || e[0] === 'Q' ? [e[1]] : [e[1], e[3]]);
+  const ys = els.flatMap(e => e[0] === 'T' || e[0] === 'Q' ? [] : e[0] === 'G' ? [e[2] + 12] : e[0] === 'N' ? [e[2]] : [e[2], e[4]]);
+  const verts = els.filter(e => SYM[e[0].replace('-', '')] && e[1] === e[3]).map(e => e[1]);
+  const maxX = Math.max(...xs), right = Math.max(...verts);
+  // En sağdaki dikey elemanın solunda yer varsa etiketi içeri yazılır.
+  const inward = verts.length === 2 && !els.some(e => e[0] === 'Q') && right > 200;
+  for (const [t0, x1, y1, x2, y2, txt = '', id] of els) {
+    if (t0 === 'W') { wires += `<path class="ln" d="M${x1} ${y1}L${x2} ${y2}"/>`; continue; }
+    if (t0 === 'N') { wires += `<circle class="fl" cx="${x1}" cy="${y1}" r="4"/>`; continue; }
+    if (t0 === 'G') { wires += `<path class="ln" d="M${x1} ${y1}v6m-12 0h24m-19 5h14m-9 5h4"/>`; continue; }
+    if (t0 === 'T') { wires += label(txt, x1, y1, txt[0] === '|' ? 'start' : 'middle'); continue; }
+    if (t0 === 'Q') { wires += `<path class="ln" d="M${x1} ${y1}h14M${x1 + 14} ${y1 - 17}v34M${x1 + 14} ${y1 - 8}l26-20M${x1 + 14} ${y1 + 8}l26 20"/><path class="fl" d="M${x1 + 40} ${y1 + 28}l-11-2 6-8z"/>`; continue; }
+    const rev = t0.endsWith('-'), t = rev ? t0.slice(0, -1) : t0, horiz = y1 === y2, h = Math.hypot(x2 - x1, y2 - y1) / 2;
+    const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2, ang = Math.round(Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI) + (rev ? 180 : 0), left = !horiz && inward && x1 === right;
+    let lab;
+    if (horiz) { const [a, m] = txt.split('|'); lab = label(a.replace('\n', ' '), cx, cy - (t === 'LED' ? 36 : 22), 'middle') + (m ? label('|' + m, cx, cy + 24, 'middle') : ''); }
+    else lab = label(txt, left ? cx - (rev ? 38 : 26) : cx + (t === 'LED' && !rev ? 30 : 22), cy, left ? 'end' : 'start');
+    const lit = glow !== null && (t === 'LED' || t === 'L') ? `<circle cx="${cx}" cy="${cy}" r="${16 + 14 * glow}" fill="var(--led)" opacity="${.85 * glow}"/>` : '';
+    const body = `${lit}<g transform="translate(${cx} ${cy}) rotate(${ang})"><path class="ln" d="M${-h} 0H-22M22 0H${h}"/>${SYM[t]}</g>${lab}`;
+    if (!pick || !id) { parts += body; continue; }
+    const hw = Math.min(h - 3, 52), hh = horiz ? 36 : Math.min(h - 3, 42), bx = horiz ? cx - hw : left ? cx - 82 : cx - 22, bw = horiz ? hw * 2 : left ? 104 : els.some(e => e[0] === 'Q') ? 96 : 78;
+    const name = txt.replace(/\n/g, ' ').replace('|', ', ölçülen ') + (rev ? ', ters yönde' : '');
+    parts += `<g class="part" role="radio" aria-checked="false" tabindex="0" data-id="${esc(id)}" aria-label="${esc(name)}"><rect class="hit" x="${bx}" y="${cy - hh}" width="${bw}" height="${hh * 2}" rx="8"/>${body}</g>`;
+  }
+  return `<svg class="ckt" viewBox="0 0 ${Math.max(300, maxX + (right === maxX && !inward ? 70 : 34))} ${Math.max(...ys) + 20}" ${pick ? 'role="radiogroup" aria-label="Devre elemanları"' : 'role="img" aria-label="Devre şeması"'}>${wires}${parts}</svg>`;
+}
+
+const HEX = { siyah: '#1c1c1c', kahverengi: '#7a4520', 'kırmızı': '#cf2a27', turuncu: '#f0821e', 'sarı': '#f4d11f', 'yeşil': '#2e9a44', mavi: '#2a5fc4', mor: '#8339b0', gri: '#8b8f92', beyaz: '#f7f7f7', 'altın': '#c9a227', 'gümüş': '#c3c7ca' };
+const resistor = b => `<svg class="ckt" viewBox="0 0 300 96" role="img" aria-label="Direnç bantları: ${b.map(x => x || 'boş').join(', ')}"><path class="ln" d="M4 48h46M250 48h46" stroke-width="5"/><path d="M62 24q-12 0-12 24t12 24q14 0 20-7h136q6 7 20 7 12 0 12-24t-12-24q-14 0-20 7H82q-6-7-20-7z" fill="#e6cfa0" stroke="#8a6f3c" stroke-width="2"/>${[92, 122, 152, 198].map((x, i) => b[i] ? `<rect x="${x}" y="31" width="16" height="34" fill="${HEX[b[i]]}" stroke="#4a3a1a" stroke-width=".8"/>` : `<rect x="${x}" y="31" width="16" height="34" fill="none" stroke="#8a6f3c" stroke-dasharray="3 3"/>`).join('')}</svg>`;
+
+// 0–2 s arası dolma eğrisi; T saniye.
+function rcCurve(T) {
+  const X = t => 46 + t * 115, Y = p => 160 - p * 130;
+  const pts = Array.from({ length: 81 }, (_, i) => `${X(i / 40).toFixed(1)} ${Y(1 - Math.exp(-i / 40 / T)).toFixed(1)}`).join('L');
+  const tau = T <= 2 ? `<path class="ln" d="M${X(T)} 160V${Y(.632)}H46" stroke-dasharray="4 4" style="stroke-width:1.500"/><circle cx="${X(T)}" cy="${Y(.632)}" r="5" fill="var(--bad)"/>` : '';
+  return `<svg class="ckt" viewBox="0 0 310 190" role="img" aria-label="Kondansatör gerilim eğrisi"><path class="ln" d="M46 22V160H290"/><path class="ln" d="M46 30H280" style="stroke-width:1" stroke-dasharray="2 5"/>${tau}<path d="M${pts}" fill="none" stroke="var(--copper)" stroke-width="3.500"/>${[0, .5, 1, 1.5, 2].map(t => `<text x="${X(t)}" y="178" text-anchor="middle" font-size="12">${fmt(t)}</text>`).join('')}<text x="40" y="34" text-anchor="end" font-size="12">%100</text><text x="40" y="${Y(.632) + 4}" text-anchor="end" font-size="12">%63</text><text x="290" y="152" font-size="12" text-anchor="end">t (s)</text></svg>`;
+}
+
+document.documentElement.lang = 'tr';
+const KEY = 'piril-v1', app = document.getElementById('app');
+const $ = (s, r = app) => r.querySelector(s), $$ = (s, r = app) => [...r.querySelectorAll(s)];
+let saveOk = true, S;
+try { S = parseState(localStorage.getItem(KEY), Object.keys(QUESTIONS)); } catch { S = fresh(); saveOk = false; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveOk = true; } catch { saveOk = false; } };
+const pct = (a, b) => Math.min(100, Math.round(a / b * 100));
+function shuffle(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const bar = (v, max, name) => `<div class="bar" role="progressbar" aria-label="${name}" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="${max}"><i style="width:${pct(v, max)}%"></i></div>`;
+const focusTop = () => { scrollTo(0, 0); $('h1').focus({ preventScroll: true }); };
+
+/* ---------- Ekranlar ---------- */
+const navBar = cur => `<nav aria-label="Ana gezinme">${[['ana', 'Dersler', ICON.path], ['tekrar', 'Tekrar', ICON.rep], ['profil', 'Profil', ICON.me]].map(([h, n, i]) =>
+  `<button data-go="${h}" ${cur === h ? 'aria-current="page"' : ''}>${i}${n}${h === 'tekrar' && S.wrong.length ? `<b aria-label="${S.wrong.length} soru">${S.wrong.length}</b>` : ''}</button>`).join('')}</nav>`;
+// Üniteler açık; ünite içinde dersler sırayla açılır.
+const unlocked = l => { const j = +l.id.split('-')[1]; return j === 1 || `${l.unit + 1}-${j - 1}` in S.done; };
+
+function home() {
+  const t = dayNum(), x = todayXp(S, t), st = liveStreak(S, t), nx = LESSONS.find(l => !(l.id in S.done));
+  const [hi, sub] = !S.xp ? ['Merhaba, ben Pırıl', 'İlk derste yükten başlıyoruz.'] : x >= GOAL ? ['Bugünkü hedef tamam', 'İstersen bir ders daha çöz.']
+    : st ? ['Devam edelim', `Hedefe ${GOAL - x} XP kaldı.`] : ['Yeniden yakalım', 'Bir derslik 3 dakikan var mı?'];
+  return `<main class="scr"><div class="stat"><span>${ICON.seri}${st} günlük seri</span><span>${ICON.xp}${S.xp} XP</span><div class="goal">${bar(x, GOAL, 'Günlük hedef')}Bugün ${x} / ${GOAL} XP</div></div>
+  <div class="hello">${mascot(x >= GOAL ? 'iyi' : 'normal')}<div><h1 tabindex="-1">${hi}</h1><p>${sub}</p></div></div>
+  ${UNITS.map((u, i) => {
+    const ls = LESSONS.filter(l => l.unit === i);
+    return `<section class="pcb"><header><b aria-hidden="true">U${i + 1}</b><h2>${u.name}</h2><small>${ls.filter(l => l.id in S.done).length}/3</small></header>
+    <div class="road"><svg viewBox="0 0 150 288" aria-hidden="true"><path d="M32 48V72L88 128V160L32 216V240" fill="none" stroke="var(--copper)" stroke-width="7" stroke-linejoin="round"/></svg>
+    ${ls.map((l, j) => {
+      const done = l.id in S.done, open = unlocked(l);
+      return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="ders-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${l.qs.length} soru` : 'Önceki dersi bitir'}</small></em></button>`;
+    }).join('')}</div></section>`;
+  }).join('')}</main>${navBar('ana')}`;
+}
+
+function review() {
+  const n = S.wrong.length;
+  return `<main class="scr"><h1 tabindex="-1">Tekrar</h1>${n ? `<p>${n} soru seni bekliyor. Doğru cevaplayana kadar burada kalırlar.</p><button class="btn" data-go="tekrar-coz">Tekrara başla</button>
+  <ul class="list">${S.wrong.map(id => `<li>${tx(QUESTIONS[id].q)}<small>${LESSONS.find(l => id.startsWith(l.id + '-')).name}</small></li>`).join('')}</ul>`
+    : `<div class="end">${mascot('iyi')}<h2>Bekleyen soru yok</h2><p>Derslerde yanlış yaptığın sorular burada birikir.</p></div>`}</main>${navBar('tekrar')}`;
+}
+
+const badgeSvg = on => `<svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--${on ? 'ink' : 'soft'})" stroke-width="2"><path d="M10 4h20v16a10 10 0 0 1-20 0z" ${on ? 'fill="var(--led)"' : 'stroke-dasharray="3 3"'}/><path d="M6 31h28M15 31v7M25 31v7"/></svg>`;
+function profile() {
+  const t = dayNum(), got = BADGES.filter(b => b[2](S)).length;
+  return `<main class="scr"><h1 tabindex="-1">Profil</h1><dl class="tbl"><dt>Toplam XP</dt><dd>${S.xp}</dd><dt>Bugün</dt><dd>${todayXp(S, t)} / ${GOAL} XP</dd><dt>Seri</dt><dd>${liveStreak(S, t)} gün</dd><dt>En uzun seri</dt><dd>${S.bestStreak} gün</dd>
+  <dt>Kaçırma hakkı</dt><dd>${S.freeze ? 'Var' : `${S.refill} gün sonra`}</dd><dt>Biten ders</dt><dd>${Object.keys(S.done).length} / ${LESSONS.length}</dd></dl>
+  <p class="note">Bir gün kaçırırsan serin bozulmaz. Kullandığın hak, 7 günlük seriyle geri gelir.</p>${saveOk ? '' : '<p class="note err">Bu tarayıcı kayda izin vermiyor. İlerlemen sayfa kapanınca silinir.</p>'}
+  <h2>Rozetler (${got}/${BADGES.length})</h2><ul class="bdg">${BADGES.map(([n, d, f]) => `<li>${badgeSvg(f(S))}<span><b>${n}</b>${d}${f(S) ? '. Kazanıldı' : ''}</span></li>`).join('')}</ul></main>${navBar('profil')}`;
+}
+
+/* ---------- Soru oturumu ---------- */
+let C = null; // etkin oturum; lid yoksa Tekrar
+const KIND = { mc: 'Çoktan seçmeli', num: 'Hesapla', oku: 'Renk kodu', kur: 'Renk kodu', ariza: 'Arızayı bul', sira: 'Sırala', sim: 'Simülasyon' };
+function start(ids, lid) { C = { queue: [...ids], total: ids.length, n: 0, right: 0, lid, xp0: S.xp, had: BADGES.map(b => b[2](S)) }; question(); }
+const answer = (v, ready = true) => { C.ans = v; $('#ok').disabled = !ready; };
+const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>` : '';
+const optList = (q, badge) => `<div class="opts">${C.perm.map(i => `<button class="opt" aria-pressed="false" data-i="${i}">${badge ? '<kbd></kbd>' : ''}<span>${tx(q.o[i])}</span></button>`).join('')}</div>`;
+
+const VIEW = {
+  mc: q => { C.perm = shuffle(q.o.length); return fig(q) + optList(q); },
+  num: q => (q.b ? `<div class="fig">${resistor(q.b)}</div><p class="note">Bantlar: ${q.b.join(', ')}</p>` : fig(q)) + `<form class="num"><input id="n" inputmode="decimal" autocomplete="off" enterkeyhint="done" aria-label="Cevap, birim ${q.u}" aria-describedby="nerr"><b>${q.u}</b></form><p class="note" id="nerr" aria-live="polite">±%2 tolerans. Virgül veya nokta kullanabilirsin.</p>`,
+  kur: () => `<div class="fig" id="res"></div><div class="slots">${[0, 1, 2].map(i => `<button data-s="${i}"></button>`).join('')}</div><div class="pal">${COLORS.map(c => `<button data-c="${c}"><i style="background:${HEX[c]}"></i>${c}</button>`).join('')}</div>`,
+  ariza: q => `<div class="fig">${circuit(q.c, { pick: true })}</div>`,
+  sira: q => { do C.perm = shuffle(q.o.length); while (C.perm.every((v, i) => v === i)); return '<p class="note">İlk sıradan başlayarak dokun. Geri almak için tekrar dokun.</p>' + optList(q, true); },
+  sim: q => `<div class="fig" id="sv"></div><div class="read" id="rd"></div><div>${SIMS[q.sim].s.map(([k, n, a, b, st, v]) => `<label class="sl"><span>${tx(n)}</span><b id="o-${k}"></b><input type="range" id="s-${k}" min="${a}" max="${b}" step="${st}" value="${v}"></label>`).join('')}</div><p class="note" id="warn" aria-live="polite"></p>`
+};
+const BIND = {
+  mc: () => $$('.opt').forEach(b => b.onclick = () => { $$('.opt').forEach(x => x.setAttribute('aria-pressed', x === b)); answer(+b.dataset.i); }),
+  num: () => { const n = $('#n'); n.oninput = () => answer(n.value, n.value.trim() !== ''); $('form').onsubmit = e => { e.preventDefault(); if (!$('#ok').disabled) check(); }; },
+  kur: () => {
+    const v = [null, null, null], names = ['1. rakam', '2. rakam', 'Çarpan']; let cur = 0;
+    const draw = () => { $$('[data-s]').forEach((b, i) => { b.setAttribute('aria-pressed', i === cur); b.textContent = v[i] ? `${names[i]}: ${v[i]}` : names[i]; }); $('#res').innerHTML = resistor([...v, 'altın']); };
+    $$('[data-s]').forEach((b, i) => b.onclick = () => { cur = i; draw(); });
+    $$('[data-c]').forEach(b => b.onclick = () => { v[cur] = b.dataset.c; const e = v.indexOf(null); if (e >= 0) cur = e; draw(); answer([...v], e < 0); });
+    draw();
+  },
+  ariza: () => {
+    const sel = p => { if (C.checked) return; $$('.part').forEach(x => x.setAttribute('aria-checked', x === p)); answer(p.dataset.id); };
+    $$('.part').forEach(p => { p.onclick = () => sel(p); p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sel(p); } }; });
+  },
+  sira: q => {
+    const seq = [];
+    $$('.opt').forEach(b => b.onclick = () => {
+      const i = +b.dataset.i, k = seq.indexOf(i);
+      if (k < 0) seq.push(i); else seq.splice(k, 1);
+      $$('.opt').forEach(x => { const p = seq.indexOf(+x.dataset.i); x.setAttribute('aria-pressed', p >= 0); $('kbd', x).textContent = p < 0 ? '' : p + 1; });
+      answer([...seq], seq.length === q.o.length);
+    });
+  },
+  sim: q => {
+    const m = SIMS[q.sim], upd = () => {
+      const v = {}; m.s.forEach(([k, , , , , , u]) => { const i = $('#s-' + k), s = `${fmt(v[k] = +i.value)} ${u}`; $('#o-' + k).textContent = s; i.setAttribute('aria-valuetext', s); });
+      const r = m.calc(v);
+      $('#rd').innerHTML = m.out.map(([k, n, u]) => `<div>${tx(n)}<b>${fmt(+r[k].toFixed(3))} ${u}</b></div>`).join('');
+      $('#sv').innerHTML = SIMVIEW[q.sim](v, r, Math.min(1, m.glow(r)));
+      $('#warn').textContent = m.warn ? m.warn(r) : '';
+      answer(v);
+    };
+    m.s.forEach(s => $('#s-' + s[0]).oninput = upd); upd();
+  }
+};
+VIEW.oku = VIEW.num; BIND.oku = BIND.num;
+const SIMVIEW = {
+  ohm: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['L', 'Lamba', `${fmt(v.R)} Ω`]]), { glow }),
+  led: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['R', 'R', `${fmt(v.R)} Ω`], ['LED', 'LED', '2 V']]), { glow }),
+  bolucu: v => circuit([...loop('12 V', [['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R2', `${fmt(v.R2)} kΩ`]]), ['N', 280, 40], ['N', 280, 180]]),
+  rc: (v, r) => rcCurve(r.T),
+  bjt: (v, r, glow) => circuit(bjtFixed(`${fmt(v.RB)} kΩ`, `${fmt(v.RC)} kΩ`, 'L'), { glow })
+};
+
+function question() {
+  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false;
+  app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
+  <div><p class="kind">${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
+  BIND[q.t](q);
+  $('#ok').onclick = check;
+  focusTop();
+}
+
+function check() {
+  if (C.checked) return;
+  const q = C.q, id = C.queue[0], ok = grade(q, C.ans, SIMS);
+  if (ok === null) { const e = $('#nerr'); e.textContent = 'Bunu sayı olarak okuyamadım. Yalnızca rakam yaz, örneğin 2,5.'; e.className = 'note err'; $('#n').focus(); return; }
+  C.checked = true; C.queue.shift();
+  record(S, id, q.t, ok, dayNum());
+  if (ok) C.right++;
+  if (ok || C.lid) C.n++; else C.queue.push(id); // Tekrar'da yanlış soru kuyruğun sonuna döner
+  if (C.lid && !C.queue.length) finishLesson(S, C.lid, C.right, C.total, dayNum());
+  save();
+  const mark = (el, v) => { if (v === String(q.a)) el.classList.add('good'); else if (v === String(C.ans)) el.classList.add('bad'); };
+  if (q.t === 'mc') $$('.opt').forEach(b => mark(b, b.dataset.i));
+  if (q.t === 'ariza') $$('.part').forEach(p => mark(p, p.dataset.id));
+  if (q.t === 'sira' && !ok) $$('.opt').sort((a, b) => a.dataset.i - b.dataset.i).forEach((b, i) => { $('kbd', b).textContent = i + 1; b.parentNode.append(b); });
+  $$('main button:not(.x),main input').forEach(b => b.disabled = true);
+  const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
+  const foot = $('.foot');
+  foot.className = 'foot ' + (ok ? 'good' : 'bad');
+  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_RIGHT} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  $('#nx').onclick = () => C.queue.length ? question() : finish();
+  $('#nx').focus({ preventScroll: true });
+}
+
+function finish() {
+  const t = dayNum(), wrong = C.lid ? C.total - C.right : 0, fresh = BADGES.filter((b, i) => !C.had[i] && b[2](S));
+  app.innerHTML = `<main class="scr"><div class="end">${mascot(wrong < 3 ? 'iyi' : 'normal')}<h1 tabindex="-1">${!C.lid ? 'Tekrar temizlendi' : wrong ? 'Ders tamam' : 'Hatasız bitirdin'}</h1>
+  <dl class="tbl"><dt>Kazanılan</dt><dd>${S.xp - C.xp0} XP</dd>${C.lid ? `<dt>Doğru</dt><dd>${C.right} / ${C.total}</dd>` : ''}<dt>Bugün</dt><dd>${todayXp(S, t)} / ${GOAL} XP</dd><dt>Seri</dt><dd>${liveStreak(S, t)} gün</dd>${fresh.map(b => `<dt>Yeni rozet</dt><dd>${b[0]}</dd>`).join('')}</dl></div></main>
+  <div class="foot">${wrong ? '<button class="btn" data-go="tekrar-coz">Yanlışları tekrar et</button><button class="btn alt" data-go="ana">Derslere dön</button>' : '<button class="btn" data-go="ana">Derslere dön</button>'}</div>`;
+  focusTop();
+}
+
+/* ---------- Yönlendirme: Android geri tuşu hash geçmişiyle çalışır ---------- */
+function route() {
+  const h = location.hash.slice(1), l = LESSONS.find(x => 'ders-' + x.id === h);
+  if (l && unlocked(l)) return start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
+  if (h === 'tekrar-coz' && S.wrong.length) return start(S.wrong, null);
+  C = null;
+  app.innerHTML = h === 'profil' ? profile() : h.startsWith('tekrar') ? review() : home();
+  focusTop();
+}
+app.addEventListener('click', e => {
+  const b = e.target.closest('[data-go]');
+  if (!b || b.disabled) return;
+  if ('#' + b.dataset.go === location.hash) route(); else location.hash = b.dataset.go;
+});
+addEventListener('hashchange', route);
+route();
+</script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+navigator.storage?.persist?.().catch(() => {}); // Chrome'dan kaydı silmemesini ister
+</script>
+</body></html>
