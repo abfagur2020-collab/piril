@@ -249,8 +249,9 @@ const ZENER = [
   ['V', 40, 180, 40, 40, '12 V'], ['R', 40, 40, 165, 40, 'R_S\n330 Ω'], ['Z', 165, 180, 165, 40, 'V_Z\n5,1 V'],
   ['W', 165, 40, 270, 40], ['R', 270, 40, 270, 180, 'R_L\n1 kΩ'], ['W', 40, 180, 270, 180], ['N', 165, 40], ['N', 165, 180]
 ];
-const bjtFixed = (rb, rc, load = 'R') => [
-  ['W', 60, 24, 190, 24], ['T', 100, 16, 0, 0, '+12 V'], ['R', 60, 24, 60, 120, 'R_B\n' + rb], ['W', 60, 120, 150, 120],
+// vbb verilirse R_B ayrı bir kaynaktan beslenir (simülasyonun modeli V_BB = 5 V).
+const bjtFixed = (rb, rc, load = 'R', vbb) => [
+  ...(vbb ? [['P', 60, 24, 0, 0, vbb, '', 't'], ['P', 190, 24, 0, 0, '+12 V', '', 't']] : [['W', 60, 24, 190, 24], ['T', 100, 16, 0, 0, '+12 V']]), ['R', 60, 24, 60, 120, 'R_B\n' + rb], ['W', 60, 120, 150, 120],
   [load, 190, 24, 190, 92, 'R_C\n' + rc], ['Q', 150, 120], ['W', 190, 148, 190, 196], ['G', 190, 196]
 ];
 const bjtDiv = (m = {}) => [
@@ -571,7 +572,7 @@ const UNITS = [
         e: 'Aktif bölgede kollektör akımı, baz akımının β katıdır.', f: 'I_C = β·I_B = 100 × 20 µA = 2 mA' },
       { t: 'num', q: 'β = 200 olan transistörde I_C = 5 mA isteniyor. Aktif bölgede gereken I_B kaç µA?', a: 25, u: 'µA',
         e: 'Kollektör akımını β\'ya böl.', f: 'I_B = I_C / β = 5 mA / 200 = 25 µA' },
-      { t: 'sim', sim: 'bjt', q: 'V_CE\'yi 6 V yap (±0,3 V). β = 100, V_BB = 5 V.',
+      { t: 'sim', sim: 'bjt', q: 'V_CE\'yi 6 V yap (±0,3 V). β = 100, V_BB = 5 V.',
         e: 'R_B küçülürse I_B ve I_C artar, V_CE düşer. Lamba R_C\'nin yerindedir.', f: 'I_C = 100·(5 − 0,7)/R_B, V_CE = 12 − I_C·R_C' },
       { t: 'mc', q: 'Doymuş bir npn transistörde V_CE yaklaşık kaçtır?', o: ['0,2 V', '0,7 V', 'V_CC / 2', 'V_CC'], a: 0,
         e: 'Doyumda transistör kapalı anahtar gibi davranır.', f: 'V_CE(doyum) ≈ 0,2 V' },
@@ -1672,7 +1673,7 @@ const SIMVIEW = {
   led: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['R', 'R', `${fmt(v.R)} Ω`], ['LED', 'LED', '2 V']]), { glow }),
   bolucu: v => circuit([...loop('12 V', [['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R2', `${fmt(v.R2)} kΩ`]]), ['N', 280, 40], ['N', 280, 180]]),
   rc: (v, r) => rcCurve(r.T),
-  bjt: (v, r, glow) => circuit(bjtFixed(`${fmt(v.RB)} kΩ`, `${fmt(v.RC)} kΩ`, 'L'), { glow }),
+  bjt: (v, r, glow) => circuit(bjtFixed(`${fmt(v.RB)} kΩ`, `${fmt(v.RC)} kΩ`, 'L', '+5 V'), { glow }),
   opamp: v => circuit(opNon(['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R_F', `${fmt(v.RF)} kΩ`], { vi: 'V_i\n0,5 V' })),
   buck: v => circuit(buck({ vin: `${fmt(v.V)} V`, t: `|D = %${fmt(v.D)}` })),
   hb: v => circuit(hbridge({ m: `D = %${fmt(v.D)}` }))
