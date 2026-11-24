@@ -842,7 +842,8 @@ UNITS.push(
       { h: 'İki altın kural', p: 'Op-amp iki girişi arasındaki farkı yüz binlerce kez yükseltir. Negatif geri besleme varsa çıkış bu farkı neredeyse sıfır yapan değere oturur: V₊ ≈ V₋ (sanal kısa devre). Girişler akım çekmez; bu iki kural çoğu devreyi çözer.',
         f: ['V₊ ≈ V₋', 'I₊ = I₋ = 0'] },
       { h: 'Eviren yükselteç', p: '+ giriş toprakta, bu yüzden − giriş de 0 V\'tadır (sanal toprak). R1\'den gelen akım op-amp\'e giremez, tamamı R_F\'den geçer. Bu akımı R_F üzerinden çekebilmek için çıkış ters işaretli olmalıdır.',
-        f: ['I = V_i / R1', 'V_o = −(R_F / R1)·V_i'], c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '47 kΩ']) },
+        f: ['I = V_i / R1', 'V_o = −(R_F / R1)·V_i'], c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '47 kΩ']),
+        fl: [{ p: [[40, 96], [128, 96], [128, 40], [238, 40], [238, 112], [216, 112]], v: [1, 0, 0, -4.7, -4.7, -4.7], i: 0.1 }] }, // V_i = 1 V varsayılır
       { h: 'Evirmeyen yükselteç ve izleyici', p: 'Sinyal + girişe gelir; R1–R_F bölücüsü çıkışın bir kesrini − girişe verir. Çıkış, bu kesir girişe eşit olana kadar yükselir ve işaret değişmez. R_F = 0 ve R1 yokken kazanç 1 olur: gerilim izleyici zayıf kaynağı yükten ayırır.',
         f: ['V_o = (1 + R_F / R1)·V_i', 'İzleyici: V_o = V_i'], sim: 'opamp' },
       { h: 'Dikkat: çıkış beslemeyi aşamaz', p: 'Hesap ±12 V beslemede 15 V çıkarıyorsa op-amp doyar ve çıkış besleme sınırında kalır. Doyunca sanal kısa devre kuralı geçersizdir.',
@@ -850,8 +851,10 @@ UNITS.push(
       { t: 'mc', q: 'İdeal op-amp\'in giriş uçlarından ne kadar akım akar?', o: ['0', 'Çıkış akımı kadar', '1 mA', 'Besleme akımı kadar'], a: 0,
         e: 'İdeal op-amp\'in giriş direnci sonsuzdur. Devre analizinin iki kuralından biri budur.', f: 'I₊ = I₋ = 0' },
       { t: 'num', q: 'Eviren yükseltecin gerilim kazancının büyüklüğü kaç?', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ']), a: 10, u: 'V/V',
+        fl: [{ p: [[40, 96], [128, 96], [128, 40], [238, 40], [238, 112], [216, 112]], v: [1, 0, 0, -10, -10, -10], i: 0.1 }], // V_i = 1 V varsayılır: 0,1 mA sanal toprağa, R_F'den çıkışa
         e: 'R1\'den gelen akımın tamamı R_F\'den geçer, çünkü op-amp girişi akım çekmez.', f: '|A| = R_F / R1 = 100 / 10 = 10' },
       { t: 'num', q: 'Çıkış gerilimi kaç V?', c: opNon(['R', 'R1', '10 kΩ'], ['R', 'R_F', '47 kΩ'], { vi: 'V_i\n0,5 V' }), a: 0.5 * 5.7, u: 'V',
+        fl: [{ p: [[216, 80], [238, 80], [238, 132], [124, 132], [124, 208]], v: [2.85, 2.85, 2.85, 0.5, 0], i: 0.05 }], // V_i kaynağı akım vermez; çıkış R_F–R1'den toprağa
         e: 'Evirmeyen yükselteçte kazanç 1 + R_F / R1\'dir, işaret değişmez.', f: 'V_o = 0,5 × (1 + 47/10) = 2,85 V' },
       { t: 'mc', q: 'Kazancı 1 olan gerilim izleyici neden kullanılır?', o: ['Yüksek giriş, düşük çıkış direnciyle kaynağı yükten ayırmak için', 'Gerilimi yükseltmek için', 'Gürültüyü artırmak için', 'Akımı sınırlamak için'], a: 0,
         e: 'Gerilim değişmez ama zayıf bir kaynak (sensör, bölücü) artık yükün akımını taşımak zorunda kalmaz.', f: 'R_giriş → ∞, R_çıkış → 0' },
@@ -861,39 +864,46 @@ UNITS.push(
         e: 'Kazanç 10 olmalı: R_F / R1 = 9. Kazanç büyürse çıkış ±12 V beslemede doyar.', f: 'V_o = 0,5 (1 + R_F/R1), örneğin R1 = 10 kΩ, R_F = 90 kΩ' } ] },
     { name: 'Fark ve toplama', z: 2, k: [
       { h: 'Toplayıcı: akımlar buluşur', p: '− giriş sanal toprak olduğu için her giriş kendi direncinden ötekilerden bağımsız bir akım yollar. Akımlar düğümde toplanır ve hepsi R_F\'den geçer. Çıkış, girişlerin ağırlıklı toplamının tersidir.',
-        f: ['V_o = −R_F·(V₁ / R1 + V₂ / R2)'], c: OPSUM,
+        f: ['V_o = −R_F·(V₁ / R1 + V₂ / R2)'], c: OPSUM, fl: [{ p: [[40, 96], [122, 96]], v: [1, 0], i: 0.1 }, { p: [[40, 176], [122, 176], [122, 96]], v: [2, 0, 0], i: 0.1 }, { p: [[122, 96], [122, 40], [238, 40], [238, 112], [216, 112]], v: [0, 0, -4, -4, -4], i: 0.2 }],
         r: 'Gerçek hayatta: ses mikserinde her kanal kendi direnciyle aynı toplama düğümüne bağlanır; direnç o kanalın ses düzeyini ayarlar.' },
       { h: 'Fark yükselteci', p: 'Fark yükselteci yalnız iki giriş arasındaki farkı yükseltir, ikisine ortak gelen gerilimi yok sayar. + giriş akım çekmediği için V₂, R3–R4 bölücüsüyle bölünür. Bunun çalışması için R2/R1 = R4/R3 olmalıdır.',
-        f: ['V₊ = V₂·R4 / (R3 + R4)', 'V_o = (R2 / R1)·(V₂ − V₁)'], c: opDiff('10 kΩ', '100 kΩ', '2,0 V', '2,1 V') },
+        f: ['V₊ = V₂·R4 / (R3 + R4)', 'V_o = (R2 / R1)·(V₂ − V₁)'], c: opDiff('10 kΩ', '100 kΩ', '2,0 V', '2,1 V'),
+        fl: [{ p: [[40, 96], [122, 96], [122, 40], [238, 40], [238, 112], [216, 112]], v: [2, 1.909, 1.909, 1, 1, 1], i: 0.00909 }, { p: [[40, 180], [140, 180], [140, 256]], v: [2.1, 1.909, 0], i: 0.0191 }] },
       { h: 'Ortak mod ve enstrümantasyon', p: 'Kablodaki parazit iki tele de aynı biner; fark yükseltecinin bunu reddetme gücü CMRR\'dir. Dirençler %1 bile uyumsuzsa ortak mod çıkışa sızar. Enstrümantasyon yükselteci girişleri izleyicilerle tamponlar ve kazancı tek bir R_G ile ayarlar.',
         f: ['CMRR = A_fark / A_ortak', 'V_o = (1 + 2R / R_G)·(V₂ − V₁)  (son kat kazancı 1)'], c: INA,
         r: 'Gerçek hayatta: tartı hücresi köprüsünün iki ucu da 2,5 V civarındadır ve aralarında yalnız birkaç mV fark vardır; enstrümantasyon yükselteci farkı yükseltir, ortak 2,5 V\'u atar.' },
       { h: 'Dikkat: geri besleme koparsa', p: 'R_F açık devre olursa negatif geri besleme kalmaz ve op-amp açık çevrimde çalışır: çıkış beslemeye yapışır. Bu durumda sanal kısa devre de bozulur, − giriş artık 0 V\'ta değildir.' } ], qs: [
       { t: 'num', q: 'Toplayıcının çıkış geriliminin büyüklüğü kaç V?', c: OPSUM, a: 4, u: 'V',
+        fl: [{ p: [[40, 96], [122, 96]], v: [1, 0], i: 0.1 }, { p: [[40, 176], [122, 176], [122, 96]], v: [2, 0, 0], i: 0.1 }, { p: [[122, 96], [122, 40], [238, 40], [238, 112], [216, 112]], v: [0, 0, -4, -4, -4], i: 0.2 }],
         e: '− girişi sanal topraktır. Her girişin akımı ayrı hesaplanır, hepsi R_F\'den geçer.', f: '|V_o| = R_F (V₁/R1 + V₂/R2) = 20 (1/10 + 2/20) = 4 V' },
       { t: 'num', q: 'Fark yükseltecinin çıkışı kaç V?', c: opDiff('10 kΩ', '50 kΩ', '1,2 V', '1,5 V'), a: 1.5, u: 'V',
+        fl: [{ p: [[216, 112], [238, 112], [238, 40], [122, 40], [122, 96], [40, 96]], v: [1.5, 1.5, 1.5, 1.25, 1.25, 1.2], i: 0.005 }, { p: [[40, 180], [140, 180], [140, 256]], v: [1.5, 1.25, 0], i: 0.025 }], // V₋ = 1,25 V > V₁: R1 akımı V₁ kaynağına girer
         e: 'Oranlar eşitken devre yalnız farkı yükseltir: V_o = (R2/R1)(V₂ − V₁).', f: 'V_o = 5 × (1,5 − 1,2) = 1,5 V' },
       { t: 'num', q: 'Aynı devrede op-amp\'in + girişindeki gerilim kaç V?', c: opDiff('10 kΩ', '50 kΩ', '1,2 V', '1,5 V'), a: 1.5 * 50 / 60, u: 'V',
+        fl: [{ p: [[216, 112], [238, 112], [238, 40], [122, 40], [122, 96], [40, 96]], v: [1.5, 1.5, 1.5, 1.25, 1.25, 1.2], i: 0.005 }, { p: [[40, 180], [140, 180], [140, 256]], v: [1.5, 1.25, 0], i: 0.025 }],
         e: '+ girişi akım çekmez; V₂, R3–R4 bölücüsüyle bölünür.', f: 'V₊ = 1,5 × 50 / 60 = 1,25 V' },
       { t: 'mc', q: 'Fark yükseltecinde R2/R1 ile R4/R3 oranları eşit değilse ne olur?', o: ['Ortak mod gerilimi de çıkışa geçer, CMRR düşer', 'Kazanç sonsuz olur', 'Devre kesin osilasyona girer', 'Hiçbir etkisi olmaz'], a: 0,
         e: 'Dirençlerin %1\'lik uyumsuzluğu bile ortak mod reddini birkaç on dB\'e düşürür. Bu yüzden hazır entegre fark yükselteci kullanılır.', f: 'CMRR = A_fark / A_ortak' },
-      { t: 'num', q: 'Enstrümantasyon yükseltecinde son katın kazancı 1 ve V_2 − V_1 = 20 mV. V_o kaç V?', c: INA, a: 0.02 * 21, u: 'V',
+      { t: 'num', q: 'Enstrümantasyon yükseltecinde son katın kazancı 1 ve V_2 − V_1 = 20 mV. V_o kaç V?', c: INA, a: 0.02 * 21, u: 'V', fl: null, // ortak mod verilmedi: ikinci kattaki akımların yönü ona bağlı
         e: 'İlk kat farkı 1 + 2R/R_G kadar yükseltir; tek direnç (R_G) kazancı ayarlar.', f: 'V_o = (1 + 2R/R_G)(V_2 − V_1) = 21 × 20 mV = 0,42 V' },
-      { t: 'ariza', q: 'V_i = 0,5 V iken V₋ = 0,5 V ve V_i kaynağından akım çekilmiyor. Çıkışı ölç, arızalı elemana dokun.', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ'], { vi: 'V_i\n0,5 V', vo: 'V_o|−11,5 V' }), a: 'R_F',
+      { t: 'ariza', q: 'V_i = 0,5 V iken V₋ = 0,5 V ve V_i kaynağından akım çekilmiyor. Çıkışı ölç, arızalı elemana dokun.', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ'], { vi: 'V_i\n0,5 V', vo: 'V_o|−11,5 V' }), a: 'R_F', fl: null, // R_F açık, V₋ = V_i: çizili devrede akım yok
         e: 'Kaynaktan akım çekilmiyorsa R1\'den akım geçmiyor ve V₋ = V_i. Geri besleme kopmuş: R_F açık devre, op-amp açık çevrimde doyar. R1 açık olsaydı devre izleyiciye döner ve V₋ = 0 olurdu.', f: 'Beklenen V_o = −(100/10) × 0,5 = −5 V' } ] },
     { name: 'Türev ve integral', z: 3, k: [
       { h: 'İntegral alıcı', p: 'Eviren yükselteçte R_F yerine C koy. − giriş sanal toprak olduğu için R\'den V_i / R akımı geçer ve tamamı C\'yi doldurur. Sabit akım kondansatör gerilimini doğrusal bir rampa gibi büyütür; çıkış ters yönde iner.',
         f: ['i = V_i / R', 'dV_o/dt = −V_i / (R·C)', 'R·C saniyedir: 47 kΩ × 10 nF = 0,47 ms'], c: opInv(['R', 'R', '47 kΩ'], ['C', 'C', '10 nF']),
+        fl: [{ p: [[40, 96], [128, 96], [128, 40], [238, 40], [238, 112], [216, 112]], v: [1, 0, 0, -1, -1, -1], i: 0.0213 }], // V_i = 1 V varsayılır, V_o rampanın −1 V anı
         r: 'Gerçek hayatta: fonksiyon üreteci kare dalgayı integral alıcıdan geçirip üçgen dalga üretir; her yarım periyotta çıkış sabit eğimle bir yöne gider.' },
       { h: 'Türev alıcı', p: 'R ile C\'nin yerini değiştir: kondansatör akımı giriş geriliminin değişim hızıyla orantılıdır. Bu akım R_F\'den geçip çıkışta gerilime döner; sabit girişte çıkış sıfırdır. Hızlı gürültüyü de büyüttüğü için pratikte C\'ye seri küçük bir direnç eklenir.',
         f: ['i = C·dV_i/dt', 'V_o = −R_F·C·dV_i/dt'] },
       { h: 'Dikkat: integral alıcı kayar', p: 'DC\'de C açık devredir, ideal integral alıcının DC kazancı sonsuzdur. Op-amp\'in birkaç mV\'luk ofseti bile sürekli integre edilir ve çıkış yavaşça doyuma kayar. C\'ye paralel büyük bir R_F DC kazancını sınırlar; köşe frekansının üstünde devre yine integral alır.',
         f: ['Kayma eğimi = V_ofset / (R·C)', 'A_DC = R_F / R', 'f_köşe = 1 / (2π·R_F·C)'] } ], qs: [
       { t: 'num', q: 'Girişe sabit 2,5 V uygulanıyor. Çıkış eğiminin büyüklüğü kaç V/ms?', c: opInv(['R', 'R', '10 kΩ'], ['C', 'C', '100 nF']), a: 2.5, u: 'V/ms',
+        fl: [{ p: [[40, 96], [128, 96], [128, 40], [238, 40], [238, 112], [216, 112]], v: [2.5, 0, 0, -2.5, -2.5, -2.5], i: 0.25 }], // sabit 0,25 mA C'yi doldurur; V_o başladıktan 1 ms sonra
         e: 'Sabit giriş, kondansatöre sabit akım verir; çıkış doğrusal rampa olur.', f: '|dV_o/dt| = V_i / (RC) = 2,5 / 1 ms = 2,5 V/ms' },
       { t: 'num', q: 'İntegral alıcıda R = 4,7 kΩ, C = 100 nF. Girişe ±2 V, 1 kHz kare dalga uygulanıyor. Çıkış üçgeninin tepeden tepeye değeri kaç V?', a: 2 / 4.7e-4 * 0.5e-3, u: 'V',
         e: 'Her yarım periyotta çıkış sabit eğimle bir yöne gider.', f: 'ΔV = (V/RC) × T/2 = (2 / 0,47 ms) × 0,5 ms = 2,13 V' },
       { t: 'num', q: 'Girişe eğimi 4 V/ms olan rampa uygulanıyor. Çıkış geriliminin büyüklüğü kaç V?', c: opInv(['C', 'C', '10 nF'], ['R', 'R_F', '100 kΩ']), a: 4, u: 'V',
+        fl: [{ p: [[40, 96], [128, 96], [128, 40], [238, 40], [238, 112], [216, 112]], v: [2, 0, 0, -4, -4, -4], i: 0.04 }], // i = C·dV/dt = 0,04 mA; V_i rampanın 2 V anı
         e: 'Türev alıcıda kondansatör akımı giriş eğimiyle orantılıdır.', f: '|V_o| = R_F·C·dV_i/dt = 1 ms × 4 V/ms = 4 V' },
       { t: 'mc', q: 'Pratik integral alıcıda C\'ye paralel büyük bir direnç neden konur?', o: ['Ofset ve bias akımının çıkışı yavaşça doyuma sürmesini önlemek için', 'Kazancı artırmak için', 'Kondansatörü aşırı gerilimden korumak için', 'Bant genişliğini sonsuz yapmak için'], a: 0,
         e: 'DC\'de ideal integral alıcının kazancı sonsuzdur; küçük bir ofset bile zamanla birikir. Paralel direnç DC kazancı R_F/R ile sınırlar.', f: 'A_DC = R_F / R' },
@@ -907,7 +917,8 @@ UNITS.push(
       { h: 'Termostat gibi düzeltme', p: 'Negatif geri beslemede çıkışın bir kesri (β) ölçülür ve girişten çıkarılır; hata büyüdükçe düzeltme de büyür. Termostat da sıcaklığı ölçer, hedefi geçince ısıtmayı kısar. Sonuç yükseltecin kendi kazancına değil, ölçme oranına bağlı kalır.',
         r: 'Gerçek hayatta: araçtaki hız sabitleyici yokuşta hız düşünce gazı açar; koşullar değişse de hız neredeyse sabit kalır.' },
       { h: 'Kapalı çevrim kazancı', p: 'A yükseltecin açık çevrim kazancı, β çıkışın geri dönen kesridir. Döngüde bir tur atınca görülen Aβ\'ya çevrim kazancı denir. Aβ ≫ 1 olunca A_f ≈ 1/β olur ve A\'nın tam değeri önemini yitirir.',
-        f: ['A_f = A / (1 + A·β)', 'Aβ ≫ 1 → A_f ≈ 1 / β', 'Evirmeyen op-amp: β = R1 / (R1 + R_F)'], c: opNon(['R', 'R1', '2,2 kΩ'], ['R', 'R_F', '22 kΩ']) },
+        f: ['A_f = A / (1 + A·β)', 'Aβ ≫ 1 → A_f ≈ 1 / β', 'Evirmeyen op-amp: β = R1 / (R1 + R_F)'], c: opNon(['R', 'R1', '2,2 kΩ'], ['R', 'R_F', '22 kΩ']),
+        fl: [{ p: [[216, 80], [238, 80], [238, 132], [124, 132], [124, 208]], v: [5.5, 5.5, 5.5, 0.5, 0], i: 0.227 }] }, // V_i = 0,5 V varsayılır
       { h: 'Kazanç verip ne alırsın?', p: 'Geri besleme kazancı (1 + Aβ) kat düşürür; karşılığında bant genişliği yaklaşık aynı oranda artar, bozulma ve kazanç değişimleri azalır. Gerilim örnekleyip seri karıştıran tipte (evirmeyen yükselteç) giriş direnci (1 + Aβ) kat artar, çıkış direnci aynı oranda düşer.',
         f: ['A_f·f_H ≈ A·f_p', 'R_if = R_i·(1 + Aβ)', 'R_of = R_o / (1 + Aβ)', 'Analiz: tip → β → Aβ → A_f'] } ], qs: [
       { t: 'num', q: 'Açık çevrim kazancı A = 1000, geri besleme oranı β = 0,1. Kapalı çevrim kazancı kaç?', a: 1000 / 101, u: 'V/V',
@@ -915,6 +926,7 @@ UNITS.push(
       { t: 'mc', q: 'Negatif geri besleme kazancı ve bant genişliğini nasıl etkiler?', o: ['Kazanç düşer, bant genişliği artar', 'İkisi de artar', 'İkisi de düşer', 'Kazanç artar, bant genişliği düşer'], a: 0,
         e: 'Tek kutuplu yükselteçte kazanç–bant genişliği çarpımı sabittir; kazançtan verip bant genişliği alırsın.', f: 'A_f · f_H ≈ A · f_p' },
       { t: 'num', q: 'Evirmeyen yükselteçte R1 = 1 kΩ, R_F = 9 kΩ. Geri besleme oranı β kaç?', c: opNon(['R', 'R1', '1 kΩ'], ['R', 'R_F', '9 kΩ']), a: 0.1, u: 'V/V',
+        fl: [{ p: [[216, 80], [238, 80], [238, 132], [124, 132], [124, 208]], v: [10, 10, 10, 1, 0], i: 1 }], // V_i = 1 V varsayılır
         e: 'β, çıkışın − girişine geri dönen kesridir.', f: 'β = R1 / (R1 + R_F) = 1 / 10 = 0,1' },
       { t: 'mc', q: 'Aβ çarpımına ne ad verilir?', o: ['Çevrim kazancı', 'Kapalı çevrim kazancı', 'Ortak mod kazancı', 'Geri besleme direnci'], a: 0,
         e: 'Döngüyü bir noktadan kesip bir tur dolaşınca görülen kazançtır. Kararlılık bundan okunur.', f: 'T = Aβ' },
@@ -947,12 +959,14 @@ UNITS.push(
     { name: 'Kararlılık ve Schmitt', z: 3, k: [
       { h: 'Pozitif geri besleme: Schmitt', p: 'Çıkışın bir kesri + girişe verilirse fark büyütülür ve çıkış hemen bir uca (±V_doy) yapışır. Eşik çıkışa bağlı olduğu için yukarı ve aşağı geçiş eşikleri farklıdır; aradaki fark histerezistir. Gürültülü sinyal eşik çevresinde titreşse bile çıkış bir kez değişir.',
         f: ['V_eşik = ±V_doy·R1 / (R1 + R2)', 'Histerezis = 2·V_doy·R1 / (R1 + R2)'], c: opNon(['R', 'R1', '4,7 kΩ'], ['R', 'R2', '47 kΩ'], { flip: 0 }),
+        fl: [{ p: [[216, 80], [238, 80], [238, 132], [124, 132], [124, 208]], v: [10, 10, 10, 0.909, 0], i: 0.193 }], // çıkış +V_doy = 10 V durumu
         r: 'Gerçek hayatta: termostat kombiyi 21 °C\'de kapatıp 19 °C\'de açar; histerezis olmasa röle eşik çevresinde sürekli tıklardı.' },
       { h: 'Faz payı', p: 'Negatif geri besleme döngüsünde her kutup faz gecikmesi ekler. Çevrim kazancının 1 (0 dB) olduğu frekansta gecikme 180°\'ye ulaşırsa düzeltme ters döner ve devre salınır. Faz payı bu sınıra kalan mesafedir; 45°\'nin altı aşma ve çınlama getirir.',
         f: ['PM = 180° + ∠Aβ(f_c)', 'Bir kutbun fazı: −arctan(f / f_p)', 'Kapasitif yük yeni kutup ekler: f_p = 1 / (2π·R_o·C_L)'] },
       { h: 'Osilatör: bilerek kararsız', p: 'Salınım için döngüde kazanç tam 1, faz 0° olmalıdır. Wien köprüsü yalnız tek frekansta faz kaydırmaz ve orada sinyali 1/3\'e indirir; bu yüzden yükselteç kazancı 3 olmalıdır.',
         f: ['f = 1 / (2π·R·C)', 'A·β = 3 · 1/3 = 1'] } ], qs: [
       { t: 'num', q: 'Eviren Schmitt tetikleyicide çıkış ±10 V. Histerezis genişliği kaç V?', c: opNon(['R', 'R1', '10 kΩ'], ['R', 'R2', '90 kΩ'], { flip: 0 }), a: 2, u: 'V',
+        fl: [{ p: [[216, 80], [238, 80], [238, 132], [124, 132], [124, 208]], v: [10, 10, 10, 1, 0], i: 0.1 }], // çıkış +10 V durumu: V₊ = +1 V eşiği
         e: 'Pozitif geri besleme + girişini çıkışın bir kesrine bağlar. Çıkış durum değiştirince eşik de değişir.', f: 'V_eşik = ±10 × 10 / (10 + 90) = ±1 V → genişlik 2 V' },
       { t: 'num', q: 'Çevrim kazancının 1 (0 dB) olduğu frekansta faz −125°. Faz payı kaç derece?', a: 55, u: '°',
         e: 'Faz payı, döngünün −180°\'ye ne kadar uzak olduğudur. 45°\'nin altı aşma ve çınlama demektir.', f: 'PM = 180° − 125° = 55°' },
