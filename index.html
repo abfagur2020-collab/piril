@@ -842,7 +842,14 @@ UNITS.push(
         e: 'Kapalı çevrim kazancına değil, çevrim kazancına bakılır.', f: 'PM = 180° + ∠Aβ(f_c)' } ] } ] },
 
   { name: 'Anahtarlama ve H köprüsü', lessons: [
-    { name: 'MOSFET anahtar', z: 1, qs: [
+    { name: 'MOSFET anahtar', z: 1, k: [
+      { h: 'Gerilimle açılan anahtar', p: 'N kanallı MOSFET, gate ile source arasındaki gerilimle (V_GS) açılıp kapanır; gate\'e kalıcı akım gitmez. Low-side bağlantıda yük + ray ile drain arasında, source toprakta durur. R_PD, sürücü yokken gate\'i 0 V\'ta tutar ve MOSFET kapalı kalır.',
+        f: ['Tam iletim: V_GS ≫ V_th (ör. 10 V)', 'Güvenli durum: V_GS = 0'], c: LOWSIDE },
+      { h: 'İletimde küçük bir direnç', p: 'Açık MOSFET, R_DS(on) değerinde küçük bir dirence benzer; kaybı akımın karesiyle büyür. PWM\'de anahtar saniyede binlerce kez açılıp kapanır, yük ortalama gerilimi görür. Görev oranı D, iletim süresinin periyoda oranıdır.',
+        f: ['P = I² · R_DS(on)', 'V_ort = D · V'],
+        r: 'Gerçek hayatta: Robot süpürgenin emme motoru 14,4 V\'tan bir MOSFET\'le PWM edilir. %60 görev oranında motor ortalama 8,6 V görür; 3 A ve 10 mΩ\'da MOSFET iletimdeyken yalnız 90 mW harcar.' },
+      { h: 'Bobin akımı aniden kesilemez', p: 'Röle, solenoid ve motor sargısı birer endüktanstır. MOSFET kapanınca akımın gidecek yolu yoksa v = L·di/dt çok büyür ve drain\'de beslemenin katları kadar sıçrama olur. Yüke ters paralel bir diyot akıma yol açar ve V_DS\'yi besleme + V_F\'de tutar.',
+        f: ['v = L · di/dt', 'Diyotla: V_DS ≈ V + V_F'] } ], qs: [
       { t: 'mc', q: 'N kanallı MOSFET\'i low-side anahtar olarak tam iletime sokmak için ne gerekir?', o: ['V_GS, V_th\'den yeterince büyük olmalı (ör. 10 V)', 'V_GS = 0 V', 'Drain\'e negatif gerilim', 'Gate\'e sürekli akım vermek'], a: 0,
         e: 'V_th, MOSFET\'in yeni iletmeye başladığı gerilimdir. Datasheet\'teki R_DS(on), belirtilen V_GS\'te (ör. 10 V) ölçülür.', f: 'Tam iletim: V_GS ≫ V_th' },
       { t: 'num', q: 'I = 10 A, R_DS(on) = 8 mΩ. İletim kaybı kaç W?', a: 0.8, u: 'W',
@@ -855,7 +862,15 @@ UNITS.push(
         e: 'Diyot sağlamken V_DS en fazla 24 V + V_F ≈ 25 V olur. 85 V, bobin akımının gidecek yeri olmadığını gösterir: D açık devre ya da takılmamış.', f: 'Yol yoksa di/dt çok büyük → v = L·di/dt' },
       { t: 'num', q: '24 V besleme %35 görev oranıyla PWM ediliyor. Yüke düşen ortalama gerilim kaç V?', a: 8.4, u: 'V',
         e: 'Ortalama gerilim, iletim süresinin periyoda oranıyla orantılıdır.', f: 'V_ort = D · V = 0,35 × 24 = 8,4 V' } ] },
-    { name: 'H köprüsü', z: 2, qs: [
+    { name: 'H köprüsü', z: 2, k: [
+      { h: 'Dört anahtar, iki yön', p: 'Motor, iki kolun orta noktaları A ile B arasındadır. Çaprazdaki iki MOSFET iletince akım bir yönde akar, öteki çapraz çift yönü çevirir. Akım her an iki MOSFET\'ten seri geçer, kayıp da ikisinde oluşur.',
+        f: ['İleri: +V → Q1 → A → motor → B → Q4 → toprak', 'Geri: Q3 ve Q2 iletir, akım B\'den A\'ya', 'P_iletim = 2 · I² · R_DS(on)'], c: hbridge() },
+      { h: 'Yasak durum ve fren', p: 'Aynı koldaki üst ve alt MOSFET birlikte açılırsa beslemeyi kısa devre eder; buna shoot-through denir. Sürücü, birini kapatıp ötekini açmadan önce kısa bir ölü zaman bekler. İki alt MOSFET birlikte açılırsa motor uçları kısalır ve dönen motor kendi zıt EMK\'sıyla frenlenir.',
+        f: ['Shoot-through: I = V / (R_DS1 + R_DS2)', 'Fren: I = E / R_a'] },
+      { h: 'Hız ve yön: PWM ortalaması', p: 'Kilitli ters faz sürüşte köprü her periyotta iki yön arasında gidip gelir; motor ortalamayı görür. D = %50 sıfır verir, üstü bir yön, altı öteki yöndür. Kaydırıcılarla dene.',
+        f: ['V_ort = (2D − 1) · V', 'Örnek: 24 V, D = %75 → +12 V'], sim: 'hb',
+        r: 'Gerçek hayatta: Robot süpürgenin tekerlek motorları H köprüsüyle sürülür; aynı köprü ileri, geri ve fren için kullanılır.' },
+      { h: 'Dikkat: düğümleri oku', p: 'İletimdeki üst MOSFET kendi düğümünü + raya, alttaki toprağa çeker. Bir düğüm komuta uymuyorsa o düğüme bağlı MOSFET\'lerden birine şüphelen. Akım sıfırsa yol bir yerde açık kalmıştır; akım çok büyükse bir yerde kısa devre vardır.' } ], qs: [
       { t: 'mc', q: 'Motor akımının A\'dan B\'ye akması için hangi MOSFET\'ler iletimde olmalı?', c: hbridge(), o: ['Q1 ve Q4', 'Q1 ve Q2', 'Q3 ve Q4', 'Q2 ve Q3'], a: 0,
         e: 'Akım + raydan Q1 ile A\'ya, motordan B\'ye, Q4 ile toprağa gider. Çaprazdaki çift yönü belirler.', f: '+24 V → Q1 → A → motor → B → Q4 → toprak' },
       { t: 'mc', q: 'Aynı koldaki Q1 ve Q2 aynı anda iletime girerse ne olur?', c: hbridge(), o: ['Besleme kısa devre olur (shoot-through), MOSFET\'ler yanabilir', 'Motor hızlanır', 'Motor ters döner', 'Hiçbir şey olmaz'], a: 0,
@@ -868,7 +883,16 @@ UNITS.push(
         e: 'Akım her an iki MOSFET\'ten seri geçer.', f: 'P = 2 · I² · R = 2 × 64 × 0,015 = 1,92 W' },
       { t: 'ariza', q: 'Q1 ve Q4\'e iletim komutu verildi, motor akımı 0 A. A ve B düğümlerini ölç, arızalı MOSFET\'e dokun.', c: hbridge({ ra: '|A = 24 V', rb: '|B = 24 V' }), a: 'Q4',
         e: 'Q1 iletimde, A = 24 V. Q4 iletseydi B toprağa yakın olurdu. B = 24 V ve akım 0 ise Q4 iletmiyor. Q3 kısa devre olsaydı B yine 24 V olur ama Q4 üzerinden büyük akım akardı.', f: 'Beklenen: V_A − V_B ≈ 24 V' } ] },
-    { name: 'Sürüş ve kayıplar', z: 3, qs: [
+    { name: 'Sürüş ve kayıplar', z: 3, k: [
+      { h: 'İki tür kayıp', p: 'MOSFET iletimdeyken R_DS(on) üzerinde, açılıp kapanırken de geçiş anında ısınır. Geçişte gerilim ve akım bir an birlikte bulunur; bu kayıp her periyotta tekrarlandığı için frekansla büyür. R_DS(on) sıcakta artar, hesap sıcak değerle yapılır.',
+        f: ['P_iletim = I² · R_DS(on) (sıcak değer)', 'P_anahtarlama ≈ ½ · V · I · (t_r + t_f) · f_sw', 'P_gate = Q_g · V_GS · f_sw (sürücüden çekilir)'] },
+      { h: 'Gate sürüşü', p: 'High-side MOSFET\'in gate\'ini bootstrap kondansatörü sürer; her açılışta ona Q_g kadar yük verir. Faz düğümünün hızlı dv/dt\'si, C_gd üzerinden kapalı MOSFET\'in gate\'ine akım basar. Kapatma yolu zayıfsa gate V_th\'yi aşar ve shoot-through olur.',
+        f: ['C_boot ≥ Q_g / ΔV', 'V_GS ≈ C_gd · dV/dt · R_kapatma'] },
+      { h: 'Ölü zaman bedava değil', p: 'Ölü zamanda iki MOSFET de kapalıdır; akımı gövde diyodu taşır ve çıkış gerilimini akımın yönü belirler. Her periyotta kaybedilen bu kısa süre, ortalama gerilimde küçük bir hata yaratır.',
+        f: ['ΔV ≈ V_dc · t_d · f_sw'] },
+      { h: 'Isı bir dizi dirençten geçer', p: 'Isıl direnç, her watt için kaç derece ısınma olduğunu söyler (°C/W). Isı jonksiyondan kılıfa, kılıftan soğutucuya, oradan havaya seri bir yoldan geçer; dirençler toplanır.',
+        f: ['T_j = T_a + P · (R_th,jc + R_th,cs + R_th,sa)'],
+        r: 'Gerçek hayatta: Drone ESC\'sindeki küçük MOSFET\'ler soğutucusuzdur, pervane rüzgârıyla soğur. 2 W kayıp ve toplam 40 °C/W ile jonksiyon ortamdan 80 °C sıcak olur; 30 °C\'lik bir günde 110 °C eder.' } ], qs: [
       { t: 'mc', q: 'Yarım köprüde üst MOSFET hızlı açılınca alt MOSFET\'in gate\'inde gerilim sıçraması görülüyor. En doğrudan çözüm hangisi?', o: ['Alt MOSFET için güçlü kapatma yolu: küçük R_g,off veya Miller clamp', 'Gate direncini 10 kat büyütmek', 'Ölü zamanı sıfırlamak', 'Besleme gerilimini yükseltmek'], a: 0,
         e: 'Faz düğümündeki dv/dt, C_gd üzerinden alt gate\'e akım basar. Bu akım kapatma yolu direncinde gerilim oluşturur; V_th\'yi aşarsa shoot-through olur.', f: 'V_GS ≈ C_gd · dV/dt · (R_g,off + R_sürücü)' },
       { t: 'num', q: 'R_DS(on) 25 °C\'de 8 mΩ ve 110 °C\'de 1,6 katına çıkıyor. 10 A\'de sıcak durumdaki iletim kaybı kaç W?', a: 100 * 0.008 * 1.6, u: 'W',
@@ -883,7 +907,14 @@ UNITS.push(
         e: 'Isıl dirençler seri toplanır. Termal ped (R_th,cs) çoğu zaman ihmal edilemez.', f: 'T_j = 40 + 5 × (0,8 + 0,5 + 6) = 76,5 °C' } ] } ] },
 
   { name: 'Anahtarlamalı güç kaynakları', lessons: [
-    { name: 'Buck dönüştürücü', z: 1, qs: [
+    { name: 'Buck dönüştürücü', z: 1, k: [
+      { h: 'Doğrayıp ortalamak', p: 'Buck, girişi S anahtarıyla hızla açıp kapatır; L ile C bu darbeleri düzgün bir DC\'ye ortalar. S kesime girince endüktör akımı duramaz, volan gibi D diyotu üzerinden dönmeye devam eder. Kalıcı durumda kondansatörün ortalama akımı sıfırdır, yani endüktörün ortalama akımı yük akımıdır.',
+        f: ['Ī_L = I_o', 'Kesimde: v_L = −V_o'], c: buck() },
+      { h: 'Görev oranı gerilimi belirler', p: 'CCM\'de çıkış gerilimi, giriş geriliminin görev oranı kadarıdır. Kaydırıcılarla giriş gerilimini ve görev oranını değiştirip çıkışı izle.',
+        f: ['V_o = D · V_in', 'D = V_o / V_in'], sim: 'buck' },
+      { h: 'Güç korunur, akım artar', p: 'İdeal dönüştürücüde giriş gücü çıkış gücüne eşittir: gerilim düşerken akım artar, girişten çekilen akım yük akımından küçüktür. Gerçekte anahtar, diyot ve endüktör ısınır; verim %85–95 dolayındadır.',
+        f: ['V_in · I_in = V_o · I_o (ideal)', 'η = P_çıkış / P_giriş'],
+        r: 'Gerçek hayatta: Arabanın USB şarj soketi 12 V aküden buck ile 5 V üretir. Telefona 5 V, 2 A (10 W) verirken %90 verimle aküden yaklaşık 0,93 A çeker.' } ], qs: [
       { t: 'num', q: 'İdeal buck dönüştürücü 12 V\'tan 5 V üretiyor. Görev oranı yüzde kaç?', c: buck({ vin: '12 V' }), a: 500 / 12, u: '%',
         e: 'CCM\'de buck çıkışı, giriş geriliminin görev oranı kadarıdır.', f: 'D = V_o / V_in = 5 / 12 = %41,7' },
       { t: 'mc', q: 'CCM\'de çalışan buck dönüştürücüde endüktör akımının ortalaması neye eşittir?', o: ['Çıkış (yük) akımına', 'Giriş akımına', 'Sıfıra', 'Tepe akımın iki katına'], a: 0,
@@ -896,7 +927,15 @@ UNITS.push(
         e: 'İdeal buck\'ta çıkış görev oranıyla doğru orantılıdır.', f: 'V_o = D · V_in, örneğin 12 V × %42 = 5,04 V' },
       { t: 'num', q: 'İdeal buck 12 V\'tan 5 V, 3 A veriyor. Girişten çekilen ortalama akım kaç A?', a: 15 / 12, u: 'A',
         e: 'Kayıpsız dönüştürücüde giriş ve çıkış gücü eşittir. Buck gerilimi düşürür, akımı artırır.', f: 'I_in = 5 × 3 / 12 = 1,25 A' } ] },
-    { name: 'Boost ve buck-boost', z: 2, qs: [
+    { name: 'Boost ve buck-boost', z: 2, k: [
+      { h: 'Boost: bobinin tekmesi', p: 'S iletince endüktör girişten akım çekip enerji depolar. S açılınca endüktör akımını sürdürmek için kendi gerilimini girişe ekler ve D üzerinden çıkışı doldurur. Endüktör akımı yalnız (1 − D) süresince çıkışa gittiği için ortalaması yük akımından büyüktür.',
+        f: ['V_o = V_in / (1 − D)', 'Ī_L = I_o / (1 − D)'], c: BOOST,
+        r: 'Gerçek hayatta: Powerbank, 3,7 V\'luk Li-ion hücreden USB\'nin 5 V\'unu boost ile üretir: D = 1 − 3,7 / 5 ≈ %26. Hücre 3,2 V\'a inince denetleyici D\'yi %36\'ya çıkarır.' },
+      { h: 'Buck-boost: ters işaretli çıkış', p: 'S iletirken enerji yalnız endüktörde birikir, S kesilince D üzerinden çıkışa boşalır. Çıkış girişe göre negatiftir; D = 0,5\'te büyüklük girişe eşittir, altında düşük, üstünde yüksektir.',
+        f: ['|V_o| = V_in · D / (1 − D)'], c: BBINV },
+      { h: 'Dalgalanma ve DCM', p: 'Endüktör akımı her periyotta bir üçgen çizer; eğimi, endüktör üstündeki gerilimin L\'ye oranıdır. Buck\'ta iletim süresince L\'ye V_in − V_o düşer. Yük akımı dalgalanmanın yarısının altına inerse akım her periyotta sıfıra değer: bu DCM\'dir ve V_o artık yüke de bağlıdır.',
+        f: ['di/dt = v_L / L', 'ΔI_L = (V_in − V_o) · D / (L · f_sw) (buck)', 'DCM sınırı: I_o < ΔI_L / 2'] },
+      { h: 'Dikkat: anahtarlama düğümü', p: 'Sağlam dönüştürücüde anahtarlama düğümü kare dalga yapar; buck\'ta ortalaması çıkış gerilimine yakındır. Düğüm hep aynı gerilimde takılı kalıyorsa, onu o gerilime bağlayan elemanı düşün.' } ], qs: [
       { t: 'num', q: 'Boost dönüştürücü 5 V\'tan 12 V üretiyor. Görev oranı yüzde kaç?', c: BOOST, a: (1 - 5 / 12) * 100, u: '%',
         e: 'Boost\'ta V_o = V_in / (1 − D).', f: 'D = 1 − 5/12 = %58,3' },
       { t: 'num', q: 'Buck: 12 V → 5 V, L = 10 µH, f_sw = 500 kHz. Endüktör akımının tepeden tepeye dalgalanması kaç A?', a: 7 * (5 / 12) / (10e-6 * 5e5), u: 'A',
@@ -909,7 +948,14 @@ UNITS.push(
         e: 'Ortalama akım, dalgalanmanın yarısının altına inince akım sıfıra değer. DCM\'de V_o artık yalnız D\'ye değil yüke de bağlıdır.', f: 'DCM sınırı: I_o < ΔI_L / 2' },
       { t: 'ariza', q: 'Görev oranı %42 komut ediliyor ama çıkış 12 V. Anahtarlama düğümünü ölç, arızalı elemana dokun.', c: buck({ vin: '12 V', t: '|V_SW = 12 V' }), a: 'S',
         e: 'Anahtar hiç kesime girmiyor: S kısa devre. Çıkış girişe yapışır ve 5 V\'luk yük aşırı gerilim görür. D kısa devre olsaydı anahtarlama düğümü 0 V\'ta kalırdı.', f: 'Beklenen V_o = 0,42 × 12 = 5 V' } ] },
-    { name: 'Flyback ve kontrol', z: 3, qs: [
+    { name: 'Flyback ve kontrol', z: 3, k: [
+      { h: 'Flyback: depola, sonra bırak', p: 'Flyback\'in trafosu iki sargılı bir endüktör gibi çalışır. S iletirken primer enerji depolar, sekonder diyodu ters kutuplu olduğu için çıkışa akım gitmez; S açılınca enerji sekonderden çıkışa boşalır. Sarım oranı gerilimi ölçekler ve girişle çıkışı yalıtır.',
+        f: ['V_o = V_in · D / (1 − D) · N_s / N_p', 'V_DS = V_in + (N_p / N_s) · V_o (+ kaçak sıçraması)'], c: FLYBACK,
+        r: 'Gerçek hayatta: Telefonun USB-C şarj adaptörü bir flyback\'tir. 230 V şebeke doğrultulunca yaklaşık 325 V DC olur; küçük trafo bunu yalıtarak 5–20 V\'a indirir.' },
+      { h: 'Çıkış dalgalanması ve CCM sınırı', p: 'Buck\'ta endüktörün üçgen dalgalanma akımı kondansatöre gider ve küçük bir gerilim dalgalanması yaratır. En hafif yükte de CCM\'de kalmak için dalgalanmanın yarısı yük akımını aşmamalıdır; bu, L için bir alt sınır verir.',
+        f: ['ΔV_o = ΔI_L / (8 · f_sw · C) (ESR ihmal)', 'L_min = (V_in − V_o) · D / (2 · I_o,min · f_sw)'] },
+      { h: 'Kontrol döngüsü tuzakları', p: 'Boost ve flyback\'te D artınca enerji önce endüktörde birikir, çıkış bir an düşer: bu ters tepki sağ yarı düzlem sıfırıdır (RHPZ) ve döngü kesimi onun birkaç kat altında tutulur. Tepe akım modunda D > 0,5 iken alt harmonik salınım çıkar; akım sinyaline rampa eklenir.',
+        f: ['f_RHPZ = (1 − D)² · R / (2π · L) (boost)', 'Eğim kompanzasyonu: S_e ≥ ½ · S_f'] } ], qs: [
       { t: 'num', q: 'Flyback CCM\'de D = 0,4. Çıkış gerilimi kaç V? (Diyot düşümünü ihmal et.)', c: FLYBACK, a: 48 * (0.4 / 0.6) / 4, u: 'V',
         e: 'Flyback, sarım oranı eklenmiş bir buck-boost\'tur.', f: 'V_o = V_in · D / (1 − D) · N_s/N_p = 48 × 0,667 / 4 = 8 V' },
       { t: 'num', q: 'Aynı flyback\'te anahtar kesimdeyken üzerindeki gerilim kaç V olur? (Kaçak endüktans sıçramasını ihmal et.)', c: FLYBACK, a: 48 + 4 * 8, u: 'V',
@@ -924,7 +970,13 @@ UNITS.push(
         e: 'Bu alt harmonik salınımdır. Eklenen rampa, endüktör akımı iniş eğiminin en az yarısı olmalıdır.', f: 'S_e ≥ ½ · S_f' } ] } ] },
 
   { name: 'Batarya yönetimi (BMS)', lessons: [
-    { name: 'Hücre ve paket', z: 1, qs: [
+    { name: 'Hücre ve paket', z: 1, k: [
+      { h: 'Seri gerilim, paralel kapasite', p: 'Seri bağlı hücrelerin gerilimleri toplanır, kapasite bir hücreninki kadar kalır. Paralel bağlı hücreler kapasiteyi toplar, gerilim aynı kalır. 10S4P, 10 seri grup ve her grupta 4 paralel hücre demektir.',
+        f: ['V_paket = S · V_hücre', 'C_paket = P · C_hücre (Ah)', 'E = V_nom · C_paket (Wh)'] },
+      { h: 'Hücre gerilimi ve C oranı', p: 'NMC hücre nominal 3,6 V, tam dolu 4,2 V\'tur; LFP nominal 3,2 V, tam dolu 3,65 V\'tur. Gerilim sınıfı tam dolu değere göre seçilir. C oranı akımı kapasiteye göre söyler: 1C paketi bir saatte boşaltır.',
+        f: ['I = C oranı × kapasite', 'Örnek: 50 Ah, 0,5C → 25 A'],
+        r: 'Gerçek hayatta: Bir e-scooter paketi 10S3P olabilir: 3,5 Ah\'lik NMC hücrelerle 36 V, 10,5 Ah ve 378 Wh. Tam dolu 42 V olduğu için şarj cihazı 42 V verir.' },
+      { h: 'BMS: paketin bekçisi', p: 'Li-ion hücre aşırı şarj, aşırı deşarj, aşırı akım ve yanlış sıcaklıkta kalıcı hasar görür ya da termal kaçağa girer. BMS her hücrenin gerilimini, paket akımını ve sıcaklıkları izler. Bir sınır aşılınca MOSFET ya da kontaktörle akımı keser.' } ], qs: [
       { t: 'num', q: '10S (10 seri) Li-ion (NMC) paket tam doluyken kaç V olur?', a: 42, u: 'V',
         e: 'Paket gerilimi hücre gerilimlerinin toplamıdır. Gerilim sınıfı seçimi nominale değil tam dolu değere göre yapılır.', f: 'V = 10 × 4,2 = 42 V' },
       { t: 'num', q: 'Her biri 3 Ah olan hücrelerle 10S4P paket kuruluyor. Paket kapasitesi kaç Ah?', a: 12, u: 'Ah',
@@ -937,7 +989,14 @@ UNITS.push(
         e: 'C oranı, akımın kapasiteye oranıdır. 1C, paketi bir saatte boşaltan akımdır.', f: 'I = 2 × 12 = 24 A' },
       { t: 'mc', q: 'NMC kimyalı Li-ion hücrenin tipik tam şarj gerilimi kaçtır?', o: ['4,2 V', '3,65 V', '3,2 V', '5,0 V'], a: 0,
         e: '3,65 V LFP hücrelerin tam şarj gerilimidir. Kesin değer hücrenin datasheet\'inden alınır.', f: 'NMC ≈ 4,2 V, LFP ≈ 3,65 V' } ] },
-    { name: 'Ölçüm ve balans', z: 2, qs: [
+    { name: 'Ölçüm ve balans', z: 2, k: [
+      { h: 'Neden balans?', p: 'Seri hücreler aynı akımı taşır ama kapasiteleri ve kaçakları biraz farklıdır; zamanla bazıları daha dolu kalır. Şarj, en dolu hücre sınıra varınca durmak zorundadır. Pasif balans, dolu hücreye bir dirençle küçük bir deşarj yolu açıp fazlalığı ısıya çevirir.',
+        f: ['P = V_hücre² / R_bal', 't = ΔQ / I_bal (Ah / A = saat)'], c: loop('V_hücre', [['SO', 'S'], ['R', 'R_bal']]) },
+      { h: 'SOC: depoda ne kaldı?', p: 'SOC, kalan yükün kapasiteye oranıdır. Coulomb sayma akımı zamanla toplar, ama küçük bir ölçüm ofseti bile günlerce birikir; dinlenmiş açık devre gerilimiyle (OCV) düzeltilir. LFP\'de OCV eğrisi orta bölgede çok düz olduğu için gerilimden SOC okumak zordur.',
+        f: ['SOC = SOC₀ − ∫I dt / C', 'Sabit akımda: ΔSOC = I · t / C'] },
+      { h: 'Akımı şöntle ölçmek', p: 'Şönt, akım yoluna seri konan çok küçük bir dirençtir; üzerindeki gerilim akımla orantılıdır. Direnci küçük olsa da yüksek akımda kayda değer ısınır.',
+        f: ['V_şönt = I · R', 'P = I² · R'],
+        r: 'Gerçek hayatta: Elektrikli arabanın BMS\'i 100 µΩ\'luk bir şöntle 300 A\'i ölçer: şöntte 30 mV düşer, 9 W ısı çıkar. Göstergedeki yüzde, bu akımdan hesaplanan SOC\'tur.' } ], qs: [
       { t: 'num', q: 'Pasif balansta 4,2 V\'luk hücreye 42 Ω direnç bağlanıyor. Dirençte harcanan güç kaç W?', c: loop('4,2 V', [['SO', 'S'], ['R', 'R_bal', '42 Ω']]), a: 4.2 * 4.2 / 42, u: 'W',
         e: 'Pasif balans fazla enerjiyi ısıya çevirir. BMS kartında bu ısı dağıtılmalıdır.', f: 'P = V² / R = 17,64 / 42 = 0,42 W' },
       { t: 'num', q: 'Hücreler arasında 0,5 Ah fark var ve balans akımı 100 mA. Dengeleme kaç saat sürer?', a: 5, u: 'h',
@@ -950,7 +1009,14 @@ UNITS.push(
         e: '%20–80 aralığında gerilim yalnız birkaç on mV değişir; ölçüm hatası ve histerezis bunu yutar.', f: 'dV/dSOC ≈ 0 (orta bölge)' },
       { t: 'num', q: '50 Ah paket %80 SOC\'tan başlayıp 1,5 saat boyunca 10 A veriyor. Yeni SOC yüzde kaç?', a: 50, u: '%',
         e: 'Çekilen yükü kapasiteye oranla ve düş.', f: 'ΔQ = 10 × 1,5 = 15 Ah = %30 → SOC = %50' } ] },
-    { name: 'Koruma ve ön şarj', z: 3, qs: [
+    { name: 'Koruma ve ön şarj', z: 3, k: [
+      { h: 'Ön şarj: yumuşak kalkış', p: 'İnverterin bus kondansatörü boşken kısa devre gibidir; ana kontaktör doğrudan kapansa dev bir akım darbesi kontakları kaynatabilir. Önce K2 kapanır ve C_bus, R_pre üzerinden yavaşça dolar. Gerilim farkı küçülünce K1 kapanır.',
+        f: ['I_tepe = V / R_pre', 'τ = R_pre · C_bus', '%95: t = τ · ln 20 ≈ 3τ; 5τ\'da %99'], c: PRECHARGE,
+        r: 'Gerçek hayatta: Elektrikli arabayı çalıştırınca duyulan "tık… tık" sesi kontaktörlerdir: önce ön şarj kontaktörü, kısa süre sonra ana kontaktör kapanır.' },
+      { h: 'Dirençteki ısı', p: 'Boş kondansatör dirençle doldurulurken, kondansatörde depolanan enerji kadar enerji de dirençte ısıya döner. Bu enerji direnç değerinden bağımsızdır; R_pre bu darbeye dayanacak şekilde seçilir. Kondansatör kısa devreyse ön şarj hiç bitmez, bu yüzden zaman aşımı konur.',
+        f: ['E_R = ½ · C · V²'] },
+      { h: 'Geri besleme bus\'ı şişirir', p: 'Frenleyen motor jeneratör olur ve enerjiyi bus\'a iter. Batarya bu enerjiyi alamıyorsa (bağlantı koptu ya da paket dolu), gidecek tek yer kondansatördür ve gerilim hızla yükselir. Çözüm rejen sınırı, fren kıyıcı ve hızlı aşırı gerilim korumasıdır.',
+        f: ['P = C · V · dV/dt → dV/dt = P / (C · V)'] } ], qs: [
       { t: 'num', q: 'K2 kapandığı anda R_pre\'den geçen tepe akım kaç A?', c: PRECHARGE, a: 110 / 47, u: 'A',
         e: 'İlk anda boş kondansatör kısa devre gibidir; gerilimin tamamı dirençtedir.', f: 'I_pk = 110 / 47 = 2,34 A' },
       { t: 'num', q: 'Ön şarj direnci 100 Ω, C_bus = 1 mF. Bus geriliminin %95\'e ulaşması kaç saniye sürer?', a: 0.1 * Math.log(20), u: 's',
@@ -965,7 +1031,14 @@ UNITS.push(
         e: 'Sağlam devrede birkaç τ sonra C_bus 110 V\'a ulaşır ve R_pre\'de 0 V kalır. Sürekli 110 V, C_bus\'ın kısa devre olduğunu gösterir. R_pre sürekli V²/R = 257 W ile ısınır; ön şarj zaman aşımıyla kesilmelidir.', f: 'τ = 47 Ω × 1 mF = 47 ms → 5 s ≫ 5τ' } ] } ] },
 
   { name: 'Elektrik motorları', lessons: [
-    { name: 'DC motor', z: 1, qs: [
+    { name: 'DC motor', z: 1, k: [
+      { h: 'Motor aynı zamanda jeneratördür', p: 'Dönen DC motor, hızıyla orantılı bir zıt EMK (E) üretir; bu, uygulanan gerilime karşı koyar. Akımı, uygulanan gerilimle zıt EMK arasındaki fark ve armatür direnci R_a belirler. Kalıcı durumda L_a akımı etkilemez.',
+        f: ['E = K_e · ω', 'I = (V − E) / R_a'], c: loop('V', [['R', 'R_a'], ['I', 'L_a'], ['M', 'E', 'K_e · ω']]) },
+      { h: 'Tork akımdan gelir', p: 'Tork akımla orantılıdır; akım ters dönerse tork da ters döner, bu yüzden polariteyi çevirmek yönü çevirir. Kalkışta ω = 0, yani E = 0\'dır; akımı yalnız R_a sınırlar ve en büyük akım bu andadır. SI birimlerinde K_t ile K_e sayısal olarak eşittir.',
+        f: ['T = K_t · I', 'I_kalkış = V / R_a'],
+        r: 'Gerçek hayatta: Akülü matkap vidayı sıkıp durduğunda motor neredeyse kalkış akımı çeker ve en büyük torku verir. Uzun süre böyle zorlanırsa sargılar ısınır.' },
+      { h: 'Dikkat: rpm değil rad/s', p: 'Formüllerdeki ω, rad/s cinsindendir; motor etiketleri ise rpm yazar. Bir tur 2π radyan, bir dakika 60 saniyedir.',
+        f: ['ω = n · 2π / 60', '1000 rpm ≈ 105 rad/s'] } ], qs: [
       { t: 'num', q: 'Motorun zıt EMK sabiti K_e = 0,05 V/(rad/s). 300 rad/s\'de zıt EMK kaç V?', a: 15, u: 'V',
         e: 'Dönen motor jeneratör gibi gerilim üretir; hızla doğru orantılıdır.', f: 'E = K_e · ω = 0,05 × 300 = 15 V' },
       { t: 'num', q: 'Kalıcı durumda armatür akımı kaç A? (Endüktans kalıcı durumda etkisiz.)', c: loop('24 V', [['R', 'R_a', '0,5 Ω'], ['I', 'L_a', '2 mH'], ['M', 'E', '20 V']]), a: 8, u: 'A',
@@ -978,7 +1051,14 @@ UNITS.push(
         e: 'Akım yönü değişince tork yönü de değişir. H köprüsü bunu elektronik olarak yapar.', f: 'T = K_t · I, I < 0 → T < 0' },
       { t: 'num', q: '3000 rpm kaç rad/s eder?', a: 3000 * 2 * Math.PI / 60, u: 'rad/s',
         e: 'Bir tur 2π radyan, bir dakika 60 saniyedir.', f: 'ω = 3000 × 2π / 60 = 314 rad/s' } ] },
-    { name: 'BLDC ve asenkron', z: 2, qs: [
+    { name: 'BLDC ve asenkron', z: 2, k: [
+      { h: 'BLDC: fırçasız komütasyon', p: 'BLDC\'de mıknatıslar rotorda, sargılar statordadır; fırça yerine sürücü sargıları sırayla anahtarlar. Üç Hall sensörü altı farklı durum verir, yani rotorun hangi 60°\'lik dilimde olduğunu söyler. Bir mekanik turda kutup çifti sayısı kadar elektriksel periyot vardır.',
+        f: ['f_e = p · n / 60 (p: kutup çifti, n: rpm)', 'Yüksüz hız: n ≈ Kv · V'],
+        r: 'Gerçek hayatta: Kv = 920 rpm/V olan drone motoru 4S (14,8 V) bataryayla yüksüz yaklaşık 13 600 rpm döner. 7 kutup çiftli bu motor için ESC yaklaşık 1590 Hz ile komütasyon yapar.' },
+      { h: 'Asenkron: alanı kovalayan rotor', p: 'Stator sargıları döner bir manyetik alan kurar; hızı frekansa ve kutup sayısına bağlıdır. Rotor alandan biraz yavaş döner; bu fark (kayma) rotorda akım ve tork doğurur. Dikkat: burada P kutup sayısıdır (4 kutup = 2 kutup çifti), BLDC formülündeki p ise kutup çifti.',
+        f: ['n_s = 120 · f / P (P: kutup sayısı)', 's = (n_s − n) / n_s'] },
+      { h: 'Step motor: sayarak konum', p: 'Step motor her darbede sabit bir açı döner; konum, darbe sayılarak bilinir. Mikro adımda sürücü faz akımlarını kademeli değiştirip her tam adımı küçük parçalara böler.',
+        f: ['Tam adım/tur = 360° / adım açısı', 'Mikro adım/tur = tam adım/tur × bölme'] } ], qs: [
       { t: 'num', q: '4 kutuplu asenkron motor 50 Hz şebekede. Senkron hız kaç rpm?', a: 1500, u: 'rpm',
         e: 'Döner alan, kutup çifti başına bir elektriksel periyotta bir tur atar.', f: 'n_s = 120 f / P = 120 × 50 / 4 = 1500 rpm' },
       { t: 'num', q: 'Aynı motor yükte 1440 rpm dönüyor. Kayma yüzde kaç?', a: 4, u: '%',
@@ -991,7 +1071,16 @@ UNITS.push(
         e: 'Kv, yüksüz hızın gerilime oranıdır. Yük altında hız düşer.', f: 'n = 1000 × 11,1 = 11 100 rpm' },
       { t: 'num', q: '1,8° adım açılı step motor 1/16 mikro adımla sürülüyor. Bir tur kaç mikro adımdır?', a: 3200, u: 'adım',
         e: 'Tam adımda tur 360/1,8 = 200 adımdır; mikro adım bunu böler.', f: '200 × 16 = 3200' } ] },
-    { name: 'Sürücü ve verim', z: 3, qs: [
+    { name: 'Sürücü ve verim', z: 3, k: [
+      { h: 'Akım sınırı ve verim', p: 'Duran motorda zıt EMK sıfırdır; akımı yalnız küçük sargı direnci sınırlar, bu yüzden sürücüler akım sınırı ve yumuşak kalkış kullanır. Verim, çıkan mekanik gücün çekilen elektrik gücüne oranıdır. Aradaki fark bakır (I²·R), demir ve sürtünme kayıplarına gider.',
+        f: ['I_kalkış = V / R', 'P_cu = I² · R', 'η = (P_giriş − P_kayıp) / P_giriş'] },
+      { h: 'Kv ile K_t aynı sabit', p: 'Kv, volt başına yüksüz rpm\'dir; K_e ise rad/s başına volttur, yani biri ötekinin tersidir (birim çevirisiyle). SI\'da K_t = K_e olduğundan Kv\'si düşük motor amper başına daha çok tork verir.',
+        f: ['K_e = 60 / (2π · Kv) (V·s/rad)', 'K_t = K_e (Nm/A, DC tanımıyla)'] },
+      { h: 'FOC ve V/f', p: 'FOC, faz akımlarını rotorla birlikte dönen iki bileşene ayırır: mıknatıs akısına dik i_q torku yapar, i_d normalde sıfır tutulur. Asenkron motorda akı V/f ile orantılıdır; frekans düşerken gerilim de düşürülür, yoksa çekirdek doyar.',
+        f: ['T = 3/2 · p · λ_m · i_q', 'Φ ∝ V / f'] },
+      { h: 'Frenleme enerjisi', p: 'Dönen rotor kinetik enerji taşır; frenlemede sürücü bunu bus\'a geri verir. Batarya alamazsa bu enerji fren direncinde ısıya çevrilir.',
+        f: ['E = ½ · J · ω²'],
+        r: 'Gerçek hayatta: Elektrikli araba yavaşlarken motor jeneratör olur ve kinetik enerjinin bir kısmını bataryaya geri yükler; buna rejeneratif fren denir.' } ], qs: [
       { t: 'num', q: '48 V motorun sargı direnci 0,4 Ω. Akım sınırı olmayan bir sürücüde kalkış akımı kaç A olur?', a: 120, u: 'A',
         e: 'Bu yüzden sürücülerde donanımsal akım sınırı ve yumuşak kalkış vardır.', f: 'I = 48 / 0,4 = 120 A' },
       { t: 'num', q: 'DC motor 24 V\'ta 8 A çekiyor, R_a = 0,5 Ω. Yalnız bakır kaybı hesaba katılırsa verim yüzde kaç?', a: (192 - 32) / 192 * 100, u: '%',
