@@ -131,6 +131,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .sl{display:grid;grid-template-columns:1fr auto;gap:0 12px}
 .sl b{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .sl input{grid-column:1/-1;width:100%;height:44px;margin:0;accent-color:var(--copper)}
+.pred{display:grid;gap:10px}
 .read{display:flex;gap:8px 28px;flex-wrap:wrap}
 .read div{font-size:14px;color:var(--soft)}
 .read b{display:block;font:700 24px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
@@ -455,17 +456,17 @@ const UNITS = [
 // Mini simülasyonlar: kaydırıcılar, hesap ve hedef aralığı.
 const SIMS = {
   ohm: { s: [['V', 'Gerilim', 1, 12, 0.5, 3, 'V'], ['R', 'Lamba direnci', 100, 1000, 10, 900, 'Ω']],
-    calc: v => ({ I: v.V / v.R * 1e3 }), key: 'I', min: 19, max: 21, out: [['I', 'Akım', 'mA']], glow: r => r.I / 40 },
+    calc: v => ({ I: v.V / v.R * 1e3 }), key: 'I', min: 19, max: 21, out: [['I', 'Akım', 'mA']], glow: r => r.I / 40, p: ['R', 'I'] },
   led: { s: [['V', 'Kaynak gerilimi', 3, 12, 0.5, 9, 'V'], ['R', 'Seri direnç', 100, 1000, 10, 1000, 'Ω']],
-    calc: v => ({ I: Math.max(0, v.V - 2) / v.R * 1e3 }), key: 'I', min: 14, max: 16, out: [['I', 'LED akımı', 'mA']], glow: r => r.I / 20,
+    calc: v => ({ I: Math.max(0, v.V - 2) / v.R * 1e3 }), key: 'I', min: 14, max: 16, out: [['I', 'LED akımı', 'mA']], glow: r => r.I / 20, p: ['V', 'I'],
     warn: r => r.I > 30 ? 'Bu akım çoğu 5 mm LED için fazla.' : '' },
   bolucu: { s: [['R1', 'R1', 1, 20, 0.5, 10, 'kΩ'], ['R2', 'R2', 1, 20, 0.5, 10, 'kΩ']],
-    calc: v => ({ Vo: 12 * v.R2 / (v.R1 + v.R2), I: 12 / (v.R1 + v.R2) }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V'], ['I', 'Akım', 'mA']], glow: r => r.Vo / 12 },
+    calc: v => ({ Vo: 12 * v.R2 / (v.R1 + v.R2), I: 12 / (v.R1 + v.R2) }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V'], ['I', 'Akım', 'mA']], glow: r => r.Vo / 12, p: ['R1', 'Vo'] },
   rc: { s: [['R', 'Direnç', 1, 100, 1, 10, 'kΩ'], ['C', 'Sığa', 1, 100, 1, 10, 'µF']],
-    calc: v => ({ T: v.R * v.C / 1e3 }), key: 'T', min: 0.48, max: 0.52, out: [['T', 'Zaman sabiti τ', 's']], glow: () => 0 },
+    calc: v => ({ T: v.R * v.C / 1e3 }), key: 'T', min: 0.48, max: 0.52, out: [['T', 'Zaman sabiti τ', 's']], glow: () => 0, p: ['C', 'T'] },
   bjt: { s: [['RB', 'R_B', 20, 200, 1, 200, 'kΩ'], ['RC', 'R_C (lamba)', 0.5, 3, 0.1, 1, 'kΩ']],
     calc: v => { const ic = Math.min(100 * 4.3 / v.RB, 11.8 / v.RC); return { IC: ic, VCE: 12 - ic * v.RC }; },
-    key: 'VCE', min: 5.7, max: 6.3, out: [['IC', 'I_C', 'mA'], ['VCE', 'V_CE', 'V']], glow: r => r.IC / 12 }
+    key: 'VCE', min: 5.7, max: 6.3, out: [['IC', 'I_C', 'mA'], ['VCE', 'V_CE', 'V']], glow: r => r.IC / 12, p: ['RC', 'IC'] }
 };
 
 const COLORS = ['siyah', 'kahverengi', 'kırmızı', 'turuncu', 'sarı', 'yeşil', 'mavi', 'mor', 'gri', 'beyaz'];
@@ -874,12 +875,12 @@ UNITS.push(
 // Ek simülasyonlar
 Object.assign(SIMS, {
   opamp: { s: [['R1', 'R1', 1, 20, 0.5, 10, 'kΩ'], ['RF', 'R_F', 10, 200, 1, 10, 'kΩ']],
-    calc: v => ({ Vo: Math.min(12, 0.5 * (1 + v.RF / v.R1)) }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V']], glow: r => r.Vo / 12,
+    calc: v => ({ Vo: Math.min(12, 0.5 * (1 + v.RF / v.R1)) }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V']], glow: r => r.Vo / 12, p: ['RF', 'Vo'],
     warn: r => r.Vo >= 12 ? 'Çıkış +12 V beslemede doydu.' : '' },
   buck: { s: [['V', 'Giriş', 8, 24, 0.5, 24, 'V'], ['D', 'Görev oranı', 10, 90, 1, 50, '%']],
-    calc: v => ({ Vo: v.V * v.D / 100 }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V']], glow: r => r.Vo / 12 },
+    calc: v => ({ Vo: v.V * v.D / 100 }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V']], glow: r => r.Vo / 12, p: ['D', 'Vo'] },
   hb: { s: [['V', 'Bus gerilimi', 12, 48, 1, 48, 'V'], ['D', 'Görev oranı', 0, 100, 1, 10, '%']],
-    calc: v => ({ Vm: (2 * v.D / 100 - 1) * v.V }), key: 'Vm', min: 9.3, max: 9.9, out: [['Vm', 'Motor ortalaması', 'V']], glow: r => Math.abs(r.Vm) / 48 }
+    calc: v => ({ Vm: (2 * v.D / 100 - 1) * v.V }), key: 'Vm', min: 9.3, max: 9.9, out: [['Vm', 'Motor ortalaması', 'V']], glow: r => Math.abs(r.Vm) / 48, p: ['D', 'Vm'] }
 });
 
 const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, z: l.z, qs: l.qs })));
@@ -1200,13 +1201,18 @@ const answer = (v, ready = true) => { C.ans = v; $('#ok').disabled = !ready; };
 const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>` : '';
 const optList = (q, badge) => `<div class="opts">${C.perm.map(i => `<button class="opt" aria-pressed="false" data-i="${i}">${badge ? '<kbd></kbd>' : ''}<span>${tx(q.o[i])}</span></button>`).join('')}</div>`;
 
+// Önce tahmin: p[0] kaydırıcısı artınca p[1] çıktısı ne olur? Diğer kaydırıcılar başlangıç değerinde; yön calc'tan çıkar.
+const PRED = ['Artar', 'Azalır', 'Değişmez'];
+const simDir = m => { const v = Object.fromEntries(m.s.map(s => [s[0], s[5]])), k = m.s.find(s => s[0] === m.p[0]), y = x => m.calc({ ...v, [k[0]]: x })[m.p[1]], d = y(k[3]) - y(k[2]); return d > 1e-9 ? 0 : d < -1e-9 ? 1 : 2; };
+const simPred = m => { const y = m.out.find(o => o[0] === m.p[1])[1]; return [m.s.find(s => s[0] === m.p[0])[1], /^\p{Lu}\p{Ll}/u.test(y) ? y[0].toLocaleLowerCase('tr') + y.slice(1) : y]; };
+
 const VIEW = {
   mc: q => { C.perm = shuffle(q.o.length); return fig(q) + optList(q); },
   num: q => (q.b ? `<div class="fig">${resistor(q.b)}</div><p class="note">Bantlar: ${q.b.join(', ')}</p>` : fig(q)) + `<form class="num"><input id="n" inputmode="decimal" autocomplete="off" enterkeyhint="done" aria-label="Cevap, birim ${q.u}" aria-describedby="nerr"><b>${q.u}</b></form><p class="note" id="nerr" aria-live="polite">±%2 tolerans. Virgül veya nokta kullanabilirsin.</p>`,
   kur: () => `<div class="fig" id="res"></div><div class="slots">${[0, 1, 2].map(i => `<button data-s="${i}"></button>`).join('')}</div><div class="pal">${COLORS.map(c => `<button data-c="${c}"><i style="background:${HEX[c]}"></i>${c}</button>`).join('')}</div>`,
   ariza: q => `<div class="fig">${circuit(q.c, { pick: true })}</div>`,
   sira: q => { do C.perm = shuffle(q.o.length); while (C.perm.every((v, i) => v === i)); return '<p class="note">İlk sıradan başlayarak dokun. Geri almak için tekrar dokun.</p>' + optList(q, true); },
-  sim: q => `<div class="fig" id="sv"></div><div class="read" id="rd"></div><div>${SIMS[q.sim].s.map(([k, n, a, b, st, v]) => `<label class="sl"><span>${tx(n)}</span><b id="o-${k}"></b><input type="range" id="s-${k}" min="${a}" max="${b}" step="${st}" value="${v}"></label>`).join('')}</div><p class="note" id="warn" aria-live="polite"></p>`
+  sim: q => { const [x, y] = simPred(SIMS[q.sim]); return `<div class="fig" id="sv"></div><div class="read" id="rd"></div><div class="pred"><p><b>Önce tahmin et.</b> ${tx(x)} artarsa ${tx(y)} ne olur?</p><div class="opts">${PRED.map((o, i) => `<button class="opt" aria-pressed="false" data-p="${i}"><span>${o}</span></button>`).join('')}</div><p class="note" id="pn" aria-live="polite"></p></div><div>${SIMS[q.sim].s.map(([k, n, a, b, st, v]) => `<label class="sl"><span>${tx(n)}</span><b id="o-${k}"></b><input type="range" id="s-${k}" min="${a}" max="${b}" step="${st}" value="${v}" disabled></label>`).join('')}</div><p class="note" id="warn" aria-live="polite"></p>`; }
 };
 const BIND = {
   mc: () => $$('.opt').forEach(b => b.onclick = () => { $$('.opt').forEach(x => x.setAttribute('aria-pressed', x === b)); answer(+b.dataset.i); }),
@@ -1232,14 +1238,23 @@ const BIND = {
     });
   },
   sim: q => {
+    let go = false; C.miss = '';
     const m = SIMS[q.sim], upd = () => {
       const v = {}; m.s.forEach(([k, , , , , , u]) => { const i = $('#s-' + k), s = `${fmt(v[k] = +i.value)} ${u}`; $('#o-' + k).textContent = s; i.setAttribute('aria-valuetext', s); });
       const r = m.calc(v);
       $('#rd').innerHTML = m.out.map(([k, n, u]) => `<div>${tx(n)}<b>${fmt(+r[k].toFixed(3))} ${u}</b></div>`).join('');
       $('#sv').innerHTML = SIMVIEW[q.sim](v, r, Math.min(1, m.glow(r)));
       $('#warn').textContent = m.warn ? m.warn(r) : '';
-      answer(v);
+      answer(v, go);
     };
+    $$('[data-p]').forEach(b => b.onclick = () => {
+      const d = simDir(m), ok = +b.dataset.p === d, [x, y] = simPred(m);
+      $$('[data-p]').forEach(o => { o.disabled = true; o.setAttribute('aria-pressed', o === b); });
+      b.classList.add(ok ? 'good' : 'bad');
+      $('#pn').textContent = ok ? 'Doğru tahmin.' : 'Tahminin tutmadı, simülasyonda kendin gör.';
+      if (!ok) C.miss = `${x} artınca ${y} ${PRED[d].toLocaleLowerCase('tr')}.`;
+      go = true; $$('.sl input').forEach(i => i.disabled = false); upd();
+    });
     m.s.forEach(s => $('#s-' + s[0]).oninput = upd); upd();
   }
 };
@@ -1283,6 +1298,7 @@ function check() {
   const foot = $('.foot');
   foot.className = 'foot ' + (ok ? 'good' : 'bad');
   foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_Z[q.z]} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  if (q.t === 'sim' && C.miss) $('.fb h2').insertAdjacentHTML('afterend', `<p>${tx(C.miss)}</p>`);
   $('#nx').onclick = () => C.queue.length ? question() : finish();
   $('#nx').focus({ preventScroll: true });
 }
