@@ -273,6 +273,24 @@ const bjtDiv = (m = {}) => [
   ...(m.vc ? [['T', 224, 104, 0, 0, '|V_C = ' + m.vc], ['T', 224, 146, 0, 0, '|V_E = ' + m.ve], ['T', 84, 136, 0, 0, '|V_B = ' + m.vb]] : [])
 ];
 
+// Elle akışlar (mA, V): çözücünün çözemediği devreler. Bkz. flowOf'un üstündeki biçim.
+// Zener iletimde: I_S = 6,9 V / 330 Ω = 20,9 mA; yüke 5,1 mA, zenere 15,8 mA (katottan anoda).
+const FL_ZENER = [{ p: [[40, 40], [165, 40]], v: [12, 5.1], i: 20.9 }, { p: [[165, 40], [165, 180]], v: [5.1, 0], i: 15.8 },
+  { p: [[165, 40], [270, 40], [270, 180], [165, 180]], v: [5.1, 5.1, 0, 0], i: 5.1 }, { p: [[165, 180], [40, 180]], v: [0, 0], i: 20.9 }];
+// RCTH, t = τ anı: v_C = 4 (1 − e⁻¹) = 2,53 V; R1'den 1,58 mA gelir, R2'ye 0,843, C'nin + levhasına 0,736 mA.
+const FL_RCTH = [{ p: [[20, 40], [130, 40]], v: [12, 2.53], i: 1.58 }, { p: [[130, 40], [130, 190]], v: [2.53, 0], i: 0.843 },
+  { p: [[130, 40], [230, 40], [230, 190], [130, 190]], v: [2.53, 2.53, 0, 0], i: 0.736 }, { p: [[130, 190], [20, 190]], v: [0, 0], i: 1.58 }];
+// bjtFixed: baz ve kollektör akımı transistörün içinde birleşip emetörden toprağa iner.
+const flFixed = (ib, ic, vc) => [{ p: [[100, 24], [60, 24], [60, 120], [150, 120], [164, 120], [164, 128]], v: [12, 12, 0.7, 0.7, 0.7, 0], i: ib },
+  { p: [[100, 24], [190, 24], [190, 92], [164, 112], [164, 128]], v: [12, 12, vc, vc, 0], i: ic }, { p: [[164, 128], [190, 148], [190, 196]], v: [0, 0, 0], i: +(ib + ic).toFixed(3) }];
+// bjtDiv, I_B ihmal: bölücüden 0,3 mA; I_C = I_E = 2,3 mA, V_E = 2,3 V, V_C = 12 − 2,3 × 2,2 = 6,94 V.
+const FL_DIV = [{ p: [[100, 24], [60, 24], [60, 120], [60, 216], [125, 216]], v: [12, 12, 3, 0, 0], i: 0.3 },
+  { p: [[100, 24], [190, 24], [190, 92], [164, 112], [164, 128], [190, 148], [190, 216], [125, 216]], v: [12, 12, 6.94, 6.94, 2.3, 2.3, 0, 0], i: 2.3 }];
+// bjtDiv, β = 100 ile tam çözüm: I_B = 21,2 µA, I_C = 2,12 mA, I_E = 2,141 mA, V_B = 2,84 V, V_E = 2,14 V. vc: kollektör gerilimi.
+const flDiv = vc => [{ p: [[100, 24], [60, 24], [60, 120]], v: [12, 12, 2.84], i: 0.3053 }, { p: [[60, 120], [60, 216], [125, 216]], v: [2.84, 0, 0], i: 0.2841 },
+  { p: [[60, 120], [150, 120], [164, 120], [164, 128]], v: [2.84, 2.84, 2.84, 2.14], i: 0.0212 },
+  { p: [[100, 24], [190, 24], [190, 92], [164, 112], [164, 128]], v: [12, 12, vc, vc, 2.14], i: 2.12 }, { p: [[164, 128], [190, 148], [190, 216], [125, 216]], v: [2.14, 2.14, 0, 0], i: 2.141 }];
+
 const UNITS = [
   { name: 'Yük, akım, gerilim', lessons: [
     { name: 'Elektrik yükü', k: [
@@ -406,7 +424,7 @@ const UNITS = [
         e: 'LED\'de 2 V düşer, akımı kalan gerilim ve direnç belirler.', f: 'I = (V − 2) / R, örneğin (8 − 2) / 400 = 15 mA' },
       { t: 'mc', q: '1 kΩ, ¼ W\'lık dirence en fazla yaklaşık kaç V uygulanabilir?', o: ['15,8 V', '4 V', '25 V', '250 V'], a: 0,
         e: 'Güç sınırını V² / R = P eşitliğinden gerilime çevir.', f: 'V = √(P·R) = √(0,25 × 1000) = 15,8 V' },
-      { t: 'ariza', q: 'LED yanmıyor, devreden akım geçmiyor. Sorunlu elemana dokun.', c: loop('9 V', [['R', 'R', '330 Ω', '0 V'], ['LED-', 'LED', '', '9 V']]), a: 'LED',
+      { t: 'ariza', q: 'LED yanmıyor, devreden akım geçmiyor. Sorunlu elemana dokun.', c: loop('9 V', [['R', 'R', '330 Ω', '0 V'], ['LED-', 'LED', '', '9 V']]), fl: null, a: 'LED',
         e: 'Sembolün üçgeni akım yönüne ters bakıyor. Ters kutuplu LED akım geçirmez, kaynağın tamamı üzerinde görünür.', f: 'I = 0 → V_R = 0 V, V_LED = 9 V' } ] } ] },
 
   { name: 'Seri ve paralel devreler', lessons: [
@@ -429,7 +447,7 @@ const UNITS = [
         e: 'Tek yol olduğu için her elemandan aynı akım geçer.', f: 'I₁ = I₂ = I₃' },
       { t: 'sim', sim: 'bolucu', q: 'Gerilim bölücünün çıkışını 5 V yap (±0,1 V). Giriş 12 V.',
         e: 'Çıkış, R2\'nin toplam dirençteki payına bağlıdır. 5 V için R2 / (R1 + R2) = 5/12 olmalı.', f: 'V_çıkış = 12 × R2 / (R1 + R2), örneğin R1 = 7 kΩ, R2 = 5 kΩ' },
-      { t: 'ariza', q: 'Dirençlerin her biri 1 kΩ. Ölçülen gerilimlere göre arızalı dirence dokun.', c: loop('12 V', [['R', 'R1', '', '0 V'], ['R', 'R2', '', '12 V'], ['R', 'R3', '', '0 V']]), a: 'R2',
+      { t: 'ariza', q: 'Dirençlerin her biri 1 kΩ. Ölçülen gerilimlere göre arızalı dirence dokun.', c: loop('12 V', [['R', 'R1', '', '0 V'], ['R', 'R2', '', '12 V'], ['R', 'R3', '', '0 V']]), fl: null, a: 'R2',
         e: 'R2 açık devre. Akım akmadığı için sağlam dirençlerde gerilim düşmez, kaynağın tamamı kopuk yerde görünür.', f: 'I = 0 → V₁ = V₃ = 0, V₂ = 12 V' },
       { t: 'num', q: '9 V kaynağa seri bağlı üç elemanın ikisinde 2,5 V ve 3 V düşüyor. Üçüncüde kaç V düşer?', a: 3.5, u: 'V',
         e: 'Kirchhoff gerilim yasası: kapalı çevrimde gerilimlerin toplamı sıfırdır.', f: 'V₃ = 9 − 2,5 − 3 = 3,5 V' } ] },
@@ -451,7 +469,7 @@ const UNITS = [
         e: 'Kirchhoff akım yasası: düğüme giren akım çıkana eşittir.', f: 'I₃ = 50 − 20 − 12 = 18 mA' },
       { t: 'num', q: 'Kaynaktan çekilen toplam akım kaç mA?', c: par('12 V', [[['R', 'R1', '4 kΩ']], [['R', 'R2', '6 kΩ']], [['R', 'R3', '12 kΩ']]]), a: 6, u: 'mA',
         e: 'Her kolda 12 V var. Kol akımlarını bul ve topla.', f: 'I = 12/4 + 12/6 + 12/12 = 3 + 2 + 1 = 6 mA' },
-      { t: 'ariza', q: 'Her direnç 1 kΩ, kol akımları ölçüldü. Arızalı dirence dokun.', c: par('12 V', [[['R', 'R1', '', '12 mA']], [['R', 'R2', '', '0 mA']], [['R', 'R3', '', '12 mA']]]), a: 'R2',
+      { t: 'ariza', q: 'Her direnç 1 kΩ, kol akımları ölçüldü. Arızalı dirence dokun.', c: par('12 V', [[['R', 'R1', '', '12 mA']], [['R', 'R2', '', '0 mA']], [['R', 'R3', '', '12 mA']]]), fl: [{ p: [[40, 40], [120, 40]], v: [12, 12], i: 24 }, { p: [[120, 40], [120, 180]], v: [12, 0], i: 12 }, { p: [[120, 40], [280, 40], [280, 180], [120, 180]], v: [12, 12, 0, 0], i: 12 }, { p: [[120, 180], [40, 180]], v: [0, 0], i: 24 }], a: 'R2',
         e: 'Paralel kolda kopan direnç yalnızca kendi akımını keser, diğer kollar çalışmaya devam eder.', f: 'Beklenen I = 12 V / 1 kΩ = 12 mA, R2\'de 0 mA' },
       { t: 'mc', q: 'Dört adet 1 kΩ direnç paralel bağlanırsa eşdeğer direnç kaç Ω olur?', o: ['250 Ω', '4000 Ω', '500 Ω', '1000 Ω'], a: 0,
         e: 'n adet eşit paralel direncin eşdeğeri R/n\'dir.', f: 'R = 1000 / 4 = 250 Ω' } ] },
@@ -506,12 +524,12 @@ const UNITS = [
         e: 'İlk iki rakam değer, üçüncü rakam pF cinsinden 10\'un kuvvetidir.', f: '10 × 10⁴ pF = 100 000 pF = 100 nF' } ] },
     { name: 'RC dolma', k: [
       { h: 'Depo hortumla dolar', p: 'Kondansatör bir direnç üzerinden dolarken başta boştur ve akım en büyüktür. Doldukça kaynakla arasındaki fark küçülür, akım ve dolma hızı azalır. Bu yüzden eğri önce dik yükselir, sonra yataylaşır.',
-        c: loop('9 V', [['S', 'Anahtar'], ['R', 'R', '22 kΩ'], ['C', 'C', '47 µF']]) },
+        c: loop('9 V', [['S', 'Anahtar'], ['R', 'R', '22 kΩ'], ['C', 'C', '47 µF']]), fl: [{ p: [[40, 40], [160, 40], [280, 40], [280, 180], [40, 180]], v: [9, 9, 0, 0, 0], i: 0.409 }] },
       { h: 'Zaman sabiti τ', p: 'τ = R·C eğrinin hızını belirler; R ohm, C farad ise τ saniyedir. Kısa yol: kΩ × µF = ms. Her τ\'da kalan farkın %63\'ü kapanır, 5τ sonunda kondansatör dolmuş sayılır.',
         f: ['τ = R·C', 'V_C(t) = V·(1 − e^(−t/τ))', 't = τ → %63   t = 3τ → %95   t = 5τ → %99\'dan fazla'], sim: 'rc',
         r: 'Gerçek hayatta: mikrodenetleyicinin RESET ucundaki 10 kΩ ve 100 nF, açılışta τ = 1 ms\'lik gecikme verir; besleme oturana kadar işlemci bekler.' },
       { h: 'Dikkat: dolunca ne görülür?', p: 'Sağlam kondansatör dolunca akım durur: gerilimin tamamı C\'de, R üzerinde 0 V kalır. V_C kaynağa yaklaşır ama onu geçemez. Ölçümler buna uymuyorsa hangi elemanın açık ya da kısa devre olunca bu gerilimleri vereceğini düşün.' } ], qs: [
-      { t: 'num', q: 'Devrenin zaman sabiti kaç saniye?', c: loop('5 V', [['S', 'Anahtar'], ['R', 'R', '10 kΩ'], ['C', 'C', '100 µF']]), a: 1, u: 's',
+      { t: 'num', q: 'Devrenin zaman sabiti kaç saniye?', c: loop('5 V', [['S', 'Anahtar'], ['R', 'R', '10 kΩ'], ['C', 'C', '100 µF']]), fl: [{ p: [[40, 40], [160, 40], [280, 40], [280, 180], [40, 180]], v: [5, 5, 0, 0, 0], i: 0.5 }], a: 1, u: 's',
         e: 'Zaman sabiti, direnç ile sığanın çarpımıdır.', f: 'τ = R·C = 10⁴ × 10⁻⁴ = 1 s' },
       { t: 'num', q: 'Boş kondansatör 5 V kaynaktan R üzerinden doluyor. t = τ anında gerilimi kaç V?', a: 5 * (1 - Math.exp(-1)), u: 'V',
         e: 'Bir zaman sabiti sonunda son değerin %63,2\'sine ulaşılır.', f: 'v = 5 (1 − e⁻¹) = 3,16 V' },
@@ -521,12 +539,12 @@ const UNITS = [
         e: 'R veya C büyüdükçe eğri yavaşlar. kΩ × µF = ms.', f: 'τ = R·C, örneğin 10 kΩ × 50 µF = 500 ms' },
       { t: 'num', q: 'Boş 1 µF kondansatör, 1 kΩ üzerinden 10 V\'a bağlanıyor. t = 2 ms\'de gerilimi kaç V?', a: 10 * (1 - Math.exp(-2)), u: 'V',
         e: 'τ = 1 ms olduğu için t = 2τ\'dur.', f: 'v = 10 (1 − e⁻²) = 8,65 V' },
-      { t: 'ariza', q: 'Devre uzun süredir enerjili ve kondansatör dolmuş olmalıydı. Arızalı elemana dokun.', c: loop('9 V', [['R', 'R', '10 kΩ', '9 V'], ['C', 'C', '10 µF', '0 V']]), a: 'C',
+      { t: 'ariza', q: 'Devre uzun süredir enerjili ve kondansatör dolmuş olmalıydı. Arızalı elemana dokun.', c: loop('9 V', [['R', 'R', '10 kΩ', '9 V'], ['C', 'C', '10 µF', '0 V']]), fl: [{ p: [[40, 40], [280, 40], [280, 180], [40, 180]], v: [9, 0, 0, 0], i: 0.9 }], a: 'C',
         e: 'Sağlam kondansatör uzun süre sonra 9 V\'a dolar ve R üzerinde 0 V kalır. Sürekli akım ve 0 V, kondansatörün kısa devre olduğunu gösterir.', f: 'Beklenen: V_C = 9 V, V_R = 0 V' } ] },
     { name: 'Boşalma ve zamanlama', k: [
       { h: 'Dolu depo boşalır', p: 'Dolu kondansatör bir dirence bağlanınca küçük bir pil gibi akım verir. Gerilim düştükçe akım da düşer, bu yüzden boşalma da üsteldir ve giderek yavaşlar. Her τ\'da gerilim o andaki değerin %37\'sine iner.',
         f: ['V_C(t) = V_0·e^(−t/τ)', 't = τ → %36,8 kalır', 'e^(−t/τ) = 0,5 → t = τ·ln 2 ≈ 0,693·τ'],
-        c: [['C', 40, 180, 40, 40, 'C\n10 µF', 'C'], put(['S', 'Anahtar'], 40, 40, 160, 40), ['W', 160, 40, 280, 40], put(['R', 'R', '47 kΩ'], 280, 40, 280, 180), ['W', 280, 180, 40, 180]] },
+        c: [['C', 40, 180, 40, 40, 'C\n10 µF', 'C'], put(['S', 'Anahtar'], 40, 40, 160, 40), ['W', 160, 40, 280, 40], put(['R', 'R', '47 kΩ'], 280, 40, 280, 180), ['W', 280, 180, 40, 180]], fl: [{ p: [[40, 40], [160, 40], [280, 40], [280, 180], [40, 180]], v: [12, 12, 12, 0, 0], i: 0.255 }] },
       { h: 'Gerilim sıçramaz', p: 'Kondansatör gerilimi aniden değişemez; anahtarlamadan hemen sonra önceki değerinde kalır. Bu yüzden boş kondansatör ilk anda kısa devre, uzun süre sonra açık devre gibidir. Her geçici durumu başlangıç, son değer ve τ ile tek formülle çözersin.',
         f: ['v_C(0⁺) = v_C(0⁻)', 'v(t) = v(∞) + [v(0⁺) − v(∞)]·e^(−t/τ)'] },
       { h: 'RC filtre', p: 'Aynı R ve C sinyal yolunda alçak geçiren filtre olur: hızlı değişimleri kondansatör yutar, yavaş değişimler geçer. Kesim frekansında çıkış girişin 0,707 katına (−3 dB) iner.',
@@ -552,21 +570,21 @@ const UNITS = [
       { h: 'Tek yönlü vana', p: 'Diyot akımı yalnız anottan katoda, semboldeki üçgenin gösterdiği yönde geçirir; ters yönde kapalıdır. İleri yönde açılması için küçük bir eşik gerilimi aşılmalıdır. Benzetmenin sınırı: açıkken bile üzerinde akımdan neredeyse bağımsız sabit bir gerilim düşer.',
         f: ['Si: V_D ≈ 0,7 V', 'Schottky: V_D ≈ 0,3 V', 'Kırmızı LED: V_D ≈ 2 V'] },
       { h: 'Sabit gerilim modeli', p: 'İletimdeki diyotu 0,7 V\'luk küçük bir pil gibi düşün. Kaynaktan diyot düşümünü çıkar, kalan gerilimi dirence uygula ve akımı Ohm yasasıyla bul.',
-        f: ['I = (V − V_D) / R'], c: loop('9 V', [['R', 'R', '2,2 kΩ'], ['D', 'D', 'Si']]) },
+        f: ['I = (V − V_D) / R'], c: loop('9 V', [['R', 'R', '2,2 kΩ'], ['D', 'D', 'Si']]), fl: [{ p: [[40, 40], [280, 40], [280, 180], [40, 180]], v: [9, 0.7, 0, 0], i: 3.77 }] },
       { h: 'Zener: ters yönde sabit gerilim', p: 'Zener diyot ters yönde belli bir gerilimde (V_Z) iletime geçer ve çıkışı orada tutar. Fazla gerilimi seri direnç R_S üstlenir. R_S\'ten geçen akım zener ile yük arasında paylaşılır.',
-        f: ['I_S = (V_giriş − V_Z) / R_S', 'I_L = V_Z / R_L', 'I_Z = I_S − I_L'], c: ZENER },
+        f: ['I_S = (V_giriş − V_Z) / R_S', 'I_L = V_Z / R_L', 'I_Z = I_S − I_L'], c: ZENER, fl: FL_ZENER },
       { h: 'Doğrultma', p: 'Diyot AC\'nin yalnız bir yarısını geçirir; AC\'yi DC\'ye çevirmenin ilk adımı budur. Prizdeki ve trafo çıkışındaki gerilimler rms değeridir; tepe değeri √2 katıdır ve diyot bundan 0,7 V eksiltir.',
         f: ['V_p = V_rms·√2', 'Çıkış tepesi = V_p − 0,7 V'],
         r: 'Gerçek hayatta: telefon şarj aleti şebekeyi önce diyot köprüsüyle doğrultur. LED de bir diyot olduğu için ters takılırsa yanmaz.' } ], qs: [
       { t: 'mc', q: 'Silisyum diyotun ileri yönde iletimdeki yaklaşık gerilimi nedir?', o: ['0,7 V', '0,2 V', '1,8 V', '5 V'], a: 0,
         e: 'Sabit gerilim modelinde silisyum için 0,7 V alınır. Schottky diyotta yaklaşık 0,3 V\'tur.', f: 'V_D ≈ 0,7 V (Si)' },
-      { t: 'num', q: 'Sabit gerilim modeliyle (V_D = 0,7 V) devre akımı kaç mA?', c: loop('5 V', [['R', 'R', '1 kΩ'], ['D', 'D', 'Si']]), a: 4.3, u: 'mA',
+      { t: 'num', q: 'Sabit gerilim modeliyle (V_D = 0,7 V) devre akımı kaç mA?', c: loop('5 V', [['R', 'R', '1 kΩ'], ['D', 'D', 'Si']]), fl: [{ p: [[40, 40], [280, 40], [280, 180], [40, 180]], v: [5, 0.7, 0, 0], i: 4.3 }], a: 4.3, u: 'mA',
         e: 'Diyotta 0,7 V düşer, kalan gerilim dirençtedir.', f: 'I = (5 − 0,7) / 1 kΩ = 4,3 mA' },
-      { t: 'ariza', q: 'Bir LED yanıyor, diğeri yanmıyor. Sorunlu elemana dokun.', c: par('5 V', [[['R', 'R1', '330 Ω'], ['LED', 'LED1']], [['R', 'R2', '330 Ω'], ['LED-', 'LED2']]]), a: 'LED2',
+      { t: 'ariza', q: 'Bir LED yanıyor, diğeri yanmıyor. Sorunlu elemana dokun.', c: par('5 V', [[['R', 'R1', '330 Ω'], ['LED', 'LED1']], [['R', 'R2', '330 Ω'], ['LED-', 'LED2']]]), fl: [{ p: [[40, 40], [150, 40], [150, 110], [150, 180], [40, 180]], v: [5, 5, 2, 0, 0], i: 9.09 }], a: 'LED2',
         e: 'LED2\'nin üçgeni yukarı, yani akım yönüne ters bakıyor. Ters yönde iletime geçmez.', f: 'Akım anottan katoda akar' },
-      { t: 'num', q: 'Zener iletimde. R_S direncinden geçen akım kaç mA?', c: ZENER, a: (12 - 5.1) / 330 * 1000, u: 'mA',
+      { t: 'num', q: 'Zener iletimde. R_S direncinden geçen akım kaç mA?', c: ZENER, fl: FL_ZENER, a: (12 - 5.1) / 330 * 1000, u: 'mA',
         e: 'Zener çıkışı 5,1 V\'ta sabitler, kalan gerilim R_S\'tedir.', f: 'I_S = (12 − 5,1) / 330 = 20,9 mA' },
-      { t: 'num', q: 'Zener iletimde. Zener akımı kaç mA?', c: ZENER, a: (12 - 5.1) / 330 * 1000 - 5.1, u: 'mA',
+      { t: 'num', q: 'Zener iletimde. Zener akımı kaç mA?', c: ZENER, fl: FL_ZENER, a: (12 - 5.1) / 330 * 1000 - 5.1, u: 'mA',
         e: 'I_S, zener ile yük arasında bölünür.', f: 'I_Z = I_S − V_Z / R_L = 20,9 − 5,1 = 15,8 mA' },
       { t: 'mc', q: '12 V rms sinüs, tek silisyum diyotla yarım dalga doğrultuluyor. Çıkış tepe değeri yaklaşık kaç V?', o: ['16,3 V', '12,0 V', '11,3 V', '17,0 V'], a: 0,
         e: 'Önce tepe değerine çevir, sonra bir diyot düşümünü çıkar.', f: 'V_p = 12·√2 − 0,7 = 16,3 V' } ] },
@@ -592,22 +610,22 @@ const UNITS = [
     { name: 'BJT kutuplama', k: [
       { h: 'Neden kutuplama?', p: 'Transistörün sinyali bozmadan yükseltmesi için durgun bir çalışma noktası (Q noktası) gerekir: aktif bölgede, V_CE beslemenin ortalarında. Kutuplama dirençleri bu noktayı kurar. Musluğu yarı açık tutmak gibi: sinyal gelince akış hem artabilir hem azalabilir.' },
       { h: 'Sabit kutuplama ve doyum testi', p: 'R_B, V_CC\'den baz akımını belirler ve aktif bölgede I_C = β·I_B olur. Ama R_C kollektör akımına bir üst sınır koyar. β·I_B bu sınırı aşarsa transistör doyar ve I_C sınırda kalır.',
-        f: ['I_B = (V_CC − V_BE) / R_B', 'V_CE = V_CC − I_C·R_C', 'I_C(doyum) = (V_CC − 0,2) / R_C', 'β·I_B > I_C(doyum) → doyum'], c: bjtFixed('220 kΩ', '1 kΩ') },
+        f: ['I_B = (V_CC − V_BE) / R_B', 'V_CE = V_CC − I_C·R_C', 'I_C(doyum) = (V_CC − 0,2) / R_C', 'β·I_B > I_C(doyum) → doyum'], c: bjtFixed('220 kΩ', '1 kΩ'), fl: flFixed(0.0514, 5.14, 6.86) },
       { h: 'Gerilim bölücülü kutuplama', p: 'R1–R2 bölücüsü bazı sabit bir gerilimde tutar; baz akımı küçük olduğu için çoğu zaman ihmal edilir. Emetör bazın 0,7 V altındadır, emetör akımı buradan çıkar. Q noktası β\'ya pek bağlı olmadığı için seri üretimde tercih edilir.',
-        f: ['V_B = V_CC·R2 / (R1 + R2)', 'I_E = (V_B − 0,7) / R_E ≈ I_C', 'V_CE = V_CC − I_C·(R_C + R_E)'], c: bjtDiv(),
+        f: ['V_B = V_CC·R2 / (R1 + R2)', 'I_E = (V_B − 0,7) / R_E ≈ I_C', 'V_CE = V_CC − I_C·(R_C + R_E)'], c: bjtDiv(), fl: FL_DIV,
         r: 'Gerçek hayatta: ses ön yükselteçlerindeki ortak emetörlü katlar böyle kutuplanır; sıcaklıkla β değişse de çalışma noktası pek kaymaz.' },
       { h: 'Dikkat: gerilimlerden arıza oku', p: 'Önce bölgeyi bul: V_E = 0 ve V_C = V_CC ise transistör kesimdedir, akım yoktur. Sonra bu gerilimleri hangi direncin açık ya da kısa devresinin üreteceğini düşün. Açık direnç akımı keser, kısa direnç üzerinde 0 V bırakır.' } ], qs: [
-      { t: 'num', q: 'Sabit kutuplamada I_B kaç µA? V_BE = 0,7 V.', c: bjtFixed('470 kΩ', '2,2 kΩ'), a: 11.3 / 470e3 * 1e6, u: 'µA',
+      { t: 'num', q: 'Sabit kutuplamada I_B kaç µA? V_BE = 0,7 V.', c: bjtFixed('470 kΩ', '2,2 kΩ'), fl: flFixed(0.024, 2.4, 6.71), a: 11.3 / 470e3 * 1e6, u: 'µA',
         e: 'Baz-emetör çevresi: V_CC = I_B·R_B + V_BE.', f: 'I_B = (12 − 0,7) / 470 kΩ = 24,0 µA' },
-      { t: 'num', q: 'β = 100, V_BE = 0,7 V. V_CE kaç V?', c: bjtFixed('470 kΩ', '2,2 kΩ'), a: 12 - 100 * 11.3 / 470e3 * 2200, u: 'V',
+      { t: 'num', q: 'β = 100, V_BE = 0,7 V. V_CE kaç V?', c: bjtFixed('470 kΩ', '2,2 kΩ'), fl: flFixed(0.024, 2.4, 6.71), a: 12 - 100 * 11.3 / 470e3 * 2200, u: 'V',
         e: 'Önce I_C = β·I_B, sonra kollektör çevresi.', f: 'I_C = 2,40 mA, V_CE = 12 − 2,40 × 2,2 = 6,71 V' },
-      { t: 'mc', q: 'β = 100, V_BE = 0,7 V. Bu transistör hangi bölgede çalışır?', c: bjtFixed('22 kΩ', '1 kΩ'), o: ['Doyum', 'Aktif', 'Kesim', 'Ters aktif'], a: 0,
+      { t: 'mc', q: 'β = 100, V_BE = 0,7 V. Bu transistör hangi bölgede çalışır?', c: bjtFixed('22 kΩ', '1 kΩ'), fl: flFixed(0.514, 11.8, 0.2), o: ['Doyum', 'Aktif', 'Kesim', 'Ters aktif'], a: 0,
         e: 'β·I_B = 51 mA, oysa R_C en fazla 11,8 mA\'e izin verir. Transistör doyar.', f: 'I_C(doyum) = (12 − 0,2) / 1 kΩ = 11,8 mA < β·I_B' },
-      { t: 'num', q: 'I_B ihmal edilirse I_E kaç mA? V_BE = 0,7 V.', c: bjtDiv(), a: 2.3, u: 'mA',
+      { t: 'num', q: 'I_B ihmal edilirse I_E kaç mA? V_BE = 0,7 V.', c: bjtDiv(), fl: FL_DIV, a: 2.3, u: 'mA',
         e: 'Baz gerilimi bölücüden 3 V. Emetör bundan 0,7 V aşağıdadır.', f: 'V_B = 12·10/40 = 3 V, I_E = (3 − 0,7) / 1 kΩ = 2,3 mA' },
-      { t: 'num', q: 'V_BE = 0,7 V. I_B ihmal edilip I_C ≈ I_E alınırsa V_CE kaç V?', c: bjtDiv(), a: 4.64, u: 'V',
+      { t: 'num', q: 'V_BE = 0,7 V. I_B ihmal edilip I_C ≈ I_E alınırsa V_CE kaç V?', c: bjtDiv(), fl: FL_DIV, a: 4.64, u: 'V',
         e: 'Kollektör-emetör çevresinde hem R_C hem R_E gerilim düşürür.', f: 'V_CE = 12 − 2,3 × (2,2 + 1) = 4,64 V' },
-      { t: 'ariza', q: 'Kaynaktan hiç akım çekilmiyor (0 mA). Gerilimlere göre arızalı dirence dokun.', c: bjtDiv({ vb: '0 V', vc: '12 V', ve: '0 V' }), a: 'R1',
+      { t: 'ariza', q: 'Kaynaktan hiç akım çekilmiyor (0 mA). Gerilimlere göre arızalı dirence dokun.', c: bjtDiv({ vb: '0 V', vc: '12 V', ve: '0 V' }), fl: null, a: 'R1',
         e: 'V_B = 0 V olduğu için transistör kesimde. Kaynak akımı da 0 ise R1 açık devredir. R2 kısa devre olsaydı R1\'den 0,4 mA akardı.', f: 'Beklenen V_B = 3 V, I(R1) = 12 / 40 kΩ = 0,3 mA' } ] } ] }
 ];
 
@@ -760,7 +778,7 @@ const ZOR = [
       e: 'mΩ\'luk şöntte lehim ve iz direnci şöntün kendisi kadar olabilir. Ayrı gerilim uçları akım taşımadığı için düşüm içermez.', f: 'V_ölçülen = I·R_şönt (akım ve gerilim yolu ayrı)' },
     { t: 'num', q: '12 V ile seri bağlı 3 LED (her biri V_F = 2,1 V) 20 mA ile sürülecek. Seri direnç kaç Ω?', a: (12 - 6.3) / 0.02, u: 'Ω',
       e: 'Seri LED\'lerin gerilimleri toplanır, kalan gerilim dirençte düşer.', f: 'R = (12 − 3 × 2,1) / 0,02 = 285 Ω' },
-    { t: 'ariza', q: 'Kaynaktan 4 mA çekiliyor. Ölçülen gerilimlere göre arızalı dirence dokun.', c: par('12 V', [[['R', 'R1', '1 kΩ', '4 V'], ['R', 'R2', '2 kΩ', '8 V']], [['R', 'R3', '1 kΩ', '0 V'], ['R', 'R4', '2 kΩ', '12 V']]]), a: 'R4',
+    { t: 'ariza', q: 'Kaynaktan 4 mA çekiliyor. Ölçülen gerilimlere göre arızalı dirence dokun.', c: par('12 V', [[['R', 'R1', '1 kΩ', '4 V'], ['R', 'R2', '2 kΩ', '8 V']], [['R', 'R3', '1 kΩ', '0 V'], ['R', 'R4', '2 kΩ', '12 V']]]), fl: [{ p: [[40, 40], [150, 40], [150, 110], [150, 180], [40, 180]], v: [12, 12, 8, 0, 0], i: 4 }], a: 'R4',
       e: 'Sağ kolda akım yok: R3\'te düşüm 0 V, kopuk R4 kaynağın tamamını görüyor. R3 kısa devre olsaydı sağ koldan 6 mA akar, toplam 10 mA olurdu.', f: 'Sol kol: 12 / 3 kΩ = 4 mA → sağ kol 0 mA' } ] },
   { name: 'Düğüm, süperpozisyon, merdiven', k: [
     { h: 'Düğüm gerilimi yöntemi', p: 'Bir düğümü toprak (0 V) seç, bilinmeyen düğümün gerilimine V de. O düğümden çıkan her kolun akımını (V − komşu) / R diye yaz ve toplamı sıfıra eşitle. Tek denklemden bütün kol akımları çıkar.',
@@ -778,19 +796,19 @@ const ZOR = [
   ], qs: [
     { t: 'num', q: 'R3 üzerindeki gerilim kaç V?', c: TWOSRC, a: 8, u: 'V',
       e: 'Tek bilinmeyen düğüm gerilimi. Düğüm denklemi kur: çıkan akımların toplamı sıfır.', f: '(V − 12)/2 + (V − 6)/3 + V/6 = 0 → V = 8 V' },
-    { t: 'num', q: 'Süperpozisyon: yalnız 6 V kaynağı etkinken (12 V kısa devre) R3 gerilimi kaç V?', c: TWOSRC, a: 2, u: 'V',
+    { t: 'num', q: 'Süperpozisyon: yalnız 6 V kaynağı etkinken (12 V kısa devre) R3 gerilimi kaç V?', c: TWOSRC, fl: [{ p: [[240, 40], [130, 40]], v: [6, 2], i: 1.333 }, { p: [[130, 40], [130, 190]], v: [2, 0], i: 0.333 }, { p: [[130, 40], [20, 40], [20, 190], [130, 190]], v: [2, 0, 0, 0], i: 1 }, { p: [[130, 190], [240, 190]], v: [0, 0], i: 1.333 }], a: 2, u: 'V',
       e: 'Kısa devre edilen kaynakla R1, R3\'e paralel olur.', f: 'R1 ∥ R3 = 1,5 kΩ → V = 6 × 1,5 / (3 + 1,5) = 2 V' },
     { t: 'num', q: 'Merdiven devresinde C düğümünün gerilimi kaç V?', c: LADDER, a: 2, u: 'V',
       e: 'Sağdan sola indirge: her basamak 2 kΩ ∥ 2 kΩ = 1 kΩ olur. Her düğüm bir öncekinin yarısıdır.', f: 'R_eş = 2 kΩ → V_A = 8 V, V_B = 4 V, V_C = 2 V' },
-    { t: 'num', q: 'Kaynak kısa devre edilince a–b uçlarından görülen Thévenin direnci kaç kΩ?', c: BRIDGE, a: 2 / 3 + 1, u: 'kΩ',
+    { t: 'num', q: 'Kaynak kısa devre edilince a–b uçlarından görülen Thévenin direnci kaç kΩ?', c: BRIDGE, fl: null, a: 2 / 3 + 1, u: 'kΩ',
       e: 'Kaynak kısa devreyken üst ve alt raylar birleşir. a\'dan R1 ∥ R2, b\'den R3 ∥ R4 görülür ve ikisi seridir.', f: 'R_Th = (1 ∥ 2) + (2 ∥ 2) = 0,667 + 1 = 1,67 kΩ' },
-    { t: 'num', q: 'a–b uçlarının Norton akımı kaç mA?', c: NORTON, a: 4 / 6, u: 'mA',
+    { t: 'num', q: 'a–b uçlarının Norton akımı kaç mA?', c: NORTON, fl: [{ p: [[40, 40], [160, 40]], v: [12, 2.667], i: 1.556 }, { p: [[160, 40], [160, 180]], v: [2.667, 0], i: 0.889 }, { p: [[160, 40], [285, 40]], v: [2.667, 0], i: 0.667 }, { p: [[285, 180], [160, 180]], v: [0, 0], i: 0.667 }, { p: [[160, 180], [40, 180]], v: [0, 0], i: 1.556 }], a: 4 / 6, u: 'mA',
       e: 'Önce Thévenin eşdeğerini bul: R3 açık uçta akım taşımaz.', f: 'V_Th = 4 V, R_Th = (6 ∥ 3) + 4 = 6 kΩ → I_N = 4/6 = 0,667 mA' },
-    { t: 'ariza', q: 'Ölçülen: V_A = 8,73 V, V_B = 5,82 V, V_C = 0 V. Sağlam devrede 8, 4 ve 2 V olmalıydı. Arızalı dirence dokun.', c: LADDER, a: 'R5',
+    { t: 'ariza', q: 'Ölçülen: V_A = 8,73 V, V_B = 5,82 V, V_C = 0 V. Sağlam devrede 8, 4 ve 2 V olmalıydı. Arızalı dirence dokun.', c: LADDER, fl: [{ p: [[20, 60], [100, 60]], v: [16, 8.727], i: 7.273 }, { p: [[100, 60], [100, 210]], v: [8.727, 0], i: 4.364 }, { p: [[100, 60], [190, 60], [190, 210], [100, 210]], v: [8.727, 5.818, 0, 0], i: 2.909 }, { p: [[100, 210], [20, 210]], v: [0, 0], i: 7.273 }], a: 'R5',
       e: 'V_C = 0 ama B yükseldi: son basamak devreden çıkmış. R5 açıkken B\'de yalnız R4 kalır, yük hafifler, A ve B yükselir. R6 kısa devre olsaydı yük artar, A ve B düşerdi.', f: 'R5 açık: B = 2 kΩ, A = (1 + 2) ∥ 2 = 1,2 kΩ → V_A = 16 × 1,2 / 2,2 = 8,73 V' } ] },
   { name: 'Thévenin ile RC ve zamanlama', k: [
     { h: 'Kondansatörün gözünden devre', p: 'Kondansatörün dışında kalan devreyi tek kaynak (V_Th) ve tek dirence (R_Th) indir. C uzun sürede V_Th\'ye dolar ve zaman sabiti R_Th·C olur. R_Th\'yi bulurken gerilim kaynağını kısa devre yap ve C\'nin uçlarından bak.',
-      f: ['V_Th = V·R2 / (R1 + R2)', 'R_Th = R1 ∥ R2 = R1·R2 / (R1 + R2)', 'τ = R_Th·C'], c: RCTH },
+      f: ['V_Th = V·R2 / (R1 + R2)', 'R_Th = R1 ∥ R2 = R1·R2 / (R1 + R2)', 'τ = R_Th·C'], c: RCTH, fl: FL_RCTH },
     { h: 'Sıfırdan başlamayan dolma', p: 'Başlangıç 0 V değilse genel formülü kullan: son değere kalan fark her τ\'da %37\'sine iner. Belli bir gerilime ulaşma süresi, başlangıçtaki farkın kalan farka oranının doğal logaritmasıdır.',
       f: ['v(t) = v(∞) + [v(0⁺) − v(∞)]·e^(−t/τ)', 't = τ·ln( [v(∞) − v(0⁺)] / [v(∞) − v(t)] )'], sim: 'rc' },
     { h: '555 ile zamanlama', p: '555 entegresi kararsız modda C\'yi V_CC\'nin 1/3\'ü ile 2/3\'ü arasında doldurup boşaltır. Dolma R_A + R_B, boşalma yalnız R_B üzerinden olur; her yarı periyot 0,693·R·C sürer.',
@@ -798,9 +816,9 @@ const ZOR = [
       r: 'Gerçek hayatta: yanıp sönen LED, sinyal flaşörü ya da buzzer 555 ile yapılabilir; C büyüdükçe yanıp sönme yavaşlar.' },
     { h: 'Filtrede frekans cevabı', p: 'Birinci dereceden RC alçak geçiren filtrede f_c\'nin çok altındaki sinyal olduğu gibi geçer, f_c\'de genlik 0,707\'ye iner. f_c\'nin üstünde frekans 10 katına çıktıkça genlik yaklaşık 10\'da 1\'e düşer.',
       f: ['f_c = 1 / (2π·R·C)', '|V_o / V_i| = 1 / √(1 + (f / f_c)²)'] } ], qs: [
-    { t: 'num', q: 'Kondansatörün gördüğü zaman sabiti kaç saniye?', c: RCTH, a: 0.2, u: 's',
+    { t: 'num', q: 'Kondansatörün gördüğü zaman sabiti kaç saniye?', c: RCTH, fl: FL_RCTH, a: 0.2, u: 's',
       e: 'τ = R_Th·C. Kaynağı kısa devre edince C, R1 ∥ R2 görür.', f: 'R_Th = 6 ∥ 3 = 2 kΩ → τ = 2 kΩ × 100 µF = 0,2 s' },
-    { t: 'num', q: 'Boş kondansatör t = 0\'da devreye giriyor. t = 0,2 s\'de gerilimi kaç V?', c: RCTH, a: 4 * (1 - Math.exp(-1)), u: 'V',
+    { t: 'num', q: 'Boş kondansatör t = 0\'da devreye giriyor. t = 0,2 s\'de gerilimi kaç V?', c: RCTH, fl: FL_RCTH, a: 4 * (1 - Math.exp(-1)), u: 'V',
       e: 'Son değer Thévenin gerilimidir (4 V), bir zaman sabiti geçmiştir.', f: 'v = 4 (1 − e⁻¹) = 2,53 V' },
     { t: 'num', q: 'Kondansatör 2 V\'tan başlayıp 47 kΩ üzerinden 10 V\'a doluyor, C = 10 µF. 6 V\'a kaç saniyede ulaşır?', a: 0.47 * Math.LN2, u: 's',
       e: 'Başlangıç sıfır değil. Genel çözümü kullan.', f: 'v = 10 − 8e^(−t/τ), τ = 0,47 s → t = τ·ln(8/4) = 0,326 s' },
@@ -808,13 +826,13 @@ const ZOR = [
       e: 'C, R_A + R_B üzerinden dolar, yalnız R_B üzerinden boşalır. Eşikler V_CC\'nin 1/3 ve 2/3\'üdür.', f: 'f = 1 / (ln2 (R_A + 2R_B) C) ≈ 1,44 / (21 kΩ × 100 nF) = 687 Hz' },
     { t: 'num', q: 'Birinci dereceden RC alçak geçiren filtrede f = 3·f_c iken genlik oranı |V_o / V_i| kaç?', a: 1 / Math.sqrt(10), u: 'V/V',
       e: 'Genlik 1/√(1 + (f/f_c)²) ile düşer.', f: '|H| = 1 / √(1 + 9) = 0,316' },
-    { t: 'ariza', q: 'Uzun süre sonra V_C = 12 V ölçülüyor ve kaynaktan akım çekilmiyor. Sağlam devrede 4 V olmalıydı. Arızalı elemana dokun.', c: RCTH, a: 'R2',
+    { t: 'ariza', q: 'Uzun süre sonra V_C = 12 V ölçülüyor ve kaynaktan akım çekilmiyor. Sağlam devrede 4 V olmalıydı. Arızalı elemana dokun.', c: RCTH, fl: null, a: 'R2',
       e: 'Akım 0 ve kondansatör kaynağın tamamına dolmuş: bölücünün alt bacağı yok. R2 açık devre. R1 kısa devre olsaydı R2\'den 4 mA akardı.', f: 'Beklenen V_C = 12 × 3 / 9 = 4 V' } ] },
   { name: 'Kutuplama ve küçük sinyal', k: [
     { h: 'Dalgalanma ve zener gücü', p: 'Doğrultucudan sonra kondansatör tepelerde dolar, aradaki boşlukta yükü besler ve biraz boşalır; bu düşüş dalgalanmadır. Tam dalgada kondansatör saniyede 2f kez tazelenir. Zener ise yük çıkarılınca en çok ısınır, çünkü R_S akımının tamamı ondan geçer.',
       f: ['ΔV ≈ I / (2·f·C)  (tam dalga)', 'ΔV ≈ I / (f·C)  (yarım dalga)', 'P_Z = V_Z·I_Z'] },
     { h: 'Baz akımını ihmal etmeden', p: 'Bölücüyü Thévenin eşdeğerine çevir: V_Th ve R_Th = R1 ∥ R2. Emetör direnci bazdan bakınca (β + 1) kat büyük görünür. R_Th, (β + 1)·R_E\'nin yanında küçükse I_B\'yi ihmal etmek güvenlidir.',
-      f: ['V_Th = V_CC·R2 / (R1 + R2)', 'I_B = (V_Th − V_BE) / (R_Th + (β + 1)·R_E)', 'I_C = β·I_B'], c: bjtDiv() },
+      f: ['V_Th = V_CC·R2 / (R1 + R2)', 'I_B = (V_Th − V_BE) / (R_Th + (β + 1)·R_E)', 'I_C = β·I_B'], c: bjtDiv(), fl: flDiv(7.34) },
     { h: 'Küçük sinyal kazancı', p: 'Q noktası etrafındaki küçük oynamalarda V_BE\'deki değişim, kollektör akımını g_m katı kadar değiştirir. Bu akım kollektördeki dirençlerde gerilime döner; yük R_C\'ye paraleldir. R_E kondansatörle köprülüyse kazanç büyüktür ve sinyal ters çevrilir.',
       f: ['g_m = I_C / V_T, V_T ≈ 25 mV', 'i_c = g_m·v_be', '|A_v| = g_m·(R_C ∥ R_L)'] },
     { h: 'Anahtar olarak transistör', p: 'Anahtarda aktif bölge değil, kesin doyum istenir. Bunun için baz akımı β ile değil, çok daha küçük bir zorlanmış β (genelde 10) ile hesaplanır. Röle bobinine ters paralel bir diyot koymayı unutma.',
@@ -822,15 +840,15 @@ const ZOR = [
       r: 'Gerçek hayatta: ESP32\'nin 3,3 V\'luk pini, bir npn transistör ve diyotla 12 V\'luk röleyi güvenle sürer.' } ], qs: [
     { t: 'num', q: 'Köprü doğrultucu ve 4700 µF kondansatör 1 A yük besliyor, şebeke 50 Hz. Tepeden tepeye dalgalanma yaklaşık kaç V?', a: 1 / (2 * 50 * 4700e-6), u: 'V',
       e: 'Tam dalga doğrultmada kondansatör saniyede 100 kez tazelenir.', f: 'ΔV ≈ I / (2fC) = 1 / (100 × 4,7 mF) = 2,13 V' },
-    { t: 'num', q: 'R_L çıkarılıyor (yüksüz durum). Zener\'in harcadığı güç kaç mW?', c: ZENER, a: (12 - 5.1) / 330 * 5.1 * 1000, u: 'mW',
+    { t: 'num', q: 'R_L çıkarılıyor (yüksüz durum). Zener\'in harcadığı güç kaç mW?', c: ZENER, fl: [{ p: [[40, 40], [165, 40], [165, 180], [40, 180]], v: [12, 5.1, 0, 0], i: 20.9 }], a: (12 - 5.1) / 330 * 5.1 * 1000, u: 'mW',
       e: 'Yük yokken R_S akımının tamamı zenerden geçer. Zener gücü bu en kötü durumda seçilir.', f: 'I_Z = 6,9 / 330 = 20,9 mA → P = 5,1 × 20,9 = 107 mW' },
-    { t: 'num', q: 'β = 100, V_BE = 0,7 V. Baz akımını ihmal etmeden (Thévenin ile) I_C kaç mA?', c: bjtDiv(), a: 100 * 2.3 / (7.5e3 + 101e3) * 1e3, u: 'mA',
+    { t: 'num', q: 'β = 100, V_BE = 0,7 V. Baz akımını ihmal etmeden (Thévenin ile) I_C kaç mA?', c: bjtDiv(), fl: flDiv(7.34), a: 100 * 2.3 / (7.5e3 + 101e3) * 1e3, u: 'mA',
       e: 'Bölücüyü Thévenin eşdeğerine çevir. R_E, baz tarafına (β + 1) katı görünür.', f: 'V_Th = 3 V, R_Th = 7,5 kΩ → I_B = 2,3 / (7,5 + 101) kΩ = 21,2 µA → I_C = 2,12 mA' },
     { t: 'num', q: 'Ortak emetörlü katta R_E kondansatörle tam köprülenmiş. I_C = 2 mA, V_T = 25 mV, R_C = R_L = 2,2 kΩ. Gerilim kazancının büyüklüğü kaç?', a: 0.08 * 1100, u: 'V/V',
       e: 'Küçük sinyal kazancı g_m ile kollektördeki toplam direncin çarpımıdır. Yük R_C\'ye paraleldir.', f: 'g_m = I_C / V_T = 80 mS → |A_v| = 80 mS × (2,2 ∥ 2,2) kΩ = 88' },
     { t: 'num', q: 'npn transistör 12 V\'tan 120 Ω\'luk röle bobinini sürecek. 3,3 V çıkışlı MCU, zorlanmış β = 10, V_BE = 0,7 V, V_CE(doy) = 0,2 V. R_B kaç Ω olmalı?', a: (3.3 - 0.7) / ((12 - 0.2) / 120 / 10), u: 'Ω',
       e: 'Anahtar olarak kullanırken transistörü kesin doyuma sokmak için β\'nın çok altında bir oran seçilir.', f: 'I_C = 11,8 / 120 = 98,3 mA → I_B = 9,83 mA → R_B = 2,6 / 9,83 mA = 264 Ω' },
-    { t: 'ariza', q: 'Gerilimlere göre arızalı dirence dokun.', c: bjtDiv({ vb: '2,84 V', vc: '12 V', ve: '2,14 V' }), a: 'RC',
+    { t: 'ariza', q: 'Gerilimlere göre arızalı dirence dokun.', c: bjtDiv({ vb: '2,84 V', vc: '12 V', ve: '2,14 V' }), fl: flDiv(12), a: 'RC',
       e: 'Emetörde 2,14 V var, transistör akım geçiriyor. Akım akarken kollektör hâlâ 12 V ise R_C üzerinde düşüm yok: R_C kısa devre.', f: 'Beklenen V_C = 12 − 2,12 mA × 2,2 kΩ = 7,34 V' } ] }
 ];
 ZOR.forEach((l, i) => UNITS[i].lessons.push({ ...l, z: 3 }));
