@@ -142,6 +142,14 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .read{display:flex;gap:8px 28px;flex-wrap:wrap}
 .read div{font-size:14px;color:var(--soft)}
 .read b{display:block;font:700 24px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+/* Konu anlatımı */
+.kart{display:grid;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.kart>p:not(.kind){font-size:17px;line-height:1.55}
+.frm{display:grid;gap:4px;padding:10px 12px;border-radius:8px;background:var(--bg);border-left:4px solid var(--copper)}
+.frm code{font:15px/1.5 var(--mono);overflow-wrap:anywhere}
+.kart .fig{background:var(--bg)}
+.real{display:grid;gap:4px;padding:12px 14px;border-radius:10px;background:linear-gradient(120deg,var(--hi1),var(--hi2))}
+.real b{font:700 14px var(--disp)}
 
 /* Alt eylem ve geri bildirim */
 .foot{position:sticky;bottom:var(--kb,0px);z-index:5;display:grid;gap:10px;background:var(--bg);border-top:1px solid var(--line);margin-inline:calc(-1*var(--gl)) calc(-1*var(--gr));
@@ -255,7 +263,14 @@ const bjtDiv = (m = {}) => [
 
 const UNITS = [
   { name: 'Yük, akım, gerilim', lessons: [
-    { name: 'Elektrik yükü', qs: [
+    { name: 'Elektrik yükü', k: [
+      { h: 'Yük nedir?', p: 'Yük, maddenin elektrik özelliğidir; birimi coulomb (C). Elektron bir kum tanesi gibidir, coulomb ise bir kova kum: 1 C için 6,25×10¹⁸ elektron gerekir. Metal telde çekirdekler yerinde durur, yükü serbest elektronlar taşır.',
+        f: ['e = 1,6×10⁻¹⁹ C', '1 mC = 10³ µC = 10⁶ nC = 10⁹ pC'] },
+      { h: 'Yükü hesapla', p: 'Toplam yük, elektron sayısı çarpı bir elektronun yüküdür. Saniyede geçen yük akımdır, yani yük = akım × süre. Aynı yükler iter, zıt yükler çeker; uzaklık 2 katına çıkınca kuvvet dörtte birine iner.',
+        f: ['Q = n·e', 'Q = I·t', '1 mAh = 0,001 A × 3600 s = 3,6 C', 'F = k·q₁·q₂ / r²'], c: loop('3,7 V', [['L', 'Lamba']]) },
+      { h: 'Pil ne kadar yük taşır?', p: 'Pilin üstündeki mAh, verebileceği toplam yüktür. Saati saniyeye çevirince coulomb çıkar.',
+        f: ['5000 mAh = 5 Ah', 'Q = 5 A × 3600 s = 18\u00a0000 C'], r: 'Gerçek hayatta: 5000 mAh telefon pili dolunca 18\u00a0000\u00a0C yük taşır. Bu, yaklaşık 1,1×10²³ elektron eder.' }
+    ], qs: [
       { t: 'mc', q: 'Elektronun yükü 1,6×10⁻¹⁹ C büyüklüğündedir. 1 C yük kaç elektrona karşılık gelir?', o: ['6,25×10¹⁸', '1,6×10¹⁹', '6,02×10²³', '6,25×10¹⁵'], a: 0,
         e: 'Toplam yükü tek elektronun yüküne bölersin.', f: 'n = Q / e = 1 / 1,6×10⁻¹⁹ = 6,25×10¹⁸' },
       { t: 'num', q: 'Bir cisme 3,2 µC yük aktarıldı. Kaç elektron hareket etti? Sonucu ×10¹³ cinsinden yaz.', a: 2, u: '×10¹³',
@@ -890,7 +905,7 @@ Object.assign(SIMS, {
     calc: v => ({ Vm: (2 * v.D / 100 - 1) * v.V }), key: 'Vm', min: 9.3, max: 9.9, out: [['Vm', 'Motor ortalaması (işaretli)', 'V']], glow: r => Math.abs(r.Vm) / 48, p: ['D', 'Vm'] }
 });
 
-const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, z: l.z, qs: l.qs })));
+const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, z: l.z, qs: l.qs, k: l.k })));
 const QUESTIONS = Object.fromEntries(LESSONS.flatMap(l => l.qs.map((q, k) => [`${l.id}-${k + 1}`, { ...q, z: l.z }])));
 const ZN = ['', 'Kolay', 'Orta', 'Zor'];
 
@@ -1186,7 +1201,7 @@ function home() {
     <div class="road"><svg viewBox="0 0 150 ${96 * ls.length}" height="${96 * ls.length}" aria-hidden="true"><path d="${roadPath(ls.length)}" fill="none" stroke="var(--copper)" stroke-width="7" stroke-linejoin="round"/></svg>
     ${ls.map((l, j) => {
       const done = l.id in S.done, open = unlocked(l);
-      return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="ders-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${zTag(l.z)} · ${l.qs.length} soru` : `${zTag(l.z)} · önceki dersi bitir`}</small></em></button>`;
+      return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="${l.k ? 'konu' : 'ders'}-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${zTag(l.z)} · ${l.qs.length} soru` : `${zTag(l.z)} · önceki dersi bitir`}</small></em></button>`;
     }).join('')}</div></section>`;
   }).join('')}</main>${navBar('ana')}`;
 }
@@ -1258,6 +1273,18 @@ const answer = (v, ready = true) => { C.ans = v; $('#ok').disabled = !ready; };
 const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>` : '';
 const optList = (q, badge) => `<div class="opts">${C.perm.map(i => `<button class="opt" aria-pressed="false" data-i="${i}">${badge ? '<kbd></kbd>' : ''}<span>${tx(q.o[i])}</span></button>`).join('')}</div>`;
 
+// Simülasyon kaydırıcıları ve canlı çizim; soru ekranı ile konu anlatımı paylaşır. p: kimlik öneki.
+const simSliders = (key, p = '', off = '') => SIMS[key].s.map(([k, n, a, b, st, v]) => `<label class="sl"><span>${tx(n)}</span><b id="${p}o-${k}"></b><input type="range" id="${p}s-${k}" min="${a}" max="${b}" step="${st}" value="${v}"${off}></label>`).join('');
+function simDraw(key, p = '') {
+  const m = SIMS[key], v = {};
+  m.s.forEach(([k, , , , , , u]) => { const i = $(`#${p}s-${k}`), s = `${fmt(v[k] = +i.value)} ${u}`; $(`#${p}o-${k}`).textContent = s; i.setAttribute('aria-valuetext', s); });
+  const r = m.calc(v);
+  $(`#${p}rd`).innerHTML = m.out.map(([k, n, u]) => `<div>${tx(n)}<b>${fmt(+r[k].toFixed(3))} ${u}</b></div>`).join('');
+  $(`#${p}sv`).innerHTML = SIMVIEW[key](v, r, Math.min(1, m.glow(r)));
+  $(`#${p}warn`).textContent = m.warn ? m.warn(r) : '';
+  return v;
+}
+
 // Önce tahmin: p[0] kaydırıcısı artınca p[1] çıktısı ne olur? Diğer kaydırıcılar başlangıç değerinde; yön calc'tan çıkar.
 const PRED = ['Artar', 'Azalır', 'Değişmez'];
 const simDir = m => { const v = Object.fromEntries(m.s.map(s => [s[0], s[5]])), k = m.s.find(s => s[0] === m.p[0]), y = x => m.calc({ ...v, [k[0]]: x })[m.p[1]], d = y(k[3]) - y(k[2]); return d > 1e-9 ? 0 : d < -1e-9 ? 1 : 2; };
@@ -1275,7 +1302,7 @@ const VIEW = {
     + (nd.length ? `<div class="prb" role="group" aria-label="Ölçüm noktaları"><span>Ölç:</span>${nd.map((e, i) => `<button data-n="${i}">${tx(nodeName(e))}</button>`).join('')}</div>` : '')
     + (m || nd.length ? `<p class="dmm" aria-live="polite"><small>${m ? 'Ölçmek için bir elemana dokun. Arızalıyı bulunca Seç’e geç.' : 'Bir ölçüm noktasına dokun, sonra arızalı elemanı seç.'}</small></p>` : ''); },
   sira: q => { do C.perm = shuffle(q.o.length); while (C.perm.every((v, i) => v === i)); return '<p class="note">İlk sıradan başlayarak dokun. Geri almak için tekrar dokun.</p>' + optList(q, true); },
-  sim: q => { const [x, y] = simPred(SIMS[q.sim]); return `<div class="fig" id="sv"></div><div class="read" id="rd"></div><div class="pred"><p><b>Önce tahmin et.</b> ${tx(x)} artarsa ${tx(y)} ne olur?</p><div class="opts">${PRED.map((o, i) => `<button class="opt" aria-pressed="false" data-p="${i}"><span>${o}</span></button>`).join('')}</div><p class="note" id="pn" aria-live="polite"></p></div><div>${SIMS[q.sim].s.map(([k, n, a, b, st, v]) => `<label class="sl"><span>${tx(n)}</span><b id="o-${k}"></b><input type="range" id="s-${k}" min="${a}" max="${b}" step="${st}" value="${v}" disabled></label>`).join('')}</div><p class="note" id="warn" aria-live="polite"></p>`; }
+  sim: q => { const [x, y] = simPred(SIMS[q.sim]); return `<div class="fig" id="sv"></div><div class="read" id="rd"></div><div class="pred"><p><b>Önce tahmin et.</b> ${tx(x)} artarsa ${tx(y)} ne olur?</p><div class="opts">${PRED.map((o, i) => `<button class="opt" aria-pressed="false" data-p="${i}"><span>${o}</span></button>`).join('')}</div><p class="note" id="pn" aria-live="polite"></p></div><div>${simSliders(q.sim, '', ' disabled')}</div><p class="note" id="warn" aria-live="polite"></p>`; }
 };
 const BIND = {
   mc: () => $$('.opt').forEach(b => b.onclick = () => { $$('.opt').forEach(x => x.setAttribute('aria-pressed', x === b)); answer(+b.dataset.i); }),
@@ -1313,14 +1340,7 @@ const BIND = {
   },
   sim: q => {
     let go = false; C.miss = '';
-    const m = SIMS[q.sim], upd = () => {
-      const v = {}; m.s.forEach(([k, , , , , , u]) => { const i = $('#s-' + k), s = `${fmt(v[k] = +i.value)} ${u}`; $('#o-' + k).textContent = s; i.setAttribute('aria-valuetext', s); });
-      const r = m.calc(v);
-      $('#rd').innerHTML = m.out.map(([k, n, u]) => `<div>${tx(n)}<b>${fmt(+r[k].toFixed(3))} ${u}</b></div>`).join('');
-      $('#sv').innerHTML = SIMVIEW[q.sim](v, r, Math.min(1, m.glow(r)));
-      $('#warn').textContent = m.warn ? m.warn(r) : '';
-      answer(v, go);
-    };
+    const m = SIMS[q.sim], upd = () => answer(simDraw(q.sim), go);
     $$('[data-p]').forEach(b => b.onclick = () => {
       const d = simDir(m), ok = +b.dataset.p === d, [x, y] = simPred(m);
       $$('[data-p]').forEach(o => { o.disabled = true; o.setAttribute('aria-pressed', o === b); });
@@ -1344,6 +1364,17 @@ const SIMVIEW = {
   buck: v => circuit(buck({ vin: `${fmt(v.V)} V`, t: `|D = %${fmt(v.D)}` })),
   hb: v => circuit(hbridge({ m: `D = %${fmt(v.D)}` }))
 };
+
+// Konu anlatımı: sorulardan önce kısa kartlar. Alttaki düğme tek dokunuşla sorulara geçirir.
+function intro(l) {
+  C = null;
+  const n = l.k.length, sim = (c, p) => `<div class="fig" id="${p}sv"></div><div class="read" id="${p}rd"></div><div>${simSliders(c.sim, p)}</div><p class="note" id="${p}warn" aria-live="polite"></p>`;
+  app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="ana" aria-label="Çık">${ICON.x}</button><p class="kind">Konu anlatımı · ${n} kart</p></div><h1 tabindex="-1">${tx(l.name)}</h1>
+  ${l.k.map((c, i) => `<section class="kart"><p class="kind">${i + 1}/${n}</p><h2>${tx(c.h)}</h2><p>${tx(c.p)}</p>${c.f ? `<div class="frm">${c.f.map(x => `<code>${tx(x)}</code>`).join('')}</div>` : ''}${c.c ? `<div class="fig">${circuit(c.c, { flow: c.fl || true })}</div>` : ''}${c.sim ? sim(c, `k${i}-`) : ''}${c.r ? `<div class="real"><b>Gerçek hayatta</b><p>${tx(c.r.replace(/^Gerçek hayatta:?\s*/i, ''))}</p></div>` : ''}</section>`).join('')}</main>
+  <div class="foot"><button class="btn" data-go="ders-${l.id}">Sorulara başla</button></div>`;
+  l.k.forEach((c, i) => { if (!c.sim) return; const p = `k${i}-`, draw = () => simDraw(c.sim, p); SIMS[c.sim].s.forEach(s => $(`#${p}s-${s[0]}`).oninput = draw); draw(); });
+  focusTop();
+}
 
 function question() {
   const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false;
@@ -1388,10 +1419,11 @@ function finish() {
 
 /* ---------- Yönlendirme: Android geri tuşu hash geçmişiyle çalışır ---------- */
 function route() {
-  const h = location.hash.slice(1), l = LESSONS.find(x => 'ders-' + x.id === h);
+  const h = location.hash.slice(1), d = /^(ders|konu)-(.+)$/.exec(h), l = d && LESSONS.find(x => x.id === d[2]);
   if (shown) scrollMem[shown] = scrollY;
   shown = null;
-  if (l && unlocked(l)) return start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
+  // konu-: önce konu anlatımı; düğmesi ders-'e gider, geri tuşu anlatıma döner.
+  if (l && unlocked(l)) return d[1] === 'konu' && l.k ? intro(l) : start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
   if (h === 'tekrar-coz' && S.wrong.length) return start(S.wrong, null);
   const pz = /^pratik-([123])$/.exec(h);
   if (pz) { const ids = byZ(+pz[1]), p = shuffle(ids.length).slice(0, 8); return start(p.map(i => ids[i]), null, true); }
