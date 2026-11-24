@@ -283,7 +283,17 @@ const UNITS = [
         e: '1 Ah, 1 A akımın 3600 saniyede taşıdığı yüktür.', f: 'Q = I·t = 2 A × 3600 s = 7200 C' },
       { t: 'mc', q: 'İki nokta yük arasındaki uzaklık 2 katına çıkarsa aralarındaki kuvvet ne olur?', o: ['Dörtte birine iner', 'Yarıya iner', 'İki katına çıkar', 'Değişmez'], a: 0,
         e: 'Coulomb kuvveti uzaklığın karesiyle ters orantılıdır.', f: 'F = k·q₁·q₂ / r²' } ] },
-    { name: 'Akım', qs: [
+    { name: 'Akım', k: [
+      { h: 'Akım nedir?', p: 'Akım, bir kesitten saniyede geçen yük miktarıdır. Borudan saniyede kaç litre su aktığı gibi düşün. Birimi amper: 1 A, saniyede 1 C yük demektir.',
+        f: ['I = Q / t', '1 A = 1 C/s, 1 mA = 0,001 A'] },
+      { h: 'Yön: + uçtan − uca', p: 'Konvansiyonel akım kaynağın + ucundan çıkar, devreyi dolaşıp − ucuna döner. Metal telde elektronlar aslında tersine, − uçtan + uca gider; hesapta bu fark etmez. Akım yolda harcanmaz, çevrimin her noktasında aynıdır.',
+        c: loop('9 V', [['R', 'R', '1 kΩ']]) },
+      { h: 'Kapasite ve süre', p: 'Pil üzerindeki mAh, akım ile sürenin çarpımıdır, yani pilin verebileceği toplam yüktür. Kapasiteyi çekilen akıma bölersen ideal çalışma süresi çıkar. Hesaptan önce birimleri eşitle: mA ile A, dakika ile saniye karışmasın.',
+        f: ['Q = I·t', 't = kapasite / I   (mAh / mA = saat)', '1 mAh = 0,001 A × 3600 s = 3,6 C'],
+        r: 'Gerçek hayatta: 500 mAh\'lik kablosuz kulaklık bataryası 50 mA çekilirse ideal durumda 10 saat çalar.' },
+      { h: 'Ampermetre seri bağlanır', p: 'Ölçülecek akım cihazın içinden geçmeli: enerjiyi kes, devreyi aç, multimetreyi iki ucun arasına seri koy. İdeal ampermetrenin iç direnci 0 Ω\'dur, akımı değiştirmez. Dikkat: Ampermetreyi bir elemana paralel bağlarsan neredeyse kısa devre yaparsın, sigortası atar.',
+        r: 'Gerçek hayatta: Multimetrede akım ölçerken kırmızı prob V/Ω girişinden çıkarılıp A ya da mA girişine takılır.' }
+    ], qs: [
       { t: 'num', q: 'Bir telin kesitinden 5 saniyede 2 C yük geçiyor. Akım kaç mA?', a: 400, u: 'mA',
         e: 'Akım, birim zamanda geçen yüktür. Sonucu A\'dan mA\'e çevir.', f: 'I = Q / t = 2 / 5 = 0,4 A = 400 mA' },
       { t: 'mc', q: 'Pilin dışındaki devrede konvansiyonel akımın yönü nedir?', o: ['+ uçtan − uca', '− uçtan + uca', 'Elektronlarla aynı yönde', 'Sürekli yön değiştirir'], a: 0,
@@ -296,7 +306,16 @@ const UNITS = [
         e: 'Ölçülecek akım ampermetrenin içinden geçmeli ve cihaz bu akımı değiştirmemelidir.', f: 'R_A → 0 Ω, gerilim düşümü → 0 V' },
       { t: 'sira', q: 'Multimetreyle akım ölçme adımlarını sırala.', o: ['Devrenin enerjisini kes', 'Devreyi ölçülecek noktadan aç', 'Multimetreyi açılan iki uç arasına seri bağla', 'Enerjiyi ver ve değeri oku'],
         e: 'Akım ölçerken devre açılır ve cihaz yolun parçası olur. Enerji altında bağlantı yapılmaz.', f: 'Ampermetre = seri bağlantı' } ] },
-    { name: 'Gerilim ve güç', qs: [
+    { name: 'Gerilim ve güç', k: [
+      { h: 'Gerilim: yük başına enerji', p: 'Gerilim, 1 C yükü iki nokta arasında taşırken aktarılan enerjidir. Su benzetmesinde akışı iten basınç farkıdır. Hep iki nokta arasında ölçülür; tek noktanın gerilimi dendiğinde öbür nokta topraktır.',
+        f: ['V = W / Q', '1 V = 1 J/C'] },
+      { h: 'Voltmetre paralel bağlanır', p: 'Voltmetrenin probları elemanın iki ucuna dokunur, devre açılmaz. İdeal voltmetrenin iç direnci sonsuzdur, devreden akım çekmez. Kapalı bir anahtarın ya da sağlam telin uçlarında 0 V görürsün; kaynağın tamamını görüyorsan orası kopuktur.',
+        c: loop('9 V', [['S', 'Anahtar', ''], ['R', 'R', '1 kΩ']]) },
+      { h: 'Güç ve enerji', p: 'Güç, saniyede aktarılan enerjidir ve gerilim ile akımın çarpımıdır. Enerji, gücün süreyle çarpımıdır. Joule istiyorsan süreyi saniye, Wh istiyorsan saat olarak yaz.',
+        f: ['P = V·I   (W = V × A)', 'W = P·t = V·I·t', '1 Wh = 3600 J, 1 kWh = 1000 Wh'] },
+      { h: 'Faturadaki kWh', p: 'kWh güç değil, enerji birimidir: 1 kW\'lık bir cihaz 1 saat çalışınca 1 kWh harcar. Watt cihazın ne kadar hızlı enerji çektiğini, kWh toplamda ne kadar çektiğini söyler.',
+        r: 'Gerçek hayatta: 2000 W\'lık kettle 3 dakika çalışırsa 2000 × 180 = 360 000 J, yani 0,1 kWh harcar.' }
+    ], qs: [
       { t: 'num', q: '2 C yükü taşımak için 6 J iş yapılıyor. İki nokta arasındaki gerilim kaç V?', a: 3, u: 'V',
         e: 'Gerilim, birim yük başına yapılan iştir.', f: 'V = W / Q = 6 / 2 = 3 V' },
       { t: 'mc', q: 'Bir direncin gerilimini ölçmek için voltmetre nasıl bağlanır ve ideal iç direnci kaçtır?', o: ['Paralel, sonsuz', 'Seri, sonsuz', 'Paralel, 0 Ω', 'Seri, 0 Ω'], a: 0,
@@ -311,7 +330,17 @@ const UNITS = [
         e: 'Akımı A\'e, süreyi saniyeye çevir.', f: 'W = V·I·t = 3,7 × 0,1 × 1800 = 666 J' } ] } ] },
 
   { name: 'Ohm yasası', lessons: [
-    { name: 'V = I·R', qs: [
+    { name: 'V = I·R', k: [
+      { h: 'Ohm yasası', p: 'Direnç, akıma karşı gösterilen zorluktur. Aynı gerilimde direnç büyürse akım küçülür, tıpkı dar borudan aynı basınçla daha az su akması gibi. Direnç sabitken akım gerilimle doğru orantılıdır.',
+        f: ['V = I·R', 'I = V / R', 'R = V / I'], sim: 'ohm' },
+      { h: 'Birim kısayolu: V, mA, kΩ', p: 'Elektronikte akım çoğu zaman mA, direnç kΩ\'dur. V, mA ve kΩ birlikte kullanılınca 1000\'ler birbirini götürür. Direnç Ω ise akımı A bulursun; mA için 1000 ile çarp.',
+        f: ['V = mA × kΩ', 'mA = V / kΩ', 'kΩ = V / mA', 'Örnek: 5 V / 2,2 kΩ = 2,27 mA'],
+        c: loop('5 V', [['R', 'R', '2,2 kΩ']]) },
+      { h: 'I–V grafiği', p: 'Direncin I–V grafiği orijinden geçen bir doğrudur. Dikey eksende I, yatayda V varsa eğim 1/R olur; buna iletkenlik denir. Dik doğru küçük direnç, yatık doğru büyük direnç demektir.',
+        f: ['G = ΔI / ΔV = 1 / R   (birimi S, siemens)'] },
+      { h: 'Nerede bozulur?', p: 'Ohm yasası direnci sabit kalan elemanlar için geçerlidir. Ampul teli ısındıkça direnci artar; LED ve diyotta akım gerilimle doğrusal artmaz.',
+        r: 'Gerçek hayatta: 12 V\'ta 2 A çeken araç ampulünün sıcak direnci 6 Ω\'dur. Soğukken direnci çok daha küçük olduğu için açıldığı an daha büyük akım çeker.' }
+    ], qs: [
       { t: 'num', q: '470 Ω direnç 12 V\'a bağlanıyor. Akım kaç mA?', c: loop('12 V', [['R', 'R', '470 Ω']]), a: 12 / 470 * 1000, u: 'mA',
         e: 'Akım, gerilimin dirence oranıdır.', f: 'I = V / R = 12 / 470 = 25,5 mA' },
       { t: 'mc', q: 'Gerilim sabitken direnç iki katına çıkarsa akım ne olur?', o: ['Yarıya iner', 'İki katına çıkar', 'Dörtte birine iner', 'Değişmez'], a: 0,
@@ -324,7 +353,16 @@ const UNITS = [
         e: 'Gerilimi artırmak veya direnci azaltmak akımı büyütür.', f: 'I = V / R, örneğin 10 V / 500 Ω = 20 mA' },
       { t: 'mc', q: 'Bir direncin I–V grafiğinde (dikey eksen I, yatay eksen V) doğrunun eğimi neye eşittir?', o: ['1 / R', 'R', 'V·I', 'R²'], a: 0,
         e: 'Eğim ΔI/ΔV, yani iletkenliktir. Dik doğru küçük direnç demektir.', f: 'G = ΔI / ΔV = 1 / R' } ] },
-    { name: 'Direnç renk kodları', qs: [
+    { name: 'Direnç renk kodları', k: [
+      { h: 'Bantları okuma', p: 'Dört bantlı dirençte ilk iki bant rakam, üçüncü bant çarpandır: rakamların arkasına kaç sıfır ekleneceğini söyler. Dördüncü bant (altın, gümüş) toleranstır; okumaya onun uzağındaki uçtan başla.',
+        f: ['R = (1. rakam)(2. rakam) × 10ⁿ   (n: 3. bant)', 'kırmızı-kırmızı-turuncu → 22 × 10³ = 22 kΩ'] },
+      { h: 'Renk–rakam tablosu', p: 'Siyah 0 ile başlar, beyaz 9 ile biter. Kırmızıdan mora kadar olan kısım gökkuşağı sırasıdır: kırmızı 2, turuncu 3, sarı 4, yeşil 5, mavi 6, mor 7.',
+        f: ['0 siyah · 1 kahverengi · 2 kırmızı · 3 turuncu · 4 sarı', '5 yeşil · 6 mavi · 7 mor · 8 gri · 9 beyaz'] },
+      { h: 'Tolerans', p: 'Tolerans, gerçek değerin yazılı değerden ne kadar sapabileceğidir. Altın ±%5, gümüş ±%10 demektir. Altın bantlı 10 kΩ direnç 9,5 ile 10,5 kΩ arasında ölçülebilir.',
+        f: ['R_min = R·(1 − t), R_max = R·(1 + t)'] },
+      { h: 'Dikkat: çarpan sıfır sayısıdır', p: 'Turuncu çarpan 3 sıfır, sarı çarpan 4 sıfır ekler. Sonucu kΩ\'a çevirmek için 1000\'e böl: 47 × 10⁴ = 470 000 Ω = 470 kΩ, 47 kΩ değil.',
+        r: 'Gerçek hayatta: Bantlar soluksa multimetrenin Ω kademesiyle ölç. Direnci iki ucundan parmaklarınla tutma; vücudun paralel girer, büyük değerlerde ölçüm küçülür.' }
+    ], qs: [
       { t: 'oku', q: 'Bu direncin değeri kaç kΩ?', b: ['kahverengi', 'siyah', 'kırmızı', 'altın'], a: 1, u: 'kΩ',
         e: 'İlk iki bant rakam, üçüncü bant 10\'un kuvvetidir.', f: 'kahverengi 1, siyah 0, kırmızı ×10² → 10 × 100 = 1 kΩ' },
       { t: 'oku', q: 'Bu direncin değeri kaç Ω?', b: ['sarı', 'mor', 'kahverengi', 'altın'], a: 470, u: 'Ω',
@@ -337,7 +375,15 @@ const UNITS = [
         e: 'Altın bant ±%5 demektir. Gümüş bant ±%10\'dur.', f: '1000 ± 0,05 × 1000 = 950–1050 Ω' },
       { t: 'oku', q: 'Bu direncin değeri kaç kΩ?', b: ['turuncu', 'turuncu', 'sarı', 'gümüş'], a: 330, u: 'kΩ',
         e: 'Sarı çarpan bandı ×10⁴ demektir.', f: '33 × 10⁴ = 330 000 Ω = 330 kΩ' } ] },
-    { name: 'Güç ve LED direnci', qs: [
+    { name: 'Güç ve LED direnci', k: [
+      { h: 'Direnç ısınır: güç', p: 'Direnç üzerinden geçen elektrik enerjisini ısıya çevirir. Elinde hangi iki büyüklük varsa gücü o formülle bul. Direncin watt değeri (¼ W, ½ W) dayanabileceği en büyük güçtür; rahat çalışması için bunun altında kal.',
+        f: ['P = V·I = I²·R = V² / R', 'Güç sınırından gerilime: V_max = √(P·R)'] },
+      { h: 'LED\'e neden direnç?', p: 'LED iletime geçince üzerindeki gerilim neredeyse sabit kalır (V_F, kırmızı LED\'de yaklaşık 2 V). Akımı sınırlayan bir şey yoksa akım çok büyür ve LED yanar. Seri direnç, kaynaktan LED\'e kalmayan gerilimi üstlenip akımı ayarlar.',
+        f: ['V_R = V_kaynak − V_F', 'R = (V_kaynak − V_F) / I', 'Örnek: (5 − 2) / 150 Ω = 20 mA, P_R = 3 V × 20 mA = 60 mW'],
+        c: loop('5 V', [['R', 'R', '150 Ω'], ['LED', 'LED', '2 V']]), sim: 'led',
+        r: 'Gerçek hayatta: 12 V LED şeritlerde üç LED bir dirençle seri gruplanır; direnç her grubun üzerinde hazır gelir.' },
+      { h: 'Dikkat: V_F\'yi çıkar, yönü kontrol et', p: 'En sık hata, kaynağın tamamını dirence yazmaktır; önce LED gerilimini çıkar. LED\'in uzun bacağı (anot) + tarafa gelir. Ters takılırsa akım geçmez ve kaynak geriliminin tamamı LED\'in uçlarında görünür.' }
+    ], qs: [
       { t: 'num', q: '100 Ω direncin uçlarında 10 V var. Harcadığı güç kaç W?', a: 1, u: 'W',
         e: 'Akımı bilmiyorsan gerilim ve dirençten gücü bulabilirsin.', f: 'P = V² / R = 100 / 100 = 1 W' },
       { t: 'num', q: '9 V kaynakla, V_F = 2 V olan LED\'i 10 mA ile sürmek için seri direnç kaç Ω olmalı?', c: loop('9 V', [['R', 'R', '?'], ['LED', 'LED', '2 V']]), a: 700, u: 'Ω',
@@ -352,7 +398,17 @@ const UNITS = [
         e: 'Sembolün üçgeni akım yönüne ters bakıyor. Ters kutuplu LED akım geçirmez, kaynağın tamamı üzerinde görünür.', f: 'I = 0 → V_R = 0 V, V_LED = 9 V' } ] } ] },
 
   { name: 'Seri ve paralel devreler', lessons: [
-    { name: 'Seri devre', qs: [
+    { name: 'Seri devre', k: [
+      { h: 'Tek yol, tek akım', p: 'Seri devrede akımın gidebileceği tek bir yol vardır, bu yüzden her elemandan aynı akım geçer. Dirençler arka arkaya eklenmiş dar boru parçaları gibidir: toplam zorluk toplanır.',
+        f: ['R_eş = R1 + R2 + R3', 'I = V / R_eş', 'Örnek: 9 V / (1 + 2) kΩ = 3 mA'],
+        c: loop('9 V', [['R', 'R1', '1 kΩ'], ['R', 'R2', '2 kΩ']]) },
+      { h: 'Gerilim paylaşılır', p: 'Kaynak gerilimi dirençlere, dirençlerle orantılı paylaşılır: büyük direnç büyük pay alır. Çevrimdeki düşümlerin toplamı kaynağa eşittir; buna Kirchhoff gerilim yasası (KVL) denir.',
+        f: ['V_k = V · R_k / R_eş', 'V = V1 + V2 + V3', 'Örnek: V1 = 3 mA × 1 kΩ = 3 V, V2 = 3 mA × 2 kΩ = 6 V'],
+        sim: 'bolucu',
+        r: 'Gerçek hayatta: Potansiyometre (ses düğmesi) ayarlanabilir bir gerilim bölücüdür.' },
+      { h: 'Dikkat: kopuk eleman', p: 'Seri devrede bir eleman koparsa akım her yerde sıfır olur. Sağlam dirençlerde I·R = 0 olduğu için gerilim düşmez; kaynağın tamamı kopuk yerin uçlarında görünür.',
+        r: 'Gerçek hayatta: Seri bağlı eski yılbaşı ampullerinde tek ampul yanınca bütün dizi söner.' }
+    ], qs: [
       { t: 'num', q: '1 kΩ, 2,2 kΩ ve 4,7 kΩ seri bağlı. Eşdeğer direnç kaç kΩ?', a: 7.9, u: 'kΩ',
         e: 'Seri dirençler doğrudan toplanır.', f: 'R = 1 + 2,2 + 4,7 = 7,9 kΩ' },
       { t: 'num', q: 'R2 üzerindeki gerilim kaç V?', c: loop('12 V', [['R', 'R1', '1 kΩ'], ['R', 'R2', '2 kΩ']]), a: 8, u: 'V',
@@ -365,7 +421,16 @@ const UNITS = [
         e: 'R2 açık devre. Akım akmadığı için sağlam dirençlerde gerilim düşmez, kaynağın tamamı kopuk yerde görünür.', f: 'I = 0 → V₁ = V₃ = 0, V₂ = 12 V' },
       { t: 'num', q: '9 V kaynağa seri bağlı üç elemanın ikisinde 2,5 V ve 3 V düşüyor. Üçüncüde kaç V düşer?', a: 3.5, u: 'V',
         e: 'Kirchhoff gerilim yasası: kapalı çevrimde gerilimlerin toplamı sıfırdır.', f: 'V₃ = 9 − 2,5 − 3 = 3,5 V' } ] },
-    { name: 'Paralel devre', qs: [
+    { name: 'Paralel devre', k: [
+      { h: 'Aynı iki düğüm, aynı gerilim', p: 'Paralel elemanların uçları aynı iki düğüme bağlıdır, bu yüzden hepsinin gerilimi aynıdır. Her kol kendi akımını I = V / R ile çeker; küçük direnç büyük akım çeker.',
+        f: ['V1 = V2 = V', 'I1 = 12 / 2 = 6 mA, I2 = 12 / 3 = 4 mA'],
+        c: par('12 V', [[['R', 'R1', '2 kΩ']], [['R', 'R2', '3 kΩ']]]) },
+      { h: 'Akımlar toplanır', p: 'Düğüme giren akım, çıkan akımların toplamına eşittir (Kirchhoff akım yasası, KCL). Her yeni kol akıma yeni bir yol açar, bu yüzden eşdeğer direnç en küçük koldan da küçük olur.',
+        f: ['I = I1 + I2 + I3', '1 / R_eş = 1 / R1 + 1 / R2 + …', 'İki direnç: R_eş = R1·R2 / (R1 + R2)', 'n eşit direnç: R_eş = R / n', 'Örnek: 2 ∥ 3 = 6 / 5 = 1,2 kΩ → 12 V / 1,2 kΩ = 10 mA = 6 + 4'] },
+      { h: 'Evdeki prizler paraleldir', p: 'Evdeki bütün cihazlar aynı 230 V\'u görür; biri kapanınca diğerleri çalışmaya devam eder. Ama açılan her cihaz hattan çekilen toplam akımı artırır.',
+        r: 'Gerçek hayatta: Aynı uzatmaya takılı 2000 W kettle (≈ 8,7 A) ve 1500 W ütü (≈ 6,5 A) birlikte ≈ 15 A çeker; 16 A\'lik sigortanın sınırına gelinir.' },
+      { h: 'Dikkat: paralelde toplama yok', p: 'Paralel dirençleri doğrudan toplamak en sık hatadır: 1 kΩ ∥ 1 kΩ = 500 Ω, 2 kΩ değil. Sonuç her zaman en küçük dirençten küçük çıkmalı; çıkmıyorsa hesabı kontrol et.' }
+    ], qs: [
       { t: 'num', q: '6 kΩ ile 3 kΩ paralel bağlı. Eşdeğer direnç kaç kΩ?', a: 2, u: 'kΩ',
         e: 'İki paralel direnç için çarpım bölü toplam kullanılır.', f: 'R = 6·3 / (6 + 3) = 2 kΩ' },
       { t: 'mc', q: 'Paralel bağlı elemanlarda hangisi ortaktır?', o: ['Gerilim', 'Akım', 'Güç', 'Direnç'], a: 0,
@@ -378,7 +443,18 @@ const UNITS = [
         e: 'Paralel kolda kopan direnç yalnızca kendi akımını keser, diğer kollar çalışmaya devam eder.', f: 'Beklenen I = 12 V / 1 kΩ = 12 mA, R2\'de 0 mA' },
       { t: 'mc', q: 'Dört adet 1 kΩ direnç paralel bağlanırsa eşdeğer direnç kaç Ω olur?', o: ['250 Ω', '4000 Ω', '500 Ω', '1000 Ω'], a: 0,
         e: 'n adet eşit paralel direncin eşdeğeri R/n\'dir.', f: 'R = 1000 / 4 = 250 Ω' } ] },
-    { name: 'Karışık devreler', qs: [
+    { name: 'Karışık devreler', k: [
+      { h: 'Adım adım sadeleştir', p: 'Önce içteki paralel ya da seri grubu tek dirence indir, devre tek dirence inene kadar sürdür. Kaynak akımını bulunca aynı yoldan geri dönüp her bloğun gerilimini ve her kolun akımını hesapla.',
+        f: ['R_eş = 2 + (3 ∥ 6) = 2 + 2 = 4 kΩ', 'I = 12 / 4 = 3 mA → V_blok = 3 mA × 2 kΩ = 6 V', 'I2 = 6 / 3 = 2 mA, I3 = 6 / 6 = 1 mA'],
+        c: [['V', 40, 180, 40, 40, '12 V', 'Kaynak'], put(['R', 'R1', '2 kΩ'], 40, 40, 160, 40), put(['R', 'R2', '3 kΩ'], 160, 40, 160, 180),
+          ['W', 160, 40, 250, 40], put(['R', 'R3', '6 kΩ'], 250, 40, 250, 180), ['W', 40, 180, 250, 180], ['N', 160, 40], ['N', 160, 180]] },
+      { h: 'Akım bölücü', p: 'Paralel iki kola ayrılan akım, dirençlerle ters orantılı paylaşılır: büyük akım küçük dirençten geçer. Bir kolun akımını bulurken pay kısmına karşı kolun direnci yazılır.',
+        f: ['I1 = I · R2 / (R1 + R2)', 'Örnek: 3 mA, 3 kΩ ∥ 6 kΩ → I(3 kΩ) = 3 × 6 / 9 = 2 mA'] },
+      { h: 'Thévenin: dışarıdan bakış', p: 'İki ucundan bakılan her doğrusal devre, bir gerilim kaynağı ile ona seri bir dirence indirgenebilir. V_Th uçlar açıkken ölçülen gerilimdir. R_Th, kaynak kısa devre edilince uçlardan görülen dirençtir.',
+        f: ['V_Th = açık uç gerilimi', 'R_Th = kaynak tel yapılınca görülen direnç'],
+        r: 'Gerçek hayatta: Pilin iç direnci aslında Thévenin direncidir; yük ağırlaştıkça R_Th\'de daha çok gerilim kaybolur, uç gerilimi düşer.' },
+      { h: 'Dikkat: seri mi, paralel mi?', p: 'İki direnç ancak aralarında başka bir kola ayrılma (düğüm) yoksa seridir. Paralel olmaları için iki ucunun da aynı iki düğüme bağlı olması gerekir. Emin değilsen düğümleri işaretle, sonra karar ver.' }
+    ], qs: [
       { t: 'num', q: 'Kaynağın gördüğü eşdeğer direnç kaç kΩ?', c: KARMA, a: 2, u: 'kΩ',
         e: 'Önce paralel R2 ve R3\'ü tek dirence indir, sonra R1 ile topla.', f: 'R = 1 + (2 ∥ 2) = 1 + 1 = 2 kΩ' },
       { t: 'num', q: 'R2 direncinden geçen akım kaç mA?', c: KARMA, a: 2.5, u: 'mA',
@@ -577,7 +653,18 @@ const TWOBAT = loop('12 V', [['R', 'R', '1 kΩ'], ['V-', 'V_2', '5 V']]); // V- 
 const WIRING = loop('12 V', [['F', 'Sigorta', '', '0 V'], ['R', 'Kablo', '', '3 V'], ['L', 'Lamba', '', '9 V']]);
 
 const ZOR = [
-  { name: 'Güç dengesi ve iç direnç', qs: [
+  { name: 'Güç dengesi ve iç direnç', k: [
+    { h: 'Yük = akım–zaman alanı', p: 'Akım sabitse yük Q = I·t olur. Akım zamanla değişiyorsa yük, akım–zaman grafiğinin altındaki alandır; matematikte buna integral denir. Üçgen ya da dikdörtgen darbede alan formülü yeter.',
+      f: ['Q = ∫ i dt', 'Üçgen darbe: Q = ½ · I_tepe · t'] },
+    { h: 'Güç veren mi, alan mı?', p: 'Pasif işaret kuralı: akım bir elemanın + ucundan giriyorsa P = V·I o elemanın aldığı güçtür. Sonuç negatifse eleman güç veriyordur, kaynaklar böyledir. Akım bir pile + ucundan giriyorsa o pil şarj oluyordur.',
+      f: ['P > 0 → güç alır (harcar)', 'P < 0 → güç verir (üretir)', 'Devrede Σ P = 0'] },
+    { h: 'İç direnç', p: 'Gerçek bir kaynak, ideal kaynak ile ona seri küçük bir iç dirençtir. Akım çektikçe iç dirençte gerilim düşer, uç gerilimi azalır. Boştaki ve yük altındaki gerilim farkını akıma bölersen r\'yi bulursun.',
+      f: ['V_uç = E − I·r', 'r = (V_boşta − V_yük) / I', 'Örnek: I = 12 / (0,5 + 5,5) = 2 A → V_uç = 12 − 2 × 0,5 = 11 V'],
+      c: loop('12 V', [['R', 'r_iç', '0,5 Ω'], ['R', 'R_yük', '5,5 Ω']]),
+      r: 'Gerçek hayatta: Marş motoru aküden yüzlerce amper çeker; birkaç mΩ\'luk iç direnç yüzünden akü gerilimi düşer ve farlar bir an kararır.' },
+    { h: 'Dikkat: kablo da gerilim yer', p: 'KVL\'ye göre kaynak gerilimi, çevrimdeki bütün düşümlerin toplamıdır; kablo ve klemensler de dahil. Sağlam bir bağlantıda düşüm birkaç yüz mV\'u geçmez. Bir kabloda volt düzeyinde düşüm ölçersen gevşek klemens, oksit ya da ince kablo ara.',
+      f: ['V_kaynak = Σ V_düşüm'] }
+  ], qs: [
     { t: 'num', q: 'Bir kesitten geçen akım i(t) = 2t A (t saniye). İlk 3 saniyede geçen yük kaç C?', a: 9, u: 'C',
       e: 'Akım değişiyorsa yük, akımın zamana göre integralidir.', f: 'Q = ∫₀³ 2t dt = t² |₀³ = 9 C' },
     { t: 'num', q: 'İki kaynak birbirine karşı bağlı. 5 V kaynağın soğurduğu (şarj olarak aldığı) güç kaç mW?', c: TWOBAT, a: 35, u: 'mW',
@@ -590,7 +677,19 @@ const ZOR = [
       e: 'Sağlam kablo ve bağlantıda düşüm birkaç yüz mV olur. 3 V düşüm kötü temas veya ince kablo demektir, lambaya 9 V kalır.', f: '12 V = 0 + 3 + 9 V (KVL)' },
     { t: 'num', q: 'Bir akü boşta 12,6 V, 20 A çekilirken 11,4 V ölçülüyor. İç direnci kaç mΩ?', a: 60, u: 'mΩ',
       e: 'Yük altındaki gerilim düşümü iç dirençte oluşur.', f: 'r = (12,6 − 11,4) / 20 = 60 mΩ' } ] },
-  { name: 'Köprü, sıcaklık ve güç', qs: [
+  { name: 'Köprü, sıcaklık ve güç', k: [
+    { h: 'Köprü: iki bölücü yan yana', p: 'Wheatstone köprüsünde kaynağa paralel iki kol vardır ve her kol bir gerilim bölücüdür. Orta noktaların gerilimini ayrı ayrı bulup farkını alırsın. Oranlar eşitse fark sıfırdır, köprü dengededir.',
+      f: ['V_a = V · R2 / (R1 + R2), V_b = V · R4 / (R3 + R4)', 'V_ab = V_a − V_b', 'Denge: R1 / R2 = R3 / R4'],
+      c: [...par('10 V', [[['R', 'R1', '1 kΩ'], ['R', 'R2', '1 kΩ']], [['R', 'R3', '2 kΩ'], ['R', 'R4', '2 kΩ']]]), ['T', 140, 110, 0, 0, 'a', '', 'l'], ['T', 250, 110, 0, 0, 'b', '', 'l']],
+      r: 'Gerçek hayatta: Mutfak tartısındaki yük hücresi bir köprüdür. Ağırlık dirençleri binde bir kadar değiştirir, köprü bunu mV\'luk bir gerilime çevirir.' },
+    { h: 'Sıcaklık direnci değiştirir', p: 'Metallerin direnci sıcaklıkla yaklaşık doğrusal artar. α, her °C için bağıl artıştır; bakırda α ≈ 0,0039 1/°C. Yani bakır sargı 60 °C ısınınca direnci yaklaşık %23 artar.',
+      f: ['R = R₀ · (1 + α·ΔT)'],
+      r: 'Gerçek hayatta: Çalışan motorun sargısı ısındıkça direnci artar, aynı akımda I²·R kaybı da büyür.' },
+    { h: 'En büyük güç aktarımı', p: 'Kaynaktan yüke en çok güç, yük direnci kaynağın iç (Thévenin) direncine eşitken aktarılır. O noktada gücün yarısı kaynağın içinde ısıya gider, verim %50 olur. Bu yüzden enerji iletiminde değil, ses ve anten gibi sinyal uyumunda aranır.',
+      f: ['R_L = R_Th → P_max = V_Th² / (4·R_Th)', 'Örnek: I = 12 / (6 + 6) = 1 A, P_L = 1² × 6 = 6 W'],
+      c: loop('12 V', [['R', 'R_Th', '6 Ω'], ['R', 'R_L', '6 Ω']]) },
+    { h: 'Dikkat: mΩ ölçerken kablo da girer', p: 'mΩ\'luk bir şöntte prob ve lehim direnci şöntün kendisi kadar olabilir. 4 uçlu (Kelvin) ölçümde akım bir çift uçtan geçer, gerilim ayrı bir çiftten okunur. Gerilim uçlarından akım geçmediği için onlarda düşüm olmaz.' }
+  ], qs: [
     { t: 'num', q: 'Köprü dengede değil. V_ab kaç V?', c: BRIDGE, a: 10 * 2 / 3 - 5, u: 'V',
       e: 'İki kol ayrı birer gerilim bölücüdür. a ve b gerilimlerini ayrı bul, farkını al.', f: 'V_a = 10 × 2/3 = 6,67 V, V_b = 10 × 2/4 = 5 V → V_ab = 1,67 V' },
     { t: 'num', q: 'Bakır sargı 20 °C\'de 10 Ω. α = 0,00393 1/°C ise 100 °C\'de direnci kaç Ω?', a: 10 * (1 + 0.00393 * 80), u: 'Ω',
@@ -603,7 +702,20 @@ const ZOR = [
       e: 'Seri LED\'lerin gerilimleri toplanır, kalan gerilim dirençte düşer.', f: 'R = (12 − 3 × 2,1) / 0,02 = 285 Ω' },
     { t: 'ariza', q: 'Kaynaktan 4 mA çekiliyor. Ölçülen gerilimlere göre arızalı dirence dokun.', c: par('12 V', [[['R', 'R1', '1 kΩ', '4 V'], ['R', 'R2', '2 kΩ', '8 V']], [['R', 'R3', '1 kΩ', '0 V'], ['R', 'R4', '2 kΩ', '12 V']]]), a: 'R4',
       e: 'Sağ kolda akım yok: R3\'te düşüm 0 V, kopuk R4 kaynağın tamamını görüyor. R3 kısa devre olsaydı sağ koldan 6 mA akar, toplam 10 mA olurdu.', f: 'Sol kol: 12 / 3 kΩ = 4 mA → sağ kol 0 mA' } ] },
-  { name: 'Düğüm, süperpozisyon, merdiven', qs: [
+  { name: 'Düğüm, süperpozisyon, merdiven', k: [
+    { h: 'Düğüm gerilimi yöntemi', p: 'Bir düğümü toprak (0 V) seç, bilinmeyen düğümün gerilimine V de. O düğümden çıkan her kolun akımını (V − komşu) / R diye yaz ve toplamı sıfıra eşitle. Tek denklemden bütün kol akımları çıkar.',
+      f: ['Σ (V − V_komşu) / R = 0'] },
+    { h: 'Süperpozisyon', p: 'Birden fazla kaynak varsa her kaynağın etkisini ayrı hesaplayıp toplayabilirsin. Bir kaynağı hesaplarken diğer gerilim kaynaklarını kısa devre (tel), akım kaynaklarını açık devre yap. Gerilim ve akım toplanır, güç toplanmaz.',
+      f: ['V = V(yalnız 1. kaynak) + V(yalnız 2. kaynak)'] },
+    { h: 'Merdiven: sağdan sola indir', p: 'En uzak basamaktan başla: seri olanı topla, paralel olanla birleştir, kaynağa doğru ilerle. Kaynak akımını bulunca bu kez soldan sağa düğüm düğüm gerilimleri hesapla.',
+      f: ['R_eş = 2 + 6 ∥ (1 + 2) = 2 + 2 = 4 kΩ', 'I = 12 / 4 = 3 mA → V_A = 12 − 3 × 2 = 6 V', 'V_B = 6 × 2 / (1 + 2) = 4 V'],
+      c: [['V', 20, 210, 20, 60, '12 V', 'Kaynak'], put(['R', 'R1', '2 kΩ'], 20, 60, 120, 60), put(['R', 'R2', '6 kΩ'], 120, 60, 120, 210),
+        put(['R', 'R3', '1 kΩ'], 120, 60, 230, 60), put(['R', 'R4', '2 kΩ'], 230, 60, 230, 210), ['W', 230, 210, 20, 210],
+        ['N', 120, 60], ['N', 120, 210], ['T', 120, 30, 0, 0, 'A'], ['T', 230, 30, 0, 0, 'B']] },
+    { h: 'Thévenin ve Norton', p: 'Kaynağı kısa devre edince devre çoğu zaman yeni bir seri-paralel düzene dönüşür; R_Th\'yi o düzende bul. Norton eşdeğeri aynı devrenin akım kaynağı hâlidir: uçlar kısa devre edilince akan akım.',
+      f: ['I_N = V_Th / R_Th', 'R_N = R_Th'],
+      r: 'Gerçek hayatta: Arıza ararken düğüm gerilimlerini ölçüp hesapla karşılaştırırsın; beklenenden sapan düğümün çevresine bakarsın.' }
+  ], qs: [
     { t: 'num', q: 'R3 üzerindeki gerilim kaç V?', c: TWOSRC, a: 8, u: 'V',
       e: 'Tek bilinmeyen düğüm gerilimi. Düğüm denklemi kur: çıkan akımların toplamı sıfır.', f: '(V − 12)/2 + (V − 6)/3 + V/6 = 0 → V = 8 V' },
     { t: 'num', q: 'Süperpozisyon: yalnız 6 V kaynağı etkinken (12 V kısa devre) R3 gerilimi kaç V?', c: TWOSRC, a: 2, u: 'V',
