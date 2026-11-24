@@ -1181,7 +1181,10 @@ function profile() {
   <p class="note">Bir gün kaçırırsan serin bozulmaz. Kullandığın hak, 7 günlük seriyle geri gelir.</p>${saveOk ? '' : '<p class="note err">Bu tarayıcı kayda izin vermiyor. İlerlemen sayfa kapanınca silinir.</p>'}
   <h2>Hatırlatıcı</h2><label class="sel"><span>Bildirim sıklığı</span><select id="rem">${['Kapalı', 'Her gün', '2 günde bir'].map((n, i) => `<option value="${i}" ${S.rem === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
   <p class="note" id="remst" aria-live="polite"></p><button class="btn alt" id="remtest" hidden>Deneme bildirimi gönder</button>
-  <h2>Rozetler (${got}/${BADGES.length})</h2><ul class="bdg">${BADGES.map(([n, d, f]) => `<li>${badgeSvg(f(S))}<span><b>${n}</b>${d}${f(S) ? '. Kazanıldı' : ''}</span></li>`).join('')}</ul></main>${navBar('profil')}`;
+  <h2>Rozetler (${got}/${BADGES.length})</h2><ul class="bdg">${BADGES.map(([n, d, f]) => `<li>${badgeSvg(f(S))}<span><b>${n}</b>${d}${f(S) ? '. Kazanıldı' : ''}</span></li>`).join('')}</ul>
+  <h2>Yedek</h2><p class="note">İlerlemen yalnızca bu tarayıcıda durur. Telefon değiştirmeden ya da site verisini silmeden önce yedeğini indir.</p>
+  <button class="btn alt" id="ydown">Yedeği indir</button><button class="btn alt" id="yup">Yedeği yükle</button><input type="file" id="yfile" accept=".json,application/json" hidden>
+  <p class="note" id="yst" aria-live="polite"></p></main>${navBar('profil')}`;
 }
 
 function bindReminder() {
@@ -1190,6 +1193,29 @@ function bindReminder() {
   sel.onchange = async () => { S.rem = +sel.value; save(); show(S.rem ? await armReminder(true) : 'tamam'); };
   test.onclick = async () => (await swReg())?.showNotification('Akımlı', { body: 'Bildirimler çalışıyor. Hatırlatmalar böyle görünecek.', icon: 'icon-192.png', tag: 'deneme' });
   (S.rem ? armReminder(false) : Promise.resolve('tamam')).then(show);
+}
+
+function bindBackup() {
+  const st = $('#yst'), inp = $('#yfile'), note = (t, err) => { st.textContent = t; st.classList.toggle('err', err); };
+  $('#ydown').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' }));
+    a.download = `akimli-yedek-${new Date(dayNum() * 864e5).toISOString().slice(0, 10)}.json`;
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1e4);
+    note('Yedek indirildi. Dosyayı güvenli bir yere koy.', false);
+  };
+  $('#yup').onclick = () => inp.click();
+  inp.onchange = async () => {
+    const f = inp.files[0]; inp.value = '';
+    if (!f) return;
+    const raw = await f.text().catch(() => '');
+    let p; try { p = JSON.parse(raw); } catch {}
+    // parseState bozuk dosyada sıfır ilerleme döner; yedek olmayanı burada ayırırız.
+    if (!p || typeof p !== 'object' || typeof p.xp !== 'number' || !p.done || typeof p.done !== 'object') return note('Bu dosya bir Akımlı yedeği değil. İlerlemen değişmedi.', true);
+    const n = parseState(raw, Object.keys(QUESTIONS));
+    if (!confirm(`Şu anki ilerlemen (${S.xp} XP, ${Object.keys(S.done).length} ders) silinip yedektekiyle (${n.xp} XP, ${Object.keys(n.done).length} ders) değiştirilsin mi?`)) return note('Yükleme iptal edildi.', false);
+    S = n; save(); route(); $('#yst').textContent = 'Yedek yüklendi.'; // route ekranı yeniden çizer
+  };
 }
 
 /* ---------- Soru oturumu ---------- */
@@ -1307,7 +1333,7 @@ function route() {
   C = null;
   shown = h === 'profil' ? 'profil' : h.startsWith('tekrar') ? 'tekrar' : 'ana';
   app.innerHTML = { profil: profile, tekrar: review, ana: home }[shown]();
-  if (shown === 'profil') bindReminder();
+  if (shown === 'profil') { bindReminder(); bindBackup(); }
   focusTop(scrollMem[shown] || 0);
   // Uygulama yeni açıldığında sıradaki ders ekranın ortasına gelir.
   if (shown === 'ana' && !(shown in scrollMem) && S.xp) $('.node.next')?.scrollIntoView({ block: 'center' });
