@@ -117,6 +117,11 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .ckt .part[aria-checked=true] .hit{fill:var(--led);fill-opacity:.28;stroke:var(--copper);stroke-dasharray:none;stroke-width:2.5}
 .ckt .part.good .hit{fill:var(--good);fill-opacity:.2;stroke:var(--good);stroke-dasharray:none}
 .ckt .part.bad .hit{fill:var(--bad);fill-opacity:.2;stroke:var(--bad);stroke-dasharray:none}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{min-height:48px;border:2px solid var(--line);border-radius:10px;background:var(--card);font-weight:700}
+.seg button[aria-pressed=true]{border-color:var(--copper);background:var(--sel)}
+.dmm{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;min-height:64px;padding:10px 14px;border-radius:10px;background:var(--mask2);color:var(--silk);font:14px var(--mono);box-shadow:inset 0 0 0 2px var(--mask)}
+.dmm b{font-size:28px;line-height:1.2;color:var(--led);font-variant-numeric:tabular-nums;margin-right:auto}
 .num{display:flex;gap:10px;align-items:center}
 .num input{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:56px;font:700 24px var(--mono);padding:0 14px;background:var(--card);border:2px solid var(--line);border-radius:10px}
 .num b{font:700 20px var(--mono)}
@@ -1200,11 +1205,13 @@ const answer = (v, ready = true) => { C.ans = v; $('#ok').disabled = !ready; };
 const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>` : '';
 const optList = (q, badge) => `<div class="opts">${C.perm.map(i => `<button class="opt" aria-pressed="false" data-i="${i}">${badge ? '<kbd></kbd>' : ''}<span>${tx(q.o[i])}</span></button>`).join('')}</div>`;
 
+// Arıza sorusu: etiketteki "|" sonrası rakamlı ölçü, kullanıcı ölçene kadar gizli kalır.
+const reading = e => { const m = (e && e[5] || '').split('|')[1]; return m && /\d/.test(m) ? m : ''; };
 const VIEW = {
   mc: q => { C.perm = shuffle(q.o.length); return fig(q) + optList(q); },
   num: q => (q.b ? `<div class="fig">${resistor(q.b)}</div><p class="note">Bantlar: ${q.b.join(', ')}</p>` : fig(q)) + `<form class="num"><input id="n" inputmode="decimal" autocomplete="off" enterkeyhint="done" aria-label="Cevap, birim ${q.u}" aria-describedby="nerr"><b>${q.u}</b></form><p class="note" id="nerr" aria-live="polite">±%2 tolerans. Virgül veya nokta kullanabilirsin.</p>`,
   kur: () => `<div class="fig" id="res"></div><div class="slots">${[0, 1, 2].map(i => `<button data-s="${i}"></button>`).join('')}</div><div class="pal">${COLORS.map(c => `<button data-c="${c}"><i style="background:${HEX[c]}"></i>${c}</button>`).join('')}</div>`,
-  ariza: q => `<div class="fig">${circuit(q.c, { pick: true })}</div>`,
+  ariza: q => { const m = q.c.some(e => e[6] && reading(e)); return (m ? '<div class="seg" role="group" aria-label="Dokunma modu"><button aria-pressed="true">Ölç</button><button aria-pressed="false">Seç</button></div>' : '') + `<div class="fig">${circuit(q.c, { pick: true })}</div>` + (m ? '<p class="dmm" aria-live="polite"><small>Ölçmek için bir elemana dokun. Arızalıyı bulunca Seç’e geç.</small></p>' : ''); },
   sira: q => { do C.perm = shuffle(q.o.length); while (C.perm.every((v, i) => v === i)); return '<p class="note">İlk sıradan başlayarak dokun. Geri almak için tekrar dokun.</p>' + optList(q, true); },
   sim: q => `<div class="fig" id="sv"></div><div class="read" id="rd"></div><div>${SIMS[q.sim].s.map(([k, n, a, b, st, v]) => `<label class="sl"><span>${tx(n)}</span><b id="o-${k}"></b><input type="range" id="s-${k}" min="${a}" max="${b}" step="${st}" value="${v}"></label>`).join('')}</div><p class="note" id="warn" aria-live="polite"></p>`
 };
@@ -1218,9 +1225,15 @@ const BIND = {
     $$('[data-c]').forEach(b => b.onclick = () => { v[cur] = b.dataset.c; const e = v.indexOf(null); if (e >= 0) cur = e; draw(); answer([...v], e < 0); });
     draw();
   },
-  ariza: () => {
+  ariza: q => {
+    const hid = {}, seg = $$('.seg button'), val = p => reading(q.c.find(e => e[6] === p.dataset.id)); let olc = seg.length > 0, n = 0;
     const sel = p => { if (C.checked) return; $$('.part').forEach(x => x.setAttribute('aria-checked', x === p)); answer(p.dataset.id); };
-    $$('.part').forEach(p => { p.onclick = () => sel(p); p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sel(p); } }; });
+    const show = p => { const h = hid[p.dataset.id]; if (!h) return; $('.me', p).innerHTML = h[0]; p.setAttribute('aria-label', h[1]); hid[p.dataset.id] = null; n++; };
+    const meas = p => { const v = val(p); show(p); $('.dmm').innerHTML = `<small>${tx(p.dataset.id)}</small><b>${v ? esc(v) : '– – –'}</b><small>${v ? `${n} ölçüm` : 'Burada ölçüm yok'}</small>`; };
+    if (olc) $$('.part').forEach(p => { const v = val(p), t = $('.me', p), l = p.getAttribute('aria-label'); if (v && t) { hid[p.dataset.id] = [t.innerHTML, l]; t.textContent = '?'; p.setAttribute('aria-label', l.replace(', ölçülen ' + v, '')); } });
+    seg.forEach((b, i) => b.onclick = () => { olc = !i; seg.forEach(x => x.setAttribute('aria-pressed', x === b)); });
+    $$('.part').forEach(p => { p.onclick = () => (olc ? meas : sel)(p); p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (olc ? meas : sel)(p); } }; });
+    $('#ok').addEventListener('click', () => $$('.part').forEach(show)); // cevaptan sonra tüm ölçüler görünür
   },
   sira: q => {
     const seq = [];
