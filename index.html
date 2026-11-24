@@ -11,18 +11,18 @@
 :root{
   --bg:#eef3ee; --card:#fff; --ink:#12302c; --soft:#4b6661; --line:#c9d6cf;
   --mask:#15564c; --mask2:#0f463e; --silk:#eaf5ee; --copper:#d08a4a; --tin:#c9d4d0;
-  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc; --hi1:#fff1c7; --hi2:#d9ecff;
+  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc; --hi1:#fff1c7; --hi2:#d9ecff; --hot:#d63a22; --cold:#2a62c9; --bdo:.5;
   --disp:"Roboto Condensed","sans-serif-condensed","Avenir Next Condensed","Arial Narrow","Segoe UI",sans-serif;
   --body:Roboto,"Segoe UI",system-ui,sans-serif; --mono:"Roboto Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; color-scheme:dark}}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; color-scheme:dark}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
@@ -117,6 +117,17 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .ckt .part[aria-checked=true] .hit{fill:var(--led);fill-opacity:.28;stroke:var(--copper);stroke-dasharray:none;stroke-width:2.5}
 .ckt .part.good .hit{fill:var(--good);fill-opacity:.2;stroke:var(--good);stroke-dasharray:none}
 .ckt .part.bad .hit{fill:var(--bad);fill-opacity:.2;stroke:var(--bad);stroke-dasharray:none}
+.ckt .flow{pointer-events:none}
+.ckt .bd{fill:none;stroke-linecap:round;stroke-opacity:var(--bdo)}
+.ckt .ch{fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.ckt .sp{font:700 20px var(--mono)}
+.ckt .sp.hot{fill:var(--hot)}
+.ckt .sp.cold{fill:var(--cold)}
+.flg{display:flex;gap:8px;align-items:baseline;margin:6px 4px 0;font-size:13px;line-height:1.35;color:var(--soft)}
+.flg i{flex:none;width:28px;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--hot),var(--cold))}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.akb{align-self:flex-start;min-height:44px;padding:0 16px;border:2px solid var(--line);border-radius:10px;background:var(--card);font-weight:700}
+.akb[aria-pressed=true]{border-color:var(--copper);background:var(--sel)}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .prb{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .prb button{padding:0 16px}
@@ -1398,10 +1409,189 @@ const BLOCK = {
   TR: (x, y, x2, y2) => [`<path class="ln" d="M${x} ${y}v8a8 8 0 0 1 0 16a8 8 0 0 1 0 16a8 8 0 0 1 0 16a8 8 0 0 1 0 16v8M${x2} ${y}v8a8 8 0 0 0 0 16a8 8 0 0 0 0 16a8 8 0 0 0 0 16a8 8 0 0 0 0 16v8M${(x + x2) / 2 - 2} ${y + 8}V${y2 - 8}M${(x + x2) / 2 + 2} ${y + 8}V${y2 - 8}"/><circle class="fl" cx="${x - 9}" cy="${y + 12}" r="3"/><circle class="fl" cx="${x2 + 9}" cy="${y2 - 12}" r="3"/>`]
 };
 
-// pick: kimlikli elemanlar seçilebilir. glow: LED/lamba parlaklığı (0–1).
+// Akım akışı: fl = [{ p: [[x, y], …], v: [her noktada volt], i: göreli akım > 0 }]. Akım p[0]'dan son noktaya akar.
+// flowOf yalnız V, R, L, F, S, SO, LED ve tellerden oluşan devreyi DC çözer. Başka eleman varsa ya da eksik bir değer
+// bir yönü veya gerilim sırasını değiştirebiliyorsa null döner: yanlış ok hiç ok olmamasından kötüdür.
+function flowOf(els) {
+  const kind = e => e[0].replace(/-$/, ''), lab = e => (e[5] || '').split('|')[0];
+  if (!els.every(e => /^(W|N|G|T|P|VB|V|R|L|F|S|SO|LED)$/.test(kind(e))) || els.some(e => (e[0] === 'T' || e[0] === 'P') && /\d\s*m?V\b/.test(lab(e)))) return null;
+  const val = (s, u) => { const m = new RegExp(`(\\d+(?:\\.\\d{3})*(?:,\\d+)?)[ \\u00a0]*([mkM]?)${u}`).exec(s); return m ? m[1].replace(/\./g, '').replace(',', '.') * { '': 1, m: 1e-3, k: 1e3, M: 1e6 }[m[2]] : null; }; // 1.000,5 → 1000.5
+  const P = new Map(), K = (x, y) => `${Math.round(x * 100) / 100},${Math.round(y * 100) / 100}`, pt = (x, y) => (P.has(K(x, y)) || P.set(K(x, y), [x, y]), K(x, y));
+  const W = [], parts = [], vt = new Set(), gs = [], wire = (a, b) => (a[0] !== b[0] || a[1] !== b[1]) && W.push([a, b]);
+  for (const e of els) {
+    const [t0, x1, y1, x2, y2] = e, t = kind(e), a = [x1, y1], b = [x2, y2], rev = t0.endsWith('-');
+    if (t === 'T' || t === 'VB') continue;
+    pt(x1, y1);
+    if (t === 'G') gs.push(K(x1, y1));
+    if (t === 'N' || t === 'P' || t === 'G') continue;
+    pt(x2, y2);
+    if (t === 'W') { wire(a, b); continue; }
+    if (t === 'V') { const E = val(lab(e), 'V'), [m, p] = rev ? [b, a] : [a, b]; if (E === null) return null; vt.add(K(...m)).add(K(...p)); parts.push({ t, a: m, b: p, E, e }); continue; }
+    // Gövde ±22 birim; uçlardan gövdeye kadar olan bacaklar tel sayılır (ortasına bağlanan olabilir).
+    const h = Math.hypot(x2 - x1, y2 - y1) / 2, d = Math.min(22, h) / h / 2, cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+    const b1 = [cx - (x2 - x1) * d, cy - (y2 - y1) * d], b2 = [cx + (x2 - x1) * d, cy + (y2 - y1) * d];
+    pt(...b1); pt(...b2); wire(a, b1); wire(b2, b);
+    if (t === 'F' || t === 'S') wire(b1, b2);
+    else if (t === 'R' || t === 'L') parts.push({ t: 'R', a: b1, b: b2, R: val(lab(e), 'Ω'), e });
+    else if (t === 'LED') parts.push({ t: 'D', a: rev ? b2 : b1, b: rev ? b1 : b2, Vf: val(lab(e), 'V') || 2, e });
+  }
+  if (!parts.some(p => p.t === 'V')) return null;
+  // Teller, üzerlerindeki her uç noktasından bölünür; tüm topraklar tek düğüm ('G').
+  const pts = [...P.values()], E = gs.map(g => [g, 'G', false]);
+  for (const [a, b] of W) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy;
+    const mid = pts.map(q => [((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / L2, q]).filter(([s, q]) => s > 1e-9 && s < 1 - 1e-9 && Math.abs((q[0] - a[0]) * dy - (q[1] - a[1]) * dx) < .01 * Math.sqrt(L2));
+    [a, ...mid.sort((m, n) => m[0] - n[0]).map(m => m[1]), b].reduce((p, q) => (E.push([K(...p), K(...q), true]), q));
+  }
+  const up = new Map(), find = k => { while (up.has(k)) k = up.get(k); return k; }, sn = p => find(K(...p));
+  E.forEach(([a, b]) => { const x = find(a), y = find(b); if (x !== y) up.set(x, y); });
+  const ref = gs.length ? find('G') : sn(parts.find(p => p.t === 'V').a), GD = 10; // iletimdeki LED: V_F + 0,1 Ω
+  if (parts.some(p => p.t === 'V' && sn(p.a) === sn(p.b))) return null;
+  // Teller birleşik düğümdür; elemanlar düğüm gerilim yöntemiyle çözülür.
+  const run = (rv, on) => {
+    const live = parts.filter((p, k) => p.t !== 'D' || on[k]), seen = new Set([ref]);
+    for (let ch = 1; ch;) { ch = 0; for (const p of live) if (seen.has(sn(p.a)) !== seen.has(sn(p.b))) { seen.add(sn(p.a)).add(sn(p.b)); ch = 1; } }
+    const idx = new Map([...seen].filter(s => s !== ref).map((s, i) => [s, i])), n = idx.size, vs = live.filter(p => p.t === 'V' && seen.has(sn(p.a))), N = n + vs.length;
+    const A = Array.from({ length: N }, () => new Array(N + 1).fill(0)), add = (r, c, v) => r !== undefined && c !== undefined && (A[r][c] += v);
+    for (const p of live) {
+      const i = idx.get(sn(p.a)), j = idx.get(sn(p.b)), k = parts.indexOf(p), g = p.t === 'R' ? 1 / rv[k] : GD;
+      if (!seen.has(sn(p.a))) continue;
+      if (p.t === 'V') { const r = n + vs.indexOf(p); add(j, r, 1); add(i, r, -1); add(r, j, 1); add(r, i, -1); A[r][N] = p.E; continue; }
+      add(i, i, g); add(j, j, g); add(i, j, -g); add(j, i, -g);
+      if (p.t === 'D') { add(i, N, g * p.Vf); add(j, N, -g * p.Vf); }
+    }
+    for (let c = 0; c < N; c++) {
+      let m = c; for (let r = c + 1; r < N; r++) if (Math.abs(A[r][c]) > Math.abs(A[m][c])) m = r;
+      if (Math.abs(A[m][c]) < 1e-12) return null;
+      [A[c], A[m]] = [A[m], A[c]];
+      for (let r = 0; r < N; r++) if (r !== c && A[r][c]) { const f = A[r][c] / A[c][c]; for (let k = c; k <= N; k++) A[r][k] -= f * A[c][k]; }
+    }
+    const x = A.map((r, i) => r[N] / r[i]), pot = s => s === ref ? 0 : idx.has(s) ? x[idx.get(s)] : NaN;
+    const I = parts.map((p, k) => (p.t === 'R' ? (pot(sn(p.a)) - pot(sn(p.b))) / rv[k] : p.t === 'D' ? on[k] && GD * (pot(sn(p.a)) - pot(sn(p.b)) - p.Vf) : vs.includes(p) && -x[n + vs.indexOf(p)]) || 0);
+    return { pot, I };
+  };
+  // Tel akımları: elemanların düğüme getirdiği akım, tel ağacında yapraklardan içe doğru taşınır. Tel halkası varsa null.
+  const adj = new Map(); E.forEach(([a, b], k) => [a, b].forEach(q => (adj.get(q) || adj.set(q, []).get(q)).push(k)));
+  const peel = I => {
+    const inj = new Map(), cur = E.map(() => null), deg = new Map([...adj].map(([q, l]) => [q, l.length])), get = q => inj.get(q) || 0;
+    parts.forEach((p, k) => { inj.set(K(...p.a), get(K(...p.a)) - I[k]); inj.set(K(...p.b), get(K(...p.b)) + I[k]); });
+    for (const q = [...deg.keys()].filter(u => deg.get(u) === 1); q.length;) {
+      const u = q.pop(); if (deg.get(u) !== 1) continue;
+      const k = adj.get(u).find(k => cur[k] === null), [a, b] = E[k], v = a === u ? b : a, j = get(u);
+      cur[k] = a === u ? j : -j; inj.set(v, get(v) + j); deg.set(u, 0); deg.set(v, deg.get(v) - 1); if (deg.get(v) === 1) q.push(v);
+    }
+    return cur.includes(null) ? null : cur;
+  };
+  // LED'ler önce iletimde sayılır; ters akım alan söner, eşiği aşan yanar.
+  const go = rv => {
+    const on = parts.map(() => true);
+    for (let it = 0; it < 12; it++) {
+      const r = run(rv, on); if (!r) return null;
+      let ch = false;
+      parts.forEach((p, k) => { if (p.t === 'D' && (on[k] ? r.I[k] < -1e-12 : r.pot(sn(p.a)) - r.pot(sn(p.b)) > p.Vf + 1e-9)) { on[k] = !on[k]; ch = true; } });
+      if (!ch) { const w = peel(r.I); return w && { ...r, w }; }
+    }
+    return null;
+  };
+  const r0 = go(parts.map(p => p.R || 1e3)); if (!r0) return null;
+  const all = r => [...r.I, ...r.w], tol = Math.max(...all(r0).map(Math.abs)) * 1e-6;
+  if (!(tol > 1e-18)) return null;
+  // Değeri yazılmamış direnç/lamba varsa rastgele değerlerle de çöz; yön ve gerilim sırası hep aynı kalmalı.
+  if (parts.some(p => p.t === 'R' && !p.R)) {
+    const groups = [...new Set([...P.keys()].map(find))], sig = r => {
+      const c = all(r), m = Math.max(...c.map(Math.abs)) * 1e-6, v = groups.map(r.pot), vm = Math.max(...v.map(x => Math.abs(x) || 0)) * 1e-6;
+      return c.map(x => Math.abs(x) <= m ? 0 : Math.sign(x)).join() + v.map(a => v.map(b => a !== a || b !== b ? 'x' : Math.abs(a - b) <= vm ? 0 : Math.sign(a - b)).join()).join();
+    }, s0 = sig(r0);
+    let seed = 7; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+    for (let n = 0; n < 8; n++) { const r = go(parts.map(p => p.R || 1e3 * 10 ** (2 * rnd() - 1))); if (!r || sig(r) !== s0) return null; }
+  }
+  const segs = [];
+  E.forEach(([a, b, show], k) => { const c = r0.w[k]; if (show && Math.abs(c) > tol) segs.push(c > 0 ? [a, b, c] : [b, a, -c]); });
+  parts.forEach((p, k) => { const c = r0.I[k], a = K(...p.a), b = K(...p.b); if (p.t !== 'V' && Math.abs(c) > tol) segs.push(c > 0 ? [a, b, c] : [b, a, -c]); });
+  // Seri parçalar tek yola birleşir; kaynak uçlarında ve kollara ayrılmalarda yol biter.
+  const ins = {}, outs = {}, used = new Set(), fl = [];
+  segs.forEach((s, k) => { (outs[s[0]] ||= []).push(k); (ins[s[1]] ||= []).push(k); });
+  const thru = q => !vt.has(q) && ins[q]?.length === 1 && outs[q]?.length === 1;
+  const chain = k0 => {
+    const ks = [segs[k0][0]];
+    for (let k = k0; ; k = outs[ks.at(-1)][0]) { used.add(k); ks.push(segs[k][1]); if (!thru(ks.at(-1)) || used.has(outs[ks.at(-1)][0])) break; }
+    fl.push({ p: ks.map(q => P.get(q)), v: ks.map(q => +r0.pot(find(q)).toFixed(3)), i: +(segs[k0][2] * 1e3).toPrecision(3) });
+  };
+  segs.forEach((s, k) => used.has(k) || thru(s[0]) || chain(k));
+  segs.forEach((s, k) => used.has(k) || chain(k));
+  return fl;
+}
+
+// Akış katmanı: gerilime göre renkli bant (kırmızı yüksek, mavi düşük) ve akım yönünde kayan oklar. Hareket azaltılmışsa oklar durur.
+let flowN = 0;
+function flowParts(els, fl) {
+  const id = 'ak' + ++flowN, vs = fl.flatMap(f => f.v), hi = Math.max(...vs), lo = Math.min(...vs), im = Math.max(...fl.map(f => f.i)), K = p => p.join();
+  const col = v => `color-mix(in oklch,var(--hot) ${hi > lo ? Math.round((v - lo) / (hi - lo) * 100) : 100}%,var(--cold))`;
+  const two = els.filter(e => SYM[e[0].replace('-', '')]), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const geo = e => { const [, x1, y1, x2, y2] = e, d = Math.min(22, Math.hypot(x2 - x1, y2 - y1) / 2) / Math.hypot(x2 - x1, y2 - y1); return [(x1 + x2) / 2, (y1 + y2) / 2, (x2 - x1) * d, (y2 - y1) * d]; };
+  const on = (a, b, c) => { const dx = b[0] - a[0], dy = b[1] - a[1], s = (c[0] - a[0]) * dx + (c[1] - a[1]) * dy; return Math.abs((c[0] - a[0]) * dy - (c[1] - a[1]) * dx) < .5 * Math.hypot(dx, dy) && s > 0 && s < dx * dx + dy * dy; };
+  let defs = '', band = '', ch = '', n = 0;
+  for (const f of fl) {
+    const r = f.i / im, w = (5 + 6 * r).toFixed(1), d = 'M' + f.p.join('L');
+    f.p.slice(1).forEach((b, k) => {
+      const a = f.p[k], va = f.v[k], vb = f.v[k + 1], ends = e => [K([e[1], e[2]]), K([e[3], e[4]])].sort().join('|');
+      // Elemanın iki ucunu birleştiren parçada gerilim yalnız gövdede düşer.
+      const e = va !== vb && two.find(e => ends(e) === [K(a), K(b)].sort().join('|'));
+      let s = [[a, b, va, vb]];
+      if (e) { const [cx, cy, dx, dy] = geo(e), g = K(a) === K([e[1], e[2]]) ? 1 : -1, a2 = [cx - g * dx, cy - g * dy], b2 = [cx + g * dx, cy + g * dy]; s = [[a, a2, va, va], [a2, b2, va, vb], [b2, b, vb, vb]]; }
+      for (const [p, q, u, v] of s) {
+        if (K(p) === K(q)) continue;
+        let st = col(u);
+        if (u !== v) { st = `url(#${id}g${n})`; defs += `<linearGradient id="${id}g${n++}" gradientUnits="userSpaceOnUse" x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}"><stop offset="0" style="stop-color:${col(u)}"/><stop offset="1" style="stop-color:${col(v)}"/></linearGradient>`; }
+        band += `<path class="bd" d="M${p}L${q}" style="stroke:${st};stroke-width:${w}"/>`;
+      }
+    });
+    const seg = f.p.slice(1).map((q, k) => [f.p[k], q, Math.hypot(q[0] - f.p[k][0], q[1] - f.p[k][1])]), len = seg.reduce((s, x) => s + x[2], 0);
+    const m = Math.max(1, Math.round(len / 34)), dur = len / (18 + 42 * r), sc = (.85 + .45 * r).toFixed(2);
+    const at = o => { for (const [a, b, l] of seg) { if (o <= l) return `translate(${(a[0] + (b[0] - a[0]) * o / l).toFixed(1)} ${(a[1] + (b[1] - a[1]) * o / l).toFixed(1)}) rotate(${Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI})`; o -= l; } };
+    for (let j = 0; j < m; j++) ch += still ? `<path class="ch" transform="${at((j + .5) * len / m)} scale(${sc})" d="M-3-5L2 0-3 5"/>`
+      : `<path class="ch" transform="scale(${sc})" d="M-3-5L2 0-3 5"><animateMotion path="${d}" dur="${dur.toFixed(2)}s" begin="${(-(j + .5) * dur / m).toFixed(2)}s" repeatCount="indefinite" rotate="auto"/></path>`;
+  }
+  // Oklar elemanın gövdesine girmez; sembol okunur kalır.
+  const holes = two.map(e => { const [cx, cy, dx, dy] = geo(e), hx = Math.max(Math.abs(dx), 14), hy = Math.max(Math.abs(dy), 14); return `<rect x="${cx - hx}" y="${cy - hy}" width="${2 * hx}" height="${2 * hy}"/>`; }).join('')
+    + els.filter(e => BLOCK[e[0]]).map(e => { const [, x, y, bw, bh] = BLOCK[e[0]](...e.slice(1, 6)); return bh ? `<rect x="${x}" y="${y}" width="${bw}" height="${bh}"/>` : ''; }).join('');
+  const src = els.filter(e => e[0].replace('-', '') === 'V').map(e => e[0].endsWith('-') ? [[e[1], e[2]], [e[3], e[4]], e] : [[e[3], e[4]], [e[1], e[2]], e]);
+  const marks = src.map(([p, m, e]) => [[p, m, '+', 'hot'], [m, p, '−', 'cold']].map(([q, o, s, c]) => {
+    const v = e[1] === e[3], g = Math.sign(o[v ? 1 : 0] - q[v ? 1 : 0]);
+    return `<text class="sp ${c}" text-anchor="middle" x="${v ? q[0] + (e[7] === 'l' ? 14 : -14) : q[0] + g * 16}" y="${v ? q[1] + g * 16 + 6 : q[1] + 24}">${s}</text>`;
+  }).join('')).join('');
+  // Ekran okuyucu için: en büyük akımı izleyerek + uçtan − uca giden yol.
+  const out = {}, nm = e => (e[6] || lab0(e) || { R: 'direnç', L: 'lamba', F: 'sigorta', S: 'anahtar', LED: 'LED' }[e[0].replace('-', '')] || 'eleman').replace(/_/g, ''), lab0 = e => (e[5] || '').split('|')[0].split('\n')[0];
+  fl.forEach(f => f.p.slice(1).forEach((q, k) => (out[K(f.p[k])] ||= []).push([q, f.i])));
+  const outI = p => (out[K(p)] || []).reduce((s, o) => s + o[1], 0), s0 = [...src].sort((a, b) => outI(b[0]) - outI(a[0]))[0];
+  let desc = 'Oklar akımın yönünü gösterir.';
+  if (s0 && outI(s0[0])) {
+    const seen = new Set(), got = new Set(), names = []; let at = s0[0], split = false, back = false;
+    const pass = e => got.has(e) || (got.add(e), names.push(nm(e)));
+    while (!seen.has(K(at))) {
+      seen.add(K(at));
+      const o = out[K(at)];
+      if (!o) { const v = src.find(v => v !== s0 && (K(v[0]) === K(at) || K(v[1]) === K(at))); if (!v) break; pass(v[2]); at = K(v[0]) === K(at) ? v[1] : v[0]; continue; }
+      if (o.length > 1) split = true;
+      const nx = o.reduce((a, b) => b[1] > a[1] ? b : a)[0];
+      two.forEach(e => on(at, nx, [(e[1] + e[3]) / 2, (e[2] + e[4]) / 2]) && pass(e));
+      at = nx;
+      if (K(at) === K(s0[1])) { back = true; break; }
+    }
+    const list = names.length > 1 ? names.slice(0, -1).join(', ') + ' ve ' + names.at(-1) : names[0];
+    desc = `Akım ${src.length > 1 && !/^kaynak$/i.test(nm(s0[2])) ? nm(s0[2]) + ' kaynağının' : 'kaynağın'} + ucundan çıkar${list ? `, ${list} üzerinden geçer` : ''}${back ? ' ve − ucuna döner' : ''}.${split ? ' Yolda kollara ayrılır, sonra yeniden birleşir.' : ''}`;
+  }
+  return {
+    g: `<g class="flow" aria-hidden="true"><defs>${defs}<mask id="${id}m" maskUnits="userSpaceOnUse" x="-999" y="-999" width="3000" height="3000"><rect x="-999" y="-999" width="3000" height="3000" fill="#fff"/><g fill="#000">${holes}</g></mask></defs>${band}<g mask="url(#${id}m)">${ch}</g>${marks}</g>`,
+    p: `<p class="flg"><i aria-hidden="true"></i><span>Oklar akımın yönü. Renk: kırmızı yüksek gerilim, mavi düşük.<span class="vh"> ${esc(desc)}</span></span></p>`
+  };
+}
+
+// pick: kimlikli elemanlar seçilebilir. glow: LED/lamba parlaklığı (0–1). flow: akış (fl dizisi ya da true: flowOf ile çöz).
 // Etiket yönü e[7]: l, r, t, b. ['VB', genişlik, yükseklik, x0] görünüm kutusunu elle verir.
-function circuit(els, { pick = false, glow = null } = {}) {
+function circuit(els, { pick = false, glow = null, flow = null } = {}) {
   let wires = '', parts = '';
+  const fl = flow === true ? flowOf(els) : flow, f = fl && fl.length ? flowParts(els, fl) : null;
   const two = els.filter(e => SYM[e[0].replace('-', '')]), vb = els.find(e => e[0] === 'VB');
   const xs = els.flatMap(e => e[0] === 'W' || two.includes(e) ? [e[1], e[3]] : e[0] === 'T' || e[0] === 'VB' ? [] : [e[1]]);
   const ys = els.flatMap(e => e[0] === 'W' || two.includes(e) ? [e[2], e[4]] : e[0] === 'G' ? [e[2] + 12] : e[0] === 'N' ? [e[2]] : []);
@@ -1436,7 +1626,7 @@ function circuit(els, { pick = false, glow = null } = {}) {
     parts += wrap(id, name + (rev ? ', ters yönde' : ''), horiz ? cx - hw : left ? cx - 82 : cx - 22, cy - hh, horiz ? hw * 2 : left ? 104 : hasQ ? 96 : 78, hh * 2, body);
   }
   const box = vb ? `${vb[3] || 0} 0 ${vb[1]} ${vb[2]}` : `0 0 ${Math.max(300, maxX + (right === maxX && !inward ? 70 : 34))} ${Math.max(...ys) + 20}`;
-  return `<svg class="ckt" viewBox="${box}" ${pick ? 'role="radiogroup" aria-label="Devre elemanları"' : 'role="img" aria-label="Devre şeması"'}>${wires}${parts}</svg>`;
+  return `<svg class="ckt" viewBox="${box}" ${pick ? 'role="radiogroup" aria-label="Devre elemanları"' : 'role="img" aria-label="Devre şeması"'}>${f ? f.g : ''}${wires}${parts}</svg>${f ? f.p : ''}`;
 }
 
 const HEX = { siyah: '#1c1c1c', kahverengi: '#7a4520', 'kırmızı': '#cf2a27', turuncu: '#f0821e', 'sarı': '#f4d11f', 'yeşil': '#2e9a44', mavi: '#2a5fc4', mor: '#8339b0', gri: '#8b8f92', beyaz: '#f7f7f7', 'altın': '#c9a227', 'gümüş': '#c3c7ca' };
@@ -1584,7 +1774,16 @@ let C = null; // etkin oturum; lid yoksa Tekrar
 const KIND = { mc: 'Çoktan seçmeli', num: 'Hesapla', oku: 'Renk kodu', kur: 'Renk kodu', ariza: 'Arızayı bul', sira: 'Sırala', sim: 'Simülasyon' };
 function start(ids, lid, practice) { C = { queue: [...ids], total: ids.length, n: 0, right: 0, lid, practice, xp0: S.xp, had: BADGES.map(b => b[2](S)) }; question(); }
 const answer = (v, ready = true) => { C.ans = v; $('#ok').disabled = !ready; };
-const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>` : '';
+const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>${C.fl ? FLOWBTN : ''}` : '';
+// Akımı göster: ipucu, XP'yi etkilemez. Arıza sorusunda düğme yok; cevaptan sonra yalnız elle yazılmış q.fl gösterilir.
+const FLOWBTN = '<button class="akb" id="akb" aria-pressed="false">Akımı göster</button>';
+function showFlow(on) {
+  const f = $('.fig'), p = on && flowParts(C.q.c, C.fl);
+  $('.flow', f)?.remove(); $('.flg', f)?.remove();
+  if (p) { $('svg', f).insertAdjacentHTML('afterbegin', p.g); f.insertAdjacentHTML('beforeend', p.p); }
+  $('#akb').setAttribute('aria-pressed', !!on);
+}
+const flowToggle = () => showFlow($('#akb').getAttribute('aria-pressed') !== 'true');
 const optList = (q, badge) => `<div class="opts">${C.perm.map(i => `<button class="opt" aria-pressed="false" data-i="${i}">${badge ? '<kbd></kbd>' : ''}<span>${tx(q.o[i])}</span></button>`).join('')}</div>`;
 
 // Simülasyon kaydırıcıları ve canlı çizim; soru ekranı ile konu anlatımı paylaşır. p: kimlik öneki.
@@ -1669,9 +1868,9 @@ const BIND = {
 };
 VIEW.oku = VIEW.num; BIND.oku = BIND.num;
 const SIMVIEW = {
-  ohm: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['L', 'Lamba', `${fmt(v.R)} Ω`]]), { glow }),
-  led: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['R', 'R', `${fmt(v.R)} Ω`], ['LED', 'LED', '2 V']]), { glow }),
-  bolucu: v => circuit([...loop('12 V', [['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R2', `${fmt(v.R2)} kΩ`]]), ['N', 280, 40], ['N', 280, 180]]),
+  ohm: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['L', 'Lamba', `${fmt(v.R)} Ω`]]), { glow, flow: true }),
+  led: (v, r, glow) => circuit(loop(`${fmt(v.V)} V`, [['R', 'R', `${fmt(v.R)} Ω`], ['LED', 'LED', '2 V']]), { glow, flow: true }),
+  bolucu: v => circuit([...loop('12 V', [['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R2', `${fmt(v.R2)} kΩ`]]), ['N', 280, 40], ['N', 280, 180]], { flow: true }),
   rc: (v, r) => rcCurve(r.T),
   bjt: (v, r, glow) => circuit(bjtFixed(`${fmt(v.RB)} kΩ`, `${fmt(v.RC)} kΩ`, 'L', '+5 V'), { glow }),
   opamp: v => circuit(opNon(['R', 'R1', `${fmt(v.R1)} kΩ`], ['R', 'R_F', `${fmt(v.RF)} kΩ`], { vi: 'V_i\n0,5 V' })),
@@ -1691,11 +1890,12 @@ function intro(l) {
 }
 
 function question() {
-  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false;
+  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; // fl: null akışı kapatır
   app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
   <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
   $('#ok').onclick = check;
+  if ($('#akb')) $('#akb').onclick = flowToggle;
   focusTop();
 }
 
@@ -1713,7 +1913,8 @@ function check() {
   if (q.t === 'mc') $$('.opt').forEach(b => mark(b, b.dataset.i));
   if (q.t === 'ariza') $$('.part').forEach(p => mark(p, p.dataset.id));
   if (q.t === 'sira' && !ok) $$('.opt').sort((a, b) => a.dataset.i - b.dataset.i).forEach((b, i) => { $('kbd', b).textContent = i + 1; b.parentNode.append(b); });
-  $$('main button:not(.x),main input').forEach(b => b.disabled = true);
+  $$('main button:not(.x):not(#akb),main input').forEach(b => b.disabled = true);
+  if (C.fl) { if (!$('#akb')) { $('.fig').insertAdjacentHTML('afterend', FLOWBTN); $('#akb').onclick = flowToggle; } showFlow(true); } // açıklama görsel olsun
   const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
   const foot = $('.foot'), hint = !ok && (q.t === 'num' || q.t === 'oku') ? clue(C.ans, q.a) : '';
   foot.className = 'foot ' + (ok ? 'good' : 'bad');
