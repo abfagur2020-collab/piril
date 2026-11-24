@@ -118,7 +118,9 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .ckt .part.good .hit{fill:var(--good);fill-opacity:.2;stroke:var(--good);stroke-dasharray:none}
 .ckt .part.bad .hit{fill:var(--bad);fill-opacity:.2;stroke:var(--bad);stroke-dasharray:none}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.seg button{min-height:48px;border:2px solid var(--line);border-radius:10px;background:var(--card);font-weight:700}
+.prb{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.prb button{padding:0 16px}
+.seg button,.prb button{min-height:48px;border:2px solid var(--line);border-radius:10px;background:var(--card);font-weight:700}
 .seg button[aria-pressed=true]{border-color:var(--copper);background:var(--sel)}
 .dmm{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;min-height:64px;padding:10px 14px;border-radius:10px;background:var(--mask2);color:var(--silk);font:14px var(--mono);box-shadow:inset 0 0 0 2px var(--mask)}
 .dmm b{font-size:28px;line-height:1.2;color:var(--led);font-variant-numeric:tabular-nums;margin-right:auto}
@@ -655,7 +657,7 @@ UNITS.push(
         e: 'Dirençlerin %1\'lik uyumsuzluğu bile ortak mod reddini birkaç on dB\'e düşürür. Bu yüzden hazır entegre fark yükselteci kullanılır.', f: 'CMRR = A_fark / A_ortak' },
       { t: 'num', q: 'Enstrümantasyon yükseltecinde son katın kazancı 1 ve V_2 − V_1 = 20 mV. V_o kaç V?', c: INA, a: 0.02 * 21, u: 'V',
         e: 'İlk kat farkı 1 + 2R/R_G kadar yükseltir; tek direnç (R_G) kazancı ayarlar.', f: 'V_o = (1 + 2R/R_G)(V_2 − V_1) = 21 × 20 mV = 0,42 V' },
-      { t: 'ariza', q: 'V_i = 0,5 V iken çıkış −11,5 V\'ta doymuş. V₋ = 0,5 V ve V_i kaynağından akım çekilmiyor. Arızalı elemana dokun.', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ'], { vi: 'V_i\n0,5 V', vo: 'V_o|−11,5 V' }), a: 'R_F',
+      { t: 'ariza', q: 'V_i = 0,5 V iken V₋ = 0,5 V ve V_i kaynağından akım çekilmiyor. Çıkışı ölç, arızalı elemana dokun.', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ'], { vi: 'V_i\n0,5 V', vo: 'V_o|−11,5 V' }), a: 'R_F',
         e: 'Kaynaktan akım çekilmiyorsa R1\'den akım geçmiyor ve V₋ = V_i. Geri besleme kopmuş: R_F açık devre, op-amp açık çevrimde doyar. R1 açık olsaydı devre izleyiciye döner ve V₋ = 0 olurdu.', f: 'Beklenen V_o = −(100/10) × 0,5 = −5 V' } ] },
     { name: 'Türev ve integral', z: 3, qs: [
       { t: 'num', q: 'Girişe sabit 2,5 V uygulanıyor. Çıkış eğiminin büyüklüğü kaç V/ms?', c: opInv(['R', 'R', '10 kΩ'], ['C', 'C', '100 nF']), a: 2.5, u: 'V/ms',
@@ -737,7 +739,7 @@ UNITS.push(
         e: 'Bu yöntemde köprü sürekli yön değiştirir; %50 görev oranı 0 V verir.', f: 'V_ort = (2D − 1)·V, örneğin 24 V, D = %70 → 9,6 V' },
       { t: 'num', q: 'İletimdeki iki MOSFET\'in her biri 15 mΩ, motor akımı 8 A. Köprünün toplam iletim kaybı kaç W?', a: 2 * 64 * 0.015, u: 'W',
         e: 'Akım her an iki MOSFET\'ten seri geçer.', f: 'P = 2 · I² · R = 2 × 64 × 0,015 = 1,92 W' },
-      { t: 'ariza', q: 'Q1 ve Q4\'e iletim komutu verildi. A = 24 V, B = 24 V ölçülüyor ve motor akımı 0 A. Arızalı MOSFET\'e dokun.', c: hbridge({ ra: '|24 V', rb: '|24 V' }), a: 'Q4',
+      { t: 'ariza', q: 'Q1 ve Q4\'e iletim komutu verildi, motor akımı 0 A. A ve B düğümlerini ölç, arızalı MOSFET\'e dokun.', c: hbridge({ ra: '|A = 24 V', rb: '|B = 24 V' }), a: 'Q4',
         e: 'Q1 iletimde, A = 24 V. Q4 iletseydi B toprağa yakın olurdu. B = 24 V ve akım 0 ise Q4 iletmiyor. Q3 kısa devre olsaydı B yine 24 V olur ama Q4 üzerinden büyük akım akardı.', f: 'Beklenen: V_A − V_B ≈ 24 V' } ] },
     { name: 'Sürüş ve kayıplar', z: 3, qs: [
       { t: 'mc', q: 'Yarım köprüde üst MOSFET hızlı açılınca alt MOSFET\'in gate\'inde gerilim sıçraması görülüyor. En doğrudan çözüm hangisi?', o: ['Alt MOSFET için güçlü kapatma yolu: küçük R_g,off veya Miller clamp', 'Gate direncini 10 kat büyütmek', 'Ölü zamanı sıfırlamak', 'Besleme gerilimini yükseltmek'], a: 0,
@@ -778,7 +780,7 @@ UNITS.push(
         e: 'Çıkış girişe göre ters işaretlidir; D = 0,5\'te büyüklük girişe eşittir.', f: '|V_o| = V_in · D / (1 − D) = 12 × 0,4 / 0,6 = 8 V' },
       { t: 'mc', q: 'Hafif yükte buck dönüştürücü DCM\'e geçiyor. Bunun işareti nedir?', o: ['Endüktör akımı her periyotta bir süre sıfırda kalır', 'Endüktör akımı hiç sıfıra inmez', 'Çıkış D·V_in\'e tam eşit kalır', 'Anahtar hiç kapanmaz'], a: 0,
         e: 'Ortalama akım, dalgalanmanın yarısının altına inince akım sıfıra değer. DCM\'de V_o artık yalnız D\'ye değil yüke de bağlıdır.', f: 'DCM sınırı: I_o < ΔI_L / 2' },
-      { t: 'ariza', q: 'Görev oranı %42 komut ediliyor ama anahtarlama düğümü sürekli 12 V, çıkış da 12 V. Arızalı elemana dokun.', c: buck({ vin: '12 V', t: '|V_SW = 12 V' }), a: 'S',
+      { t: 'ariza', q: 'Görev oranı %42 komut ediliyor ama çıkış 12 V. Anahtarlama düğümünü ölç, arızalı elemana dokun.', c: buck({ vin: '12 V', t: '|V_SW = 12 V' }), a: 'S',
         e: 'Anahtar hiç kesime girmiyor: S kısa devre. Çıkış girişe yapışır ve 5 V\'luk yük aşırı gerilim görür. D kısa devre olsaydı anahtarlama düğümü 0 V\'ta kalırdı.', f: 'Beklenen V_o = 0,42 × 12 = 5 V' } ] },
     { name: 'Flyback ve kontrol', z: 3, qs: [
       { t: 'num', q: 'Flyback CCM\'de D = 0,4. Çıkış gerilimi kaç V? (Diyot düşümünü ihmal et.)', c: FLYBACK, a: 48 * (0.4 / 0.6) / 4, u: 'V',
@@ -885,7 +887,7 @@ Object.assign(SIMS, {
   buck: { s: [['V', 'Giriş', 8, 24, 0.5, 24, 'V'], ['D', 'Görev oranı', 10, 90, 1, 50, '%']],
     calc: v => ({ Vo: v.V * v.D / 100 }), key: 'Vo', min: 4.9, max: 5.1, out: [['Vo', 'Çıkış', 'V']], glow: r => r.Vo / 12, p: ['D', 'Vo'] },
   hb: { s: [['V', 'Bus gerilimi', 12, 48, 1, 48, 'V'], ['D', 'Görev oranı', 0, 100, 1, 10, '%']],
-    calc: v => ({ Vm: (2 * v.D / 100 - 1) * v.V }), key: 'Vm', min: 9.3, max: 9.9, out: [['Vm', 'Motor ortalaması', 'V']], glow: r => Math.abs(r.Vm) / 48, p: ['D', 'Vm'] }
+    calc: v => ({ Vm: (2 * v.D / 100 - 1) * v.V }), key: 'Vm', min: 9.3, max: 9.9, out: [['Vm', 'Motor ortalaması (işaretli)', 'V']], glow: r => Math.abs(r.Vm) / 48, p: ['D', 'Vm'] }
 });
 
 const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, z: l.z, qs: l.qs })));
@@ -1078,14 +1080,15 @@ function circuit(els, { pick = false, glow = null } = {}) {
   // En sağdaki dikey elemanın solunda yer varsa etiketi içeri yazılır.
   const inward = !vb && verts.length === 2 && !hasQ && right > 200;
   const wrap = (id, name, x, y, w, h, body) => pick && id ? `<g class="part" role="radio" aria-checked="false" tabindex="0" data-id="${esc(id)}" aria-label="${esc(name)}"><rect class="hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/>${body}</g>` : body;
+  const node = (txt, g) => /\d/.test(txt.split('|')[1] || '') ? `<g class="node">${g}</g>` : g;
   for (const [t0, x1, y1, x2, y2, txt = '', id, side] of els) {
     const name = txt.replace(/\n/g, ' ').replace('|', ', ölçülen ');
     if (t0 === 'VB') continue;
     if (t0 === 'W') { wires += `<path class="ln" d="M${x1} ${y1}L${x2} ${y2}"/>`; continue; }
     if (t0 === 'N') { wires += `<circle class="fl" cx="${x1}" cy="${y1}" r="4"/>`; continue; }
     if (t0 === 'G') { wires += `<path class="ln" d="M${x1} ${y1}v6m-12 0h24m-19 5h14m-9 5h4"/>`; continue; }
-    if (t0 === 'P') { wires += `<circle class="ln" cx="${x1}" cy="${y1}" r="4"/>` + (side === 't' ? label(txt, x1, y1 - 16, 'middle') : label(txt, x1 + (side === 'l' ? -9 : 9), y1, side === 'l' ? 'end' : 'start')); continue; }
-    if (t0 === 'T') { wires += label(txt, x1, y1, side === 'l' ? 'end' : side === 'r' || (txt[0] === '|' && !side) ? 'start' : 'middle'); continue; }
+    if (t0 === 'P') { wires += `<circle class="ln" cx="${x1}" cy="${y1}" r="4"/>` + node(txt, side === 't' ? label(txt, x1, y1 - 16, 'middle') : label(txt, x1 + (side === 'l' ? -9 : 9), y1, side === 'l' ? 'end' : 'start')); continue; }
+    if (t0 === 'T') { wires += node(txt, label(txt, x1, y1, side === 'l' ? 'end' : side === 'r' || (txt[0] === '|' && !side) ? 'start' : 'middle')); continue; }
     if (BLOCK[t0]) {
       const [g, hx, hy, hw, hh, lx, ly, an] = BLOCK[t0](x1, y1, x2, y2, txt);
       parts += wrap(id, name, hx, hy, hw, hh, g + (lx !== undefined && txt ? label(txt, lx, ly, an) : ''));
@@ -1262,11 +1265,15 @@ const simPred = m => { const y = m.out.find(o => o[0] === m.p[1])[1]; return [m.
 
 // Arıza sorusu: etiketteki "|" sonrası rakamlı ölçü, kullanıcı ölçene kadar gizli kalır.
 const reading = e => { const m = (e && e[5] || '').split('|')[1]; return m && /\d/.test(m) ? m : ''; };
+const nodes = q => q.c.filter(e => (e[0] === 'T' || e[0] === 'P') && reading(e));
+const nodeName = e => { const [a, m] = e[5].split('|'); return a ? a.split('\n')[0] : m.split(' = ')[0]; }, nodeVal = e => reading(e).split(' = ').pop();
 const VIEW = {
   mc: q => { C.perm = shuffle(q.o.length); return fig(q) + optList(q); },
   num: q => (q.b ? `<div class="fig">${resistor(q.b)}</div><p class="note">Bantlar: ${q.b.join(', ')}</p>` : fig(q)) + `<form class="num"><input id="n" inputmode="decimal" autocomplete="off" enterkeyhint="done" aria-label="Cevap, birim ${q.u}" aria-describedby="nerr"><b>${q.u}</b></form><p class="note" id="nerr" aria-live="polite">±%2 tolerans. Virgül veya nokta kullanabilirsin.</p>`,
   kur: () => `<div class="fig" id="res"></div><div class="slots">${[0, 1, 2].map(i => `<button data-s="${i}"></button>`).join('')}</div><div class="pal">${COLORS.map(c => `<button data-c="${c}"><i style="background:${HEX[c]}"></i>${c}</button>`).join('')}</div>`,
-  ariza: q => { const m = q.c.some(e => e[6] && reading(e)); return (m ? '<div class="seg" role="group" aria-label="Dokunma modu"><button aria-pressed="true">Ölç</button><button aria-pressed="false">Seç</button></div>' : '') + `<div class="fig">${circuit(q.c, { pick: true })}</div>` + (m ? '<p class="dmm" aria-live="polite"><small>Ölçmek için bir elemana dokun. Arızalıyı bulunca Seç’e geç.</small></p>' : ''); },
+  ariza: q => { const m = q.c.some(e => e[6] && reading(e)), nd = nodes(q); return (m ? '<div class="seg" role="group" aria-label="Dokunma modu"><button aria-pressed="true">Ölç</button><button aria-pressed="false">Seç</button></div>' : '') + `<div class="fig">${circuit(q.c, { pick: true })}</div>`
+    + (nd.length ? `<div class="prb" role="group" aria-label="Ölçüm noktaları"><span>Ölç:</span>${nd.map((e, i) => `<button data-n="${i}">${tx(nodeName(e))}</button>`).join('')}</div>` : '')
+    + (m || nd.length ? `<p class="dmm" aria-live="polite"><small>${m ? 'Ölçmek için bir elemana dokun. Arızalıyı bulunca Seç’e geç.' : 'Bir ölçüm noktasına dokun, sonra arızalı elemanı seç.'}</small></p>` : ''); },
   sira: q => { do C.perm = shuffle(q.o.length); while (C.perm.every((v, i) => v === i)); return '<p class="note">İlk sıradan başlayarak dokun. Geri almak için tekrar dokun.</p>' + optList(q, true); },
   sim: q => { const [x, y] = simPred(SIMS[q.sim]); return `<div class="fig" id="sv"></div><div class="read" id="rd"></div><div class="pred"><p><b>Önce tahmin et.</b> ${tx(x)} artarsa ${tx(y)} ne olur?</p><div class="opts">${PRED.map((o, i) => `<button class="opt" aria-pressed="false" data-p="${i}"><span>${o}</span></button>`).join('')}</div><p class="note" id="pn" aria-live="polite"></p></div><div>${SIMS[q.sim].s.map(([k, n, a, b, st, v]) => `<label class="sl"><span>${tx(n)}</span><b id="o-${k}"></b><input type="range" id="s-${k}" min="${a}" max="${b}" step="${st}" value="${v}" disabled></label>`).join('')}</div><p class="note" id="warn" aria-live="polite"></p>`; }
 };
@@ -1284,11 +1291,16 @@ const BIND = {
     const hid = {}, seg = $$('.seg button'), val = p => reading(q.c.find(e => e[6] === p.dataset.id)); let olc = seg.length > 0, n = 0;
     const sel = p => { if (C.checked) return; $$('.part').forEach(x => x.setAttribute('aria-checked', x === p)); answer(p.dataset.id); };
     const show = p => { const h = hid[p.dataset.id]; if (!h) return; $('.me', p).innerHTML = h[0]; p.setAttribute('aria-label', h[1]); hid[p.dataset.id] = null; };
-    const meas = p => { const v = val(p); if (hid[p.dataset.id]) n++; show(p); $('.dmm').innerHTML = `<small>${tx(p.dataset.id)}</small><b>${v ? esc(v) : '– – –'}</b><small>${v ? `${n} ölçüm` : 'Burada ölçüm yok'}</small>`; };
+    const dmm = (who, v) => $('.dmm').innerHTML = `<small>${tx(who)}</small><b>${v ? esc(v) : '– – –'}</b><small>${v ? `${n} ölçüm` : 'Burada ölçüm yok'}</small>`;
+    const meas = p => { const v = val(p); if (hid[p.dataset.id]) n++; show(p); dmm(p.dataset.id, v); };
+    // Düğüm ölçüleri: devredeki değer "?" olur, ölçüm noktası düğmesiyle açılır.
+    const nd = nodes(q), gs = $$('.ckt .node'), nhid = gs.map((g, i) => { const t = $('.me', g), h = t.innerHTML, v = esc(nodeVal(nd[i])), k = h.lastIndexOf(v); t.innerHTML = h.slice(0, k) + '?' + h.slice(k + v.length); return h; });
+    const nshow = i => { if (!nhid[i]) return false; $('.me', gs[i]).innerHTML = nhid[i]; nhid[i] = null; return true; };
+    $$('.prb button').forEach(b => b.onclick = () => { const i = +b.dataset.n; if (nshow(i)) n++; dmm(nodeName(nd[i]), nodeVal(nd[i])); });
     if (olc) $$('.part').forEach(p => { const v = val(p), t = $('.me', p), l = p.getAttribute('aria-label'); if (v && t) { hid[p.dataset.id] = [t.innerHTML, l]; t.textContent = '?'; p.setAttribute('aria-label', l.replace(', ölçülen ' + v, '')); } });
     seg.forEach((b, i) => b.onclick = () => { olc = !i; seg.forEach(x => x.setAttribute('aria-pressed', x === b)); });
     $$('.part').forEach(p => { p.onclick = () => (olc ? meas : sel)(p); p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (olc ? meas : sel)(p); } }; });
-    $('#ok').addEventListener('click', () => $$('.part').forEach(show)); // cevaptan sonra tüm ölçüler görünür
+    $('#ok').addEventListener('click', () => { $$('.part').forEach(show); gs.forEach((g, i) => nshow(i)); }); // cevaptan sonra tüm ölçüler görünür
   },
   sira: q => {
     const seq = [];

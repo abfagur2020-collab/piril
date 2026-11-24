@@ -20,8 +20,8 @@ async function open(scheme) {
 }
 // Ölçülü ve ölçüsüz arıza soruları, sayfadaki veriden.
 const pickIds = page => page.evaluate(() => {
-  const ar = Object.entries(QUESTIONS).filter(([, q]) => q.t === 'ariza'), has = q => q.c.some(e => e[6] && reading(e));
-  return { meas: ar.filter(([, q]) => has(q)).map(([k]) => k), plain: ar.filter(([, q]) => !has(q)).map(([k]) => k) };
+  const ar = Object.entries(QUESTIONS).filter(([, q]) => q.t === 'ariza'), has = q => q.c.some(e => e[6] && reading(e)), hasN = q => nodes(q).length > 0;
+  return { meas: ar.filter(([, q]) => has(q)).map(([k]) => k), node: ar.filter(([, q]) => hasN(q)).map(([k]) => k), plain: ar.filter(([, q]) => !has(q) && !hasN(q)).map(([k]) => k) };
 });
 const go = (page, id) => page.evaluate(id => start([id], id.split('-').slice(0, 2).join('-')), id);
 const info = (page, id) => page.evaluate(id => { const q = QUESTIONS[id]; return { a: q.a, r: Object.fromEntries(q.c.filter(e => e[6] && reading(e)).map(e => [e[6], reading(e)])) }; }, id);
@@ -30,8 +30,9 @@ const part = (page, id) => page.locator(`.part[data-id="${id}"]`);
 let shot = false;
 try {
   const page = await open('light');
-  const { meas, plain } = await pickIds(page);
-  console.log(`ölçülü arıza: ${meas.length}, ölçüsüz: ${plain.length}`);
+  const { meas, node, plain } = await pickIds(page);
+  console.log(`ölçülü arıza: ${meas.length}, düğüm ölçülü: ${node.length}, ölçüsüz: ${plain.length}`);
+  assert.equal(node.length, 5);
   assert.ok(meas.length > 0);
 
   for (const id of meas) {
@@ -76,6 +77,29 @@ try {
     assert.match(await page.locator('.foot h2').textContent(), /^Doğru/, `${id} doğru sayılmadı`);
     for (const p of ids) assert.equal(await part(page, p).locator('.me').textContent(), r[p], `${id} ${p} cevaptan sonra görünmüyor`);
     console.log(`ok  ${id} (${a})`);
+  }
+
+  // Düğüm ölçüleri: değer "?" başlar, ölçüm noktası düğmesiyle açılır; elemana dokunmak seçer.
+  for (const id of node) {
+    await go(page, id);
+    const { a } = await info(page, id), nd = await page.evaluate(id => nodes(QUESTIONS[id]).map(e => [nodeName(e), nodeVal(e)]), id);
+    const me = page.locator('.ckt .node .me');
+    assert.equal(await me.count(), nd.length);
+    for (let i = 0; i < nd.length; i++) {
+      assert.ok((await me.nth(i).textContent()).endsWith('?'), `${id} ${nd[i][0]} gizli başlamadı`);
+      assert.ok(!(await me.nth(i).textContent()).includes(nd[i][1]));
+    }
+    for (let i = 0; i < nd.length; i++) {
+      await page.locator(`.prb button[data-n="${i}"]`).click();
+      assert.ok((await me.nth(i).textContent()).endsWith(nd[i][1]), `${id} ${nd[i][0]} açılmadı`);
+      assert.match(await page.locator('.dmm').textContent(), new RegExp(`${nd[i][1]}.*${i + 1} ölçüm`));
+    }
+    await page.locator('.prb button[data-n="0"]').click(); // aynı noktayı yeniden ölçmek sayacı artırmaz
+    assert.match(await page.locator('.dmm').textContent(), new RegExp(`${nd.length} ölçüm`));
+    await part(page, a).click();
+    await page.locator('#ok').click();
+    assert.match(await page.locator('.foot h2').textContent(), /^Doğru/, `${id} doğru sayılmadı`);
+    console.log(`ok  ${id} (${a}, düğüm: ${nd.map(x => x.join(' = ')).join(', ')})`);
   }
 
   // Ölçüsüz arıza soruları eskisi gibi: mod düğmesi ve gösterge yok, dokununca seçilir.
