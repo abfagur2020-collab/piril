@@ -966,6 +966,19 @@ function grade(q, ans, SIMS) {
   }
 }
 
+// Hata dedektifi: yanlış sayı doğru cevabın bilinen bir katıysa nedenini söyler, yoksa ''.
+function clue(ans, a) {
+  if (!a) return '';
+  for (const x of parseNum(ans)) {
+    if (within(x, -a)) return 'İşaret ters. Akım yönünü ya da gerilim kutbunu kontrol et.';
+    for (const [f, n] of [[1e3, '1000'], [1e6, '1 milyon'], [1e9, '1 milyar'], [1e12, '1 trilyon'], [2, 'tam 2'], [10, '10'], [100, '100']]) {
+      const k = within(x, a * f) ? 'büyük' : within(x, a / f) ? 'küçük' : '';
+      if (k) return `Sonucun ${n} kat ${k}. ` + (f === 2 ? 'Formülü ve değerleri bir daha gözden geçir.' : f < 1e3 ? `Virgülü ${f === 10 ? 'bir' : 'iki'} basamak kaydırmış olabilirsin.` : 'Birim önekini kontrol et: m, k, µ, n karışmış olabilir.');
+    }
+  }
+  return '';
+}
+
 const BADGES = [
   ['İlk ışık', 'Bir ders bitir', s => Object.keys(s.done).length >= 1],
   ['Hatasız', 'Bir dersi yanlışsız bitir', s => s.perfect >= 1],
@@ -1280,9 +1293,9 @@ function check() {
   if (q.t === 'sira' && !ok) $$('.opt').sort((a, b) => a.dataset.i - b.dataset.i).forEach((b, i) => { $('kbd', b).textContent = i + 1; b.parentNode.append(b); });
   $$('main button:not(.x),main input').forEach(b => b.disabled = true);
   const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
-  const foot = $('.foot');
+  const foot = $('.foot'), hint = !ok && (q.t === 'num' || q.t === 'oku') ? clue(C.ans, q.a) : '';
   foot.className = 'foot ' + (ok ? 'good' : 'bad');
-  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_Z[q.z]} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_Z[q.z]} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
   $('#nx').onclick = () => C.queue.length ? question() : finish();
   $('#nx').focus({ preventScroll: true });
 }
