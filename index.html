@@ -1147,13 +1147,13 @@ UNITS.push(
         e: '3,65 V LFP hücrelerin tam şarj gerilimidir. Kesin değer hücrenin datasheet\'inden alınır.', f: 'NMC ≈ 4,2 V, LFP ≈ 3,65 V' } ] },
     { name: 'Ölçüm ve balans', z: 2, k: [
       { h: 'Neden balans?', p: 'Seri hücreler aynı akımı taşır ama kapasiteleri ve kaçakları biraz farklıdır; zamanla bazıları daha dolu kalır. Şarj, en dolu hücre sınıra varınca durmak zorundadır. Pasif balans, dolu hücreye bir dirençle küçük bir deşarj yolu açıp fazlalığı ısıya çevirir.',
-        f: ['P = V_hücre² / R_bal', 't = ΔQ / I_bal (Ah / A = saat)'], c: loop('V_hücre', [['SO', 'S'], ['R', 'R_bal']]), fl: [{ p: [[40, 40], [280, 40], [280, 180], [40, 180]], v: [4.2, 4.2, 0, 0], i: 100 }] },
+        f: ['P = V_hücre² / R_bal', 't = ΔQ / I_bal (Ah / A = saat)'], c: loop('V_hücre', [['S', 'S'], ['R', 'R_bal']]), fl: [{ p: [[40, 40], [280, 40], [280, 180], [40, 180]], v: [4.2, 4.2, 0, 0], i: 100 }] },
       { h: 'SOC: depoda ne kaldı?', p: 'SOC, kalan yükün kapasiteye oranıdır. Coulomb sayma akımı zamanla toplar, ama küçük bir ölçüm ofseti bile günlerce birikir; dinlenmiş açık devre gerilimiyle (OCV) düzeltilir. LFP\'de OCV eğrisi orta bölgede çok düz olduğu için gerilimden SOC okumak zordur.',
         f: ['SOC = SOC₀ − ∫I dt / C', 'Sabit akımda: ΔSOC = I · t / C'] },
       { h: 'Akımı şöntle ölçmek', p: 'Şönt, akım yoluna seri konan çok küçük bir dirençtir; üzerindeki gerilim akımla orantılıdır. Direnci küçük olsa da yüksek akımda kayda değer ısınır.',
         f: ['V_şönt = I · R', 'P = I² · R'],
         r: 'Gerçek hayatta: Elektrikli arabanın BMS\'i 100 µΩ\'luk bir şöntle 300 A\'i ölçer: şöntte 30 mV düşer, 9 W ısı çıkar. Göstergedeki yüzde, bu akımdan hesaplanan SOC\'tur.' } ], qs: [
-      { t: 'num', q: 'Pasif balansta 4,2 V\'luk hücreye 42 Ω direnç bağlanıyor. Dirençte harcanan güç kaç W?', c: loop('4,2 V', [['SO', 'S'], ['R', 'R_bal', '42 Ω']]), fl: [{ p: [[40, 40], [280, 40], [280, 180], [40, 180]], v: [4.2, 4.2, 0, 0], i: 100 }], a: 4.2 * 4.2 / 42, u: 'W',
+      { t: 'num', q: 'Pasif balansta 4,2 V\'luk hücreye 42 Ω direnç bağlanıyor. Dirençte harcanan güç kaç W?', c: loop('4,2 V', [['S', 'S'], ['R', 'R_bal', '42 Ω']]), fl: [{ p: [[40, 40], [280, 40], [280, 180], [40, 180]], v: [4.2, 4.2, 0, 0], i: 100 }], a: 4.2 * 4.2 / 42, u: 'W',
         e: 'Pasif balans fazla enerjiyi ısıya çevirir. BMS kartında bu ısı dağıtılmalıdır.', f: 'P = V² / R = 17,64 / 42 = 0,42 W' },
       { t: 'num', q: 'Hücreler arasında 0,5 Ah fark var ve balans akımı 100 mA. Dengeleme kaç saat sürer?', a: 5, u: 'h',
         e: 'Pasif balans yavaştır. Büyük paketlerde aktif balans tercih edilir.', f: 't = 0,5 Ah / 0,1 A = 5 h' },
@@ -1557,7 +1557,7 @@ function flowOf(els) {
 // Akış katmanı: gerilime göre renkli bant (kırmızı yüksek, mavi düşük) ve akım yönünde kayan oklar. Hareket azaltılmışsa oklar durur.
 let flowN = 0;
 function flowParts(els, fl) {
-  const id = 'ak' + ++flowN, vs = fl.flatMap(f => f.v), hi = Math.max(...vs), lo = Math.min(...vs), im = Math.max(...fl.map(f => f.i)), K = p => p.join();
+  const id = 'ak' + ++flowN, vs = [0, ...fl.flatMap(f => f.v)], hi = Math.max(...vs), lo = Math.min(...vs), im = Math.max(...fl.map(f => f.i)), K = p => p.join();
   const col = v => `color-mix(in oklch,var(--hot) ${hi > lo ? Math.round((v - lo) / (hi - lo) * 100) : 100}%,var(--cold))`;
   const two = els.filter(e => SYM[e[0].replace('-', '')]), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const geo = e => { const [, x1, y1, x2, y2] = e, d = Math.min(22, Math.hypot(x2 - x1, y2 - y1) / 2) / Math.hypot(x2 - x1, y2 - y1); return [(x1 + x2) / 2, (y1 + y2) / 2, (x2 - x1) * d, (y2 - y1) * d]; };
@@ -1586,7 +1586,8 @@ function flowParts(els, fl) {
   }
   // Oklar elemanın gövdesine girmez; sembol okunur kalır.
   const holes = two.map(e => { const [cx, cy, dx, dy] = geo(e), hx = Math.max(Math.abs(dx), 14), hy = Math.max(Math.abs(dy), 14); return `<rect x="${cx - hx}" y="${cy - hy}" width="${2 * hx}" height="${2 * hy}"/>`; }).join('')
-    + els.filter(e => BLOCK[e[0]]).map(e => { const [, x, y, bw, bh] = BLOCK[e[0]](...e.slice(1, 6)); return bh ? `<rect x="${x}" y="${y}" width="${bw}" height="${bh}"/>` : ''; }).join('');
+    + els.filter(e => BLOCK[e[0]]).map(e => { const [, x, y, bw, bh] = BLOCK[e[0]](...e.slice(1, 6)); return bh ? `<rect x="${x}" y="${y}" width="${bw}" height="${bh}"/>` : ''; }).join('')
+    + els.filter(e => e[0] === 'TR').map(([, x, y, x2]) => `<rect x="${x - 12}" y="${y + 8}" width="${x2 - x + 24}" height="64"/>`).join('');
   const src = els.filter(e => e[0].replace('-', '') === 'V').map(e => e[0].endsWith('-') ? [[e[1], e[2]], [e[3], e[4]], e] : [[e[3], e[4]], [e[1], e[2]], e]);
   // Kısa devre edilmiş kaynağın (uçları aynı gerilimde) +/− işareti yanıltır, çizilmez.
   const pv = {}; fl.forEach(f => f.p.forEach((q, k) => pv[K(q)] = f.v[k]));
@@ -1924,7 +1925,7 @@ function intro(l) {
 }
 
 function question() {
-  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; // fl: null akışı kapatır
+  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; if (!C.fl?.length) C.fl = null; // fl: null akışı kapatır
   app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
   <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
