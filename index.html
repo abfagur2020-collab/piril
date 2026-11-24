@@ -378,7 +378,17 @@ const UNITS = [
         e: 'Gerilim kaynağını kısa devre et. R1 ve R2 paralel kalır.', f: 'R_Th = 6 ∥ 3 = 2 kΩ' } ] } ] },
 
   { name: 'Kondansatör ve RC', lessons: [
-    { name: 'Kondansatör', qs: [
+    { name: 'Kondansatör', k: [
+      { h: 'Bir yük deposu', p: 'Kondansatör, araları yalıtkanla ayrılmış iki levhadır ve su deposu gibi yük biriktirir. Gerilim su seviyesi, yük (Q) depodaki su, sığa (C) deponun genişliğidir. Depo dolup gerilim sabitlenince akış durur: DC\'de uzun süre sonra kondansatör açık devre gibidir.',
+        f: ['i = C·dv/dt → v sabitse i = 0'] },
+      { h: 'Yük ve enerji', p: 'Q coulomb, C farad, V volt cinsindendir; µF × V çarpımı µC verir. Enerji gerilimin karesiyle büyür: gerilim iki katına çıkarsa enerji dört katına çıkar.',
+        f: ['Q = C·V', 'W = ½·C·V²', '1 µF = 10⁻⁶ F, 1 nF = 10⁻⁹ F, 1 pF = 10⁻¹² F'],
+        r: 'Gerçek hayatta: fotoğraf makinesi flaşı 100 µF\'lık kondansatörü yaklaşık 300 V\'a doldurur ve ½·C·V² ≈ 4,5 J enerjiyi milisaniyeler içinde lambaya boşaltır.' },
+      { h: 'Seri ve paralel', p: 'Paralel bağlamak levha alanını büyütür, sığalar toplanır. Seride sığa küçülür, en küçüğünden bile küçük olur ve paralel direnç gibi hesaplanır. Kurallar dirençlerin tam tersidir.',
+        f: ['Paralel: C = C1 + C2', 'Seri: C = C1·C2 / (C1 + C2)'],
+        c: par('12 V', [[['C', 'C1', '47 µF']], [['C', 'C2', '100 µF']]]) },
+      { h: 'Dikkat: kod ve birim', p: 'Seramik kondansatördeki üç rakamlı kod pF cinsindendir: ilk iki rakam değer, üçüncüsü eklenecek sıfır sayısıdır. Hesaba başlamadan µF ve nF\'ı farada çevir, enerjide ½ çarpanını unutma.',
+        f: ['472 → 47·10² pF = 4,7 nF', '221 → 22·10¹ pF = 220 pF'] } ], qs: [
       { t: 'num', q: '100 µF kondansatör 12 V ile dolduruluyor. Depolanan yük kaç mC?', a: 1.2, u: 'mC',
         e: 'Yük, sığa ile gerilimin çarpımıdır.', f: 'Q = C·V = 100 µF × 12 V = 1200 µC = 1,2 mC' },
       { t: 'num', q: '1000 µF kondansatör 10 V\'a dolu. Depolanan enerji kaç mJ?', a: 50, u: 'mJ',
@@ -391,7 +401,13 @@ const UNITS = [
         e: 'Seri kondansatörler paralel dirençler gibi hesaplanır.', f: 'C = 6·3 / (6 + 3) = 2 µF' },
       { t: 'mc', q: 'Üzerinde "104" yazan seramik kondansatörün değeri nedir?', o: ['100 nF', '10 nF', '104 pF', '1 µF'], a: 0,
         e: 'İlk iki rakam değer, üçüncü rakam pF cinsinden 10\'un kuvvetidir.', f: '10 × 10⁴ pF = 100 000 pF = 100 nF' } ] },
-    { name: 'RC dolma', qs: [
+    { name: 'RC dolma', k: [
+      { h: 'Depo hortumla dolar', p: 'Kondansatör bir direnç üzerinden dolarken başta boştur ve akım en büyüktür. Doldukça kaynakla arasındaki fark küçülür, akım ve dolma hızı azalır. Bu yüzden eğri önce dik yükselir, sonra yataylaşır.',
+        c: loop('9 V', [['S', 'Anahtar'], ['R', 'R', '22 kΩ'], ['C', 'C', '47 µF']]) },
+      { h: 'Zaman sabiti τ', p: 'τ = R·C eğrinin hızını belirler; R ohm, C farad ise τ saniyedir. Kısa yol: kΩ × µF = ms. Her τ\'da kalan farkın %63\'ü kapanır, 5τ sonunda kondansatör dolmuş sayılır.',
+        f: ['τ = R·C', 'V_C(t) = V·(1 − e^(−t/τ))', 't = τ → %63   t = 3τ → %95   t = 5τ → %99\'dan fazla'], sim: 'rc',
+        r: 'Gerçek hayatta: mikrodenetleyicinin RESET ucundaki 10 kΩ ve 100 nF, açılışta τ = 1 ms\'lik gecikme verir; besleme oturana kadar işlemci bekler.' },
+      { h: 'Dikkat: dolunca ne görülür?', p: 'Sağlam kondansatör dolunca akım durur: gerilimin tamamı C\'de, R üzerinde 0 V kalır. V_C kaynağa yaklaşır ama onu geçemez. Ölçümler buna uymuyorsa hangi elemanın açık ya da kısa devre olunca bu gerilimleri vereceğini düşün.' } ], qs: [
       { t: 'num', q: 'Devrenin zaman sabiti kaç saniye?', c: loop('5 V', [['S', 'Anahtar'], ['R', 'R', '10 kΩ'], ['C', 'C', '100 µF']]), a: 1, u: 's',
         e: 'Zaman sabiti, direnç ile sığanın çarpımıdır.', f: 'τ = R·C = 10⁴ × 10⁻⁴ = 1 s' },
       { t: 'num', q: 'Boş kondansatör 5 V kaynaktan R üzerinden doluyor. t = τ anında gerilimi kaç V?', a: 5 * (1 - Math.exp(-1)), u: 'V',
@@ -404,7 +420,17 @@ const UNITS = [
         e: 'τ = 1 ms olduğu için t = 2τ\'dur.', f: 'v = 10 (1 − e⁻²) = 8,65 V' },
       { t: 'ariza', q: 'Devre uzun süredir enerjili ve kondansatör dolmuş olmalıydı. Arızalı elemana dokun.', c: loop('9 V', [['R', 'R', '10 kΩ', '9 V'], ['C', 'C', '10 µF', '0 V']]), a: 'C',
         e: 'Sağlam kondansatör uzun süre sonra 9 V\'a dolar ve R üzerinde 0 V kalır. Sürekli akım ve 0 V, kondansatörün kısa devre olduğunu gösterir.', f: 'Beklenen: V_C = 9 V, V_R = 0 V' } ] },
-    { name: 'Boşalma ve zamanlama', qs: [
+    { name: 'Boşalma ve zamanlama', k: [
+      { h: 'Dolu depo boşalır', p: 'Dolu kondansatör bir dirence bağlanınca küçük bir pil gibi akım verir. Gerilim düştükçe akım da düşer, bu yüzden boşalma da üsteldir ve giderek yavaşlar. Her τ\'da gerilim o andaki değerin %37\'sine iner.',
+        f: ['V_C(t) = V_0·e^(−t/τ)', 't = τ → %36,8 kalır', 'e^(−t/τ) = 0,5 → t = τ·ln 2 ≈ 0,693·τ'],
+        c: [['C', 40, 180, 40, 40, 'C\n10 µF', 'C'], put(['S', 'Anahtar'], 40, 40, 160, 40), ['W', 160, 40, 280, 40], put(['R', 'R', '47 kΩ'], 280, 40, 280, 180), ['W', 280, 180, 40, 180]] },
+      { h: 'Gerilim sıçramaz', p: 'Kondansatör gerilimi aniden değişemez; anahtarlamadan hemen sonra önceki değerinde kalır. Bu yüzden boş kondansatör ilk anda kısa devre, uzun süre sonra açık devre gibidir. Her geçici durumu başlangıç, son değer ve τ ile tek formülle çözersin.',
+        f: ['v_C(0⁺) = v_C(0⁻)', 'v(t) = v(∞) + [v(0⁺) − v(∞)]·e^(−t/τ)'] },
+      { h: 'RC filtre', p: 'Aynı R ve C sinyal yolunda alçak geçiren filtre olur: hızlı değişimleri kondansatör yutar, yavaş değişimler geçer. Kesim frekansında çıkış girişin 0,707 katına (−3 dB) iner.',
+        f: ['f_c = 1 / (2π·R·C)'],
+        r: 'Gerçek hayatta: Arduino\'nun yaklaşık 490 Hz\'lik PWM çıkışı 10 kΩ ve 10 µF ile (f_c ≈ 1,6 Hz) süzülünce neredeyse düz bir DC gerilime döner.' },
+      { h: 'Dikkat: birimleri çevir', p: 'τ = R·C\'den R ya da C çekerken önce SI birimine çevir: 22 µF = 22·10⁻⁶ F. Gerilimin yarıya inmesi τ değil, yaklaşık 0,7·τ sürer.',
+        f: ['R = τ / C', 'C = τ / R'] } ], qs: [
       { t: 'num', q: '12 V\'a dolu kondansatör R üzerinden boşalıyor. t = τ anında gerilimi kaç V?', a: 12 * Math.exp(-1), u: 'V',
         e: 'Bir zaman sabiti sonunda başlangıç değerinin %36,8\'i kalır.', f: 'v = 12·e⁻¹ = 4,41 V' },
       { t: 'num', q: 'R = 100 kΩ, C = 10 µF. Boşalırken gerilim kaç saniyede yarıya iner?', a: Math.LN2, u: 's',
@@ -419,7 +445,16 @@ const UNITS = [
         e: 'τ = RC bağıntısından R\'yi çek.', f: 'R = τ / C = 0,47 / 47×10⁻⁶ = 10 kΩ' } ] } ] },
 
   { name: 'Diyot ve transistör', lessons: [
-    { name: 'Diyot', qs: [
+    { name: 'Diyot', k: [
+      { h: 'Tek yönlü vana', p: 'Diyot akımı yalnız anottan katoda, semboldeki üçgenin gösterdiği yönde geçirir; ters yönde kapalıdır. İleri yönde açılması için küçük bir eşik gerilimi aşılmalıdır. Benzetmenin sınırı: açıkken bile üzerinde akımdan neredeyse bağımsız sabit bir gerilim düşer.',
+        f: ['Si: V_D ≈ 0,7 V', 'Schottky: V_D ≈ 0,3 V', 'Kırmızı LED: V_D ≈ 2 V'] },
+      { h: 'Sabit gerilim modeli', p: 'İletimdeki diyotu 0,7 V\'luk küçük bir pil gibi düşün. Kaynaktan diyot düşümünü çıkar, kalan gerilimi dirence uygula ve akımı Ohm yasasıyla bul.',
+        f: ['I = (V − V_D) / R'], c: loop('9 V', [['R', 'R', '2,2 kΩ'], ['D', 'D', 'Si']]) },
+      { h: 'Zener: ters yönde sabit gerilim', p: 'Zener diyot ters yönde belli bir gerilimde (V_Z) iletime geçer ve çıkışı orada tutar. Fazla gerilimi seri direnç R_S üstlenir. R_S\'ten geçen akım zener ile yük arasında paylaşılır.',
+        f: ['I_S = (V_giriş − V_Z) / R_S', 'I_L = V_Z / R_L', 'I_Z = I_S − I_L'], c: ZENER },
+      { h: 'Doğrultma', p: 'Diyot AC\'nin yalnız bir yarısını geçirir; AC\'yi DC\'ye çevirmenin ilk adımı budur. Prizdeki ve trafo çıkışındaki gerilimler rms değeridir; tepe değeri √2 katıdır ve diyot bundan 0,7 V eksiltir.',
+        f: ['V_p = V_rms·√2', 'Çıkış tepesi = V_p − 0,7 V'],
+        r: 'Gerçek hayatta: telefon şarj aleti şebekeyi önce diyot köprüsüyle doğrultur. LED de bir diyot olduğu için ters takılırsa yanmaz.' } ], qs: [
       { t: 'mc', q: 'Silisyum diyotun ileri yönde iletimdeki yaklaşık gerilimi nedir?', o: ['0,7 V', '0,2 V', '1,8 V', '5 V'], a: 0,
         e: 'Sabit gerilim modelinde silisyum için 0,7 V alınır. Schottky diyotta yaklaşık 0,3 V\'tur.', f: 'V_D ≈ 0,7 V (Si)' },
       { t: 'num', q: 'Sabit gerilim modeliyle (V_D = 0,7 V) devre akımı kaç mA?', c: loop('5 V', [['R', 'R', '1 kΩ'], ['D', 'D', 'Si']]), a: 4.3, u: 'mA',
@@ -432,7 +467,13 @@ const UNITS = [
         e: 'I_S, zener ile yük arasında bölünür.', f: 'I_Z = I_S − V_Z / R_L = 20,9 − 5,1 = 15,8 mA' },
       { t: 'mc', q: '12 V rms sinüs, tek silisyum diyotla yarım dalga doğrultuluyor. Çıkış tepe değeri yaklaşık kaç V?', o: ['16,3 V', '12,0 V', '11,3 V', '17,0 V'], a: 0,
         e: 'Önce tepe değerine çevir, sonra bir diyot düşümünü çıkar.', f: 'V_p = 12·√2 − 0,7 = 16,3 V' } ] },
-    { name: 'BJT temelleri', qs: [
+    { name: 'BJT temelleri', k: [
+      { h: 'Küçük akım büyük akımı yönetir', p: 'npn transistörde bazdan giren küçük akım, kollektörden emetöre akan büyük akımı açar. Musluk gibi düşün: baz akımı kolu çevirir, borudaki su kollektör akımıdır. Suyu kol değil besleme sağlar; transistör enerji üretmez, akışı ayarlar.',
+        r: 'Gerçek hayatta: Arduino pini ancak 20 mA kadar verebilir; bir transistör birkaç mA baz akımıyla yüzlerce mA çeken röleyi, motoru ya da LED şeridini anahtarlar.' },
+      { h: 'Üç çalışma bölgesi', p: 'Kesimde baz akımı yoktur, transistör açık anahtardır. Aktif bölgede BE ileri, BC ters kutupludur ve I_C = β·I_B olur. Doyumda iki jonksiyon da ileridir: kollektör devresi daha fazla akıma izin vermez, V_CE ≈ 0,2 V\'a iner ve transistör kapalı anahtar gibidir.',
+        f: ['Kesim: I_B = 0 → I_C = 0', 'Aktif: I_C = β·I_B, V_BE ≈ 0,7 V', 'Doyum: V_CE ≈ 0,2 V', 'I_E = I_C + I_B'] },
+      { h: 'Q noktasını bul', p: 'Önce aktif bölgede olduğunu varsay ve V_BE = 0,7 V al. Baz çevresinden I_B, sonra I_C, en son kollektör çevresinden V_CE bulunur; V_CE > 0,2 V çıkmazsa varsayım yanlıştır. Simülasyonda R_B\'yi küçült: I_B ve I_C artar, V_CE düşer.',
+        f: ['I_B = (V_BB − V_BE) / R_B', 'I_C = β·I_B', 'V_CE = V_CC − I_C·R_C'], sim: 'bjt' } ], qs: [
       { t: 'mc', q: 'npn transistörün aktif bölgede çalışması için jonksiyonlar nasıl kutuplanır?', o: ['BE ileri, BC ters', 'BE ters, BC ileri', 'İkisi de ileri', 'İkisi de ters'], a: 0,
         e: 'İkisi ileriyse doyum, ikisi tersse kesim bölgesidir.', f: 'V_BE ≈ 0,7 V, V_CE > V_CE(doyum)' },
       { t: 'num', q: 'β = 100, I_B = 20 µA. Aktif bölgede I_C kaç mA?', a: 2, u: 'mA',
@@ -445,7 +486,14 @@ const UNITS = [
         e: 'Doyumda transistör kapalı anahtar gibi davranır.', f: 'V_CE(doyum) ≈ 0,2 V' },
       { t: 'sira', q: 'BJT DC analizinde Q noktasını bulma adımlarını sırala.', o: ['Aktif bölgede olduğunu varsay, V_BE = 0,7 V al', 'Baz-emetör çevresinden I_B\'yi bul', 'I_C = β·I_B hesapla', 'Kollektör-emetör çevresinden V_CE\'yi bul', 'V_CE > 0,2 V mu, varsayımı denetle'],
         e: 'Varsayım en sonda denetlenir. V_CE ≤ 0,2 V çıkarsa transistör doyumdadır ve hesap yenilenir.', f: 'I_B → I_C → V_CE → denetim' } ] },
-    { name: 'BJT kutuplama', qs: [
+    { name: 'BJT kutuplama', k: [
+      { h: 'Neden kutuplama?', p: 'Transistörün sinyali bozmadan yükseltmesi için durgun bir çalışma noktası (Q noktası) gerekir: aktif bölgede, V_CE beslemenin ortalarında. Kutuplama dirençleri bu noktayı kurar. Musluğu yarı açık tutmak gibi: sinyal gelince akış hem artabilir hem azalabilir.' },
+      { h: 'Sabit kutuplama ve doyum testi', p: 'R_B, V_CC\'den baz akımını belirler ve aktif bölgede I_C = β·I_B olur. Ama R_C kollektör akımına bir üst sınır koyar. β·I_B bu sınırı aşarsa transistör doyar ve I_C sınırda kalır.',
+        f: ['I_B = (V_CC − V_BE) / R_B', 'V_CE = V_CC − I_C·R_C', 'I_C(doyum) = (V_CC − 0,2) / R_C', 'β·I_B > I_C(doyum) → doyum'], c: bjtFixed('220 kΩ', '1 kΩ') },
+      { h: 'Gerilim bölücülü kutuplama', p: 'R1–R2 bölücüsü bazı sabit bir gerilimde tutar; baz akımı küçük olduğu için çoğu zaman ihmal edilir. Emetör bazın 0,7 V altındadır, emetör akımı buradan çıkar. Q noktası β\'ya pek bağlı olmadığı için seri üretimde tercih edilir.',
+        f: ['V_B = V_CC·R2 / (R1 + R2)', 'I_E = (V_B − 0,7) / R_E ≈ I_C', 'V_CE = V_CC − I_C·(R_C + R_E)'], c: bjtDiv(),
+        r: 'Gerçek hayatta: ses ön yükselteçlerindeki ortak emetörlü katlar böyle kutuplanır; sıcaklıkla β değişse de çalışma noktası pek kaymaz.' },
+      { h: 'Dikkat: gerilimlerden arıza oku', p: 'Önce bölgeyi bul: V_E = 0 ve V_C = V_CC ise transistör kesimdedir, akım yoktur. Sonra bu gerilimleri hangi direncin açık ya da kısa devresinin üreteceğini düşün. Açık direnç akımı keser, kısa direnç üzerinde 0 V bırakır.' } ], qs: [
       { t: 'num', q: 'Sabit kutuplamada I_B kaç µA? V_BE = 0,7 V.', c: bjtFixed('470 kΩ', '2,2 kΩ'), a: 11.3 / 470e3 * 1e6, u: 'µA',
         e: 'Baz-emetör çevresi: V_CC = I_B·R_B + V_BE.', f: 'I_B = (12 − 0,7) / 470 kΩ = 24,0 µA' },
       { t: 'num', q: 'β = 100, V_BE = 0,7 V. V_CE kaç V?', c: bjtFixed('470 kΩ', '2,2 kΩ'), a: 12 - 100 * 11.3 / 470e3 * 2200, u: 'V',
@@ -601,7 +649,16 @@ const ZOR = [
       e: 'Önce Thévenin eşdeğerini bul: R3 açık uçta akım taşımaz.', f: 'V_Th = 4 V, R_Th = (6 ∥ 3) + 4 = 6 kΩ → I_N = 4/6 = 0,667 mA' },
     { t: 'ariza', q: 'Ölçülen: V_A = 8,73 V, V_B = 5,82 V, V_C = 0 V. Sağlam devrede 8, 4 ve 2 V olmalıydı. Arızalı dirence dokun.', c: LADDER, a: 'R5',
       e: 'V_C = 0 ama B yükseldi: son basamak devreden çıkmış. R5 açıkken B\'de yalnız R4 kalır, yük hafifler, A ve B yükselir. R6 kısa devre olsaydı yük artar, A ve B düşerdi.', f: 'R5 açık: B = 2 kΩ, A = (1 + 2) ∥ 2 = 1,2 kΩ → V_A = 16 × 1,2 / 2,2 = 8,73 V' } ] },
-  { name: 'Thévenin ile RC ve zamanlama', qs: [
+  { name: 'Thévenin ile RC ve zamanlama', k: [
+    { h: 'Kondansatörün gözünden devre', p: 'Kondansatörün dışında kalan devreyi tek kaynak (V_Th) ve tek dirence (R_Th) indir. C uzun sürede V_Th\'ye dolar ve zaman sabiti R_Th·C olur. R_Th\'yi bulurken gerilim kaynağını kısa devre yap ve C\'nin uçlarından bak.',
+      f: ['V_Th = V·R2 / (R1 + R2)', 'R_Th = R1 ∥ R2 = R1·R2 / (R1 + R2)', 'τ = R_Th·C'], c: RCTH },
+    { h: 'Sıfırdan başlamayan dolma', p: 'Başlangıç 0 V değilse genel formülü kullan: son değere kalan fark her τ\'da %37\'sine iner. Belli bir gerilime ulaşma süresi, başlangıçtaki farkın kalan farka oranının doğal logaritmasıdır.',
+      f: ['v(t) = v(∞) + [v(0⁺) − v(∞)]·e^(−t/τ)', 't = τ·ln( [v(∞) − v(0⁺)] / [v(∞) − v(t)] )'], sim: 'rc' },
+    { h: '555 ile zamanlama', p: '555 entegresi kararsız modda C\'yi V_CC\'nin 1/3\'ü ile 2/3\'ü arasında doldurup boşaltır. Dolma R_A + R_B, boşalma yalnız R_B üzerinden olur; her yarı periyot 0,693·R·C sürer.',
+      f: ['t_yüksek = 0,693·(R_A + R_B)·C', 't_düşük = 0,693·R_B·C', 'f = 1 / (t_yüksek + t_düşük) ≈ 1,44 / ((R_A + 2·R_B)·C)'],
+      r: 'Gerçek hayatta: yanıp sönen LED, sinyal flaşörü ya da buzzer 555 ile yapılabilir; C büyüdükçe yanıp sönme yavaşlar.' },
+    { h: 'Filtrede frekans cevabı', p: 'Birinci dereceden RC alçak geçiren filtrede f_c\'nin çok altındaki sinyal olduğu gibi geçer, f_c\'de genlik 0,707\'ye iner. f_c\'nin üstünde frekans 10 katına çıktıkça genlik yaklaşık 10\'da 1\'e düşer.',
+      f: ['f_c = 1 / (2π·R·C)', '|V_o / V_i| = 1 / √(1 + (f / f_c)²)'] } ], qs: [
     { t: 'num', q: 'Kondansatörün gördüğü zaman sabiti kaç saniye?', c: RCTH, a: 0.2, u: 's',
       e: 'τ = R_Th·C. Kaynağı kısa devre edince C, R1 ∥ R2 görür.', f: 'R_Th = 6 ∥ 3 = 2 kΩ → τ = 2 kΩ × 100 µF = 0,2 s' },
     { t: 'num', q: 'Boş kondansatör t = 0\'da devreye giriyor. t = 0,2 s\'de gerilimi kaç V?', c: RCTH, a: 4 * (1 - Math.exp(-1)), u: 'V',
@@ -614,7 +671,16 @@ const ZOR = [
       e: 'Genlik 1/√(1 + (f/f_c)²) ile düşer.', f: '|H| = 1 / √(1 + 9) = 0,316' },
     { t: 'ariza', q: 'Uzun süre sonra V_C = 12 V ölçülüyor ve kaynaktan akım çekilmiyor. Sağlam devrede 4 V olmalıydı. Arızalı elemana dokun.', c: RCTH, a: 'R2',
       e: 'Akım 0 ve kondansatör kaynağın tamamına dolmuş: bölücünün alt bacağı yok. R2 açık devre. R1 kısa devre olsaydı R2\'den 4 mA akardı.', f: 'Beklenen V_C = 12 × 3 / 9 = 4 V' } ] },
-  { name: 'Kutuplama ve küçük sinyal', qs: [
+  { name: 'Kutuplama ve küçük sinyal', k: [
+    { h: 'Dalgalanma ve zener gücü', p: 'Doğrultucudan sonra kondansatör tepelerde dolar, aradaki boşlukta yükü besler ve biraz boşalır; bu düşüş dalgalanmadır. Tam dalgada kondansatör saniyede 2f kez tazelenir. Zener ise yük çıkarılınca en çok ısınır, çünkü R_S akımının tamamı ondan geçer.',
+      f: ['ΔV ≈ I / (2·f·C)  (tam dalga)', 'ΔV ≈ I / (f·C)  (yarım dalga)', 'P_Z = V_Z·I_Z'] },
+    { h: 'Baz akımını ihmal etmeden', p: 'Bölücüyü Thévenin eşdeğerine çevir: V_Th ve R_Th = R1 ∥ R2. Emetör direnci bazdan bakınca (β + 1) kat büyük görünür. R_Th, (β + 1)·R_E\'nin yanında küçükse I_B\'yi ihmal etmek güvenlidir.',
+      f: ['V_Th = V_CC·R2 / (R1 + R2)', 'I_B = (V_Th − V_BE) / (R_Th + (β + 1)·R_E)', 'I_C = β·I_B'], c: bjtDiv() },
+    { h: 'Küçük sinyal kazancı', p: 'Q noktası etrafındaki küçük oynamalarda V_BE\'deki değişim, kollektör akımını g_m katı kadar değiştirir. Bu akım kollektördeki dirençlerde gerilime döner; yük R_C\'ye paraleldir. R_E kondansatörle köprülüyse kazanç büyüktür ve sinyal ters çevrilir.',
+      f: ['g_m = I_C / V_T, V_T ≈ 25 mV', 'i_c = g_m·v_be', '|A_v| = g_m·(R_C ∥ R_L)'] },
+    { h: 'Anahtar olarak transistör', p: 'Anahtarda aktif bölge değil, kesin doyum istenir. Bunun için baz akımı β ile değil, çok daha küçük bir zorlanmış β (genelde 10) ile hesaplanır. Röle bobinine ters paralel bir diyot koymayı unutma.',
+      f: ['I_C = (V_CC − V_CE(doy)) / R_bobin', 'I_B = I_C / β_zorlanmış', 'R_B = (V_sür − V_BE) / I_B'],
+      r: 'Gerçek hayatta: ESP32\'nin 3,3 V\'luk pini, bir npn transistör ve diyotla 12 V\'luk röleyi güvenle sürer.' } ], qs: [
     { t: 'num', q: 'Köprü doğrultucu ve 4700 µF kondansatör 1 A yük besliyor, şebeke 50 Hz. Tepeden tepeye dalgalanma yaklaşık kaç V?', a: 1 / (2 * 50 * 4700e-6), u: 'V',
       e: 'Tam dalga doğrultmada kondansatör saniyede 100 kez tazelenir.', f: 'ΔV ≈ I / (2fC) = 1 / (100 × 4,7 mF) = 2,13 V' },
     { t: 'num', q: 'R_L çıkarılıyor (yüksüz durum). Zener\'in harcadığı güç kaç mW?', c: ZENER, a: (12 - 5.1) / 330 * 5.1 * 1000, u: 'mW',
@@ -633,7 +699,15 @@ ZOR.forEach((l, i) => UNITS[i].lessons.push({ ...l, z: 3 }));
 
 UNITS.push(
   { name: 'Op-amp devreleri', lessons: [
-    { name: 'Eviren ve evirmeyen', z: 1, qs: [
+    { name: 'Eviren ve evirmeyen', z: 1, k: [
+      { h: 'İki altın kural', p: 'Op-amp iki girişi arasındaki farkı yüz binlerce kez yükseltir. Negatif geri besleme varsa çıkış bu farkı neredeyse sıfır yapan değere oturur: V₊ ≈ V₋ (sanal kısa devre). Girişler akım çekmez; bu iki kural çoğu devreyi çözer.',
+        f: ['V₊ ≈ V₋', 'I₊ = I₋ = 0'] },
+      { h: 'Eviren yükselteç', p: '+ giriş toprakta, bu yüzden − giriş de 0 V\'tadır (sanal toprak). R1\'den gelen akım op-amp\'e giremez, tamamı R_F\'den geçer. Bu akımı R_F üzerinden çekebilmek için çıkış ters işaretli olmalıdır.',
+        f: ['I = V_i / R1', 'V_o = −(R_F / R1)·V_i'], c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '47 kΩ']) },
+      { h: 'Evirmeyen yükselteç ve izleyici', p: 'Sinyal + girişe gelir; R1–R_F bölücüsü çıkışın bir kesrini − girişe verir. Çıkış, bu kesir girişe eşit olana kadar yükselir ve işaret değişmez. R_F = 0 ve R1 yokken kazanç 1 olur: gerilim izleyici zayıf kaynağı yükten ayırır.',
+        f: ['V_o = (1 + R_F / R1)·V_i', 'İzleyici: V_o = V_i'], sim: 'opamp' },
+      { h: 'Dikkat: çıkış beslemeyi aşamaz', p: 'Hesap ±12 V beslemede 15 V çıkarıyorsa op-amp doyar ve çıkış besleme sınırında kalır. Doyunca sanal kısa devre kuralı geçersizdir.',
+        r: 'Gerçek hayatta: birkaç on mV veren bir sensörün sinyali, kazancı 50–100 olan evirmeyen yükselteçle Arduino\'nun rahat okuyacağı volt düzeyine çıkarılır.' } ], qs: [
       { t: 'mc', q: 'İdeal op-amp\'in giriş uçlarından ne kadar akım akar?', o: ['0', 'Çıkış akımı kadar', '1 mA', 'Besleme akımı kadar'], a: 0,
         e: 'İdeal op-amp\'in giriş direnci sonsuzdur. Devre analizinin iki kuralından biri budur.', f: 'I₊ = I₋ = 0' },
       { t: 'num', q: 'Eviren yükseltecin gerilim kazancının büyüklüğü kaç?', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ']), a: 10, u: 'V/V',
@@ -646,7 +720,16 @@ UNITS.push(
         e: 'Çok büyük açık çevrim kazancı, negatif geri beslemeyle girişler arası farkı sıfıra yaklaştırır. Çıkış doyunca bu bağ kopar.', f: 'V₊ − V₋ = V_o / A → 0' },
       { t: 'sim', sim: 'opamp', q: 'Evirmeyen yükselteçte V_i = 0,5 V. Çıkışı 5 V yap (±0,1 V).',
         e: 'Kazanç 10 olmalı: R_F / R1 = 9. Kazanç büyürse çıkış ±12 V beslemede doyar.', f: 'V_o = 0,5 (1 + R_F/R1), örneğin R1 = 10 kΩ, R_F = 90 kΩ' } ] },
-    { name: 'Fark ve toplama', z: 2, qs: [
+    { name: 'Fark ve toplama', z: 2, k: [
+      { h: 'Toplayıcı: akımlar buluşur', p: '− giriş sanal toprak olduğu için her giriş kendi direncinden ötekilerden bağımsız bir akım yollar. Akımlar düğümde toplanır ve hepsi R_F\'den geçer. Çıkış, girişlerin ağırlıklı toplamının tersidir.',
+        f: ['V_o = −R_F·(V₁ / R1 + V₂ / R2)'], c: OPSUM,
+        r: 'Gerçek hayatta: ses mikserinde her kanal kendi direnciyle aynı toplama düğümüne bağlanır; direnç o kanalın ses düzeyini ayarlar.' },
+      { h: 'Fark yükselteci', p: 'Fark yükselteci yalnız iki giriş arasındaki farkı yükseltir, ikisine ortak gelen gerilimi yok sayar. + giriş akım çekmediği için V₂, R3–R4 bölücüsüyle bölünür. Bunun çalışması için R2/R1 = R4/R3 olmalıdır.',
+        f: ['V₊ = V₂·R4 / (R3 + R4)', 'V_o = (R2 / R1)·(V₂ − V₁)'], c: opDiff('10 kΩ', '100 kΩ', '2,0 V', '2,1 V') },
+      { h: 'Ortak mod ve enstrümantasyon', p: 'Kablodaki parazit iki tele de aynı biner; fark yükseltecinin bunu reddetme gücü CMRR\'dir. Dirençler %1 bile uyumsuzsa ortak mod çıkışa sızar. Enstrümantasyon yükselteci girişleri izleyicilerle tamponlar ve kazancı tek bir R_G ile ayarlar.',
+        f: ['CMRR = A_fark / A_ortak', 'V_o = (1 + 2R / R_G)·(V₂ − V₁)  (son kat kazancı 1)'], c: INA,
+        r: 'Gerçek hayatta: tartı hücresi köprüsünün iki ucu da 2,5 V civarındadır ve aralarında yalnız birkaç mV fark vardır; enstrümantasyon yükselteci farkı yükseltir, ortak 2,5 V\'u atar.' },
+      { h: 'Dikkat: geri besleme koparsa', p: 'R_F açık devre olursa negatif geri besleme kalmaz ve op-amp açık çevrimde çalışır: çıkış beslemeye yapışır. Bu durumda sanal kısa devre de bozulur, − giriş artık 0 V\'ta değildir.' } ], qs: [
       { t: 'num', q: 'Toplayıcının çıkış geriliminin büyüklüğü kaç V?', c: OPSUM, a: 4, u: 'V',
         e: '− girişi sanal topraktır. Her girişin akımı ayrı hesaplanır, hepsi R_F\'den geçer.', f: '|V_o| = R_F (V₁/R1 + V₂/R2) = 20 (1/10 + 2/20) = 4 V' },
       { t: 'num', q: 'Fark yükseltecinin çıkışı kaç V?', c: opDiff('10 kΩ', '50 kΩ', '1,2 V', '1,5 V'), a: 1.5, u: 'V',
@@ -659,7 +742,14 @@ UNITS.push(
         e: 'İlk kat farkı 1 + 2R/R_G kadar yükseltir; tek direnç (R_G) kazancı ayarlar.', f: 'V_o = (1 + 2R/R_G)(V_2 − V_1) = 21 × 20 mV = 0,42 V' },
       { t: 'ariza', q: 'V_i = 0,5 V iken V₋ = 0,5 V ve V_i kaynağından akım çekilmiyor. Çıkışı ölç, arızalı elemana dokun.', c: opInv(['R', 'R1', '10 kΩ'], ['R', 'R_F', '100 kΩ'], { vi: 'V_i\n0,5 V', vo: 'V_o|−11,5 V' }), a: 'R_F',
         e: 'Kaynaktan akım çekilmiyorsa R1\'den akım geçmiyor ve V₋ = V_i. Geri besleme kopmuş: R_F açık devre, op-amp açık çevrimde doyar. R1 açık olsaydı devre izleyiciye döner ve V₋ = 0 olurdu.', f: 'Beklenen V_o = −(100/10) × 0,5 = −5 V' } ] },
-    { name: 'Türev ve integral', z: 3, qs: [
+    { name: 'Türev ve integral', z: 3, k: [
+      { h: 'İntegral alıcı', p: 'Eviren yükselteçte R_F yerine C koy. − giriş sanal toprak olduğu için R\'den V_i / R akımı geçer ve tamamı C\'yi doldurur. Sabit akım kondansatör gerilimini doğrusal bir rampa gibi büyütür; çıkış ters yönde iner.',
+        f: ['i = V_i / R', 'dV_o/dt = −V_i / (R·C)', 'R·C saniyedir: 47 kΩ × 10 nF = 0,47 ms'], c: opInv(['R', 'R', '47 kΩ'], ['C', 'C', '10 nF']),
+        r: 'Gerçek hayatta: fonksiyon üreteci kare dalgayı integral alıcıdan geçirip üçgen dalga üretir; her yarım periyotta çıkış sabit eğimle bir yöne gider.' },
+      { h: 'Türev alıcı', p: 'R ile C\'nin yerini değiştir: kondansatör akımı giriş geriliminin değişim hızıyla orantılıdır. Bu akım R_F\'den geçip çıkışta gerilime döner; sabit girişte çıkış sıfırdır. Hızlı gürültüyü de büyüttüğü için pratikte C\'ye seri küçük bir direnç eklenir.',
+        f: ['i = C·dV_i/dt', 'V_o = −R_F·C·dV_i/dt'] },
+      { h: 'Dikkat: integral alıcı kayar', p: 'DC\'de C açık devredir, ideal integral alıcının DC kazancı sonsuzdur. Op-amp\'in birkaç mV\'luk ofseti bile sürekli integre edilir ve çıkış yavaşça doyuma kayar. C\'ye paralel büyük bir R_F DC kazancını sınırlar; köşe frekansının üstünde devre yine integral alır.',
+        f: ['Kayma eğimi = V_ofset / (R·C)', 'A_DC = R_F / R', 'f_köşe = 1 / (2π·R_F·C)'] } ], qs: [
       { t: 'num', q: 'Girişe sabit 2,5 V uygulanıyor. Çıkış eğiminin büyüklüğü kaç V/ms?', c: opInv(['R', 'R', '10 kΩ'], ['C', 'C', '100 nF']), a: 2.5, u: 'V/ms',
         e: 'Sabit giriş, kondansatöre sabit akım verir; çıkış doğrusal rampa olur.', f: '|dV_o/dt| = V_i / (RC) = 2,5 / 1 ms = 2,5 V/ms' },
       { t: 'num', q: 'İntegral alıcıda R = 4,7 kΩ, C = 100 nF. Girişe ±2 V, 1 kHz kare dalga uygulanıyor. Çıkış üçgeninin tepeden tepeye değeri kaç V?', a: 2 / 4.7e-4 * 0.5e-3, u: 'V',
@@ -674,7 +764,13 @@ UNITS.push(
         e: 'Ofset gerilimi girişte sabit bir gerilim gibi integre edilir. En kötü durum hesabı budur.', f: 'Eğim = 2 mV / 10 ms = 0,2 V/s → t = 10 / 0,2 = 50 s' } ] } ] },
 
   { name: 'Geri besleme', lessons: [
-    { name: 'Kapalı çevrim kazancı', z: 1, qs: [
+    { name: 'Kapalı çevrim kazancı', z: 1, k: [
+      { h: 'Termostat gibi düzeltme', p: 'Negatif geri beslemede çıkışın bir kesri (β) ölçülür ve girişten çıkarılır; hata büyüdükçe düzeltme de büyür. Termostat da sıcaklığı ölçer, hedefi geçince ısıtmayı kısar. Sonuç yükseltecin kendi kazancına değil, ölçme oranına bağlı kalır.',
+        r: 'Gerçek hayatta: araçtaki hız sabitleyici yokuşta hız düşünce gazı açar; koşullar değişse de hız neredeyse sabit kalır.' },
+      { h: 'Kapalı çevrim kazancı', p: 'A yükseltecin açık çevrim kazancı, β çıkışın geri dönen kesridir. Döngüde bir tur atınca görülen Aβ\'ya çevrim kazancı denir. Aβ ≫ 1 olunca A_f ≈ 1/β olur ve A\'nın tam değeri önemini yitirir.',
+        f: ['A_f = A / (1 + A·β)', 'Aβ ≫ 1 → A_f ≈ 1 / β', 'Evirmeyen op-amp: β = R1 / (R1 + R_F)'], c: opNon(['R', 'R1', '2,2 kΩ'], ['R', 'R_F', '22 kΩ']) },
+      { h: 'Kazanç verip ne alırsın?', p: 'Geri besleme kazancı (1 + Aβ) kat düşürür; karşılığında bant genişliği yaklaşık aynı oranda artar, bozulma ve kazanç değişimleri azalır. Gerilim örnekleyip seri karıştıran tipte (evirmeyen yükselteç) giriş direnci (1 + Aβ) kat artar, çıkış direnci aynı oranda düşer.',
+        f: ['A_f·f_H ≈ A·f_p', 'R_if = R_i·(1 + Aβ)', 'R_of = R_o / (1 + Aβ)', 'Analiz: tip → β → Aβ → A_f'] } ], qs: [
       { t: 'num', q: 'Açık çevrim kazancı A = 1000, geri besleme oranı β = 0,1. Kapalı çevrim kazancı kaç?', a: 1000 / 101, u: 'V/V',
         e: 'Çevrim kazancı Aβ büyükken kapalı çevrim kazancı 1/β\'ya yaklaşır.', f: 'A_f = A / (1 + Aβ) = 1000 / 101 = 9,90' },
       { t: 'mc', q: 'Negatif geri besleme kazancı ve bant genişliğini nasıl etkiler?', o: ['Kazanç düşer, bant genişliği artar', 'İkisi de artar', 'İkisi de düşer', 'Kazanç artar, bant genişliği düşer'], a: 0,
@@ -687,7 +783,16 @@ UNITS.push(
         e: 'Evirmeyen op-amp yükselteci bu tiptir. İki direnç de (1 + Aβ) kadar değişir.', f: 'R_if = R_i (1 + Aβ), R_of = R_o / (1 + Aβ)' },
       { t: 'sira', q: 'Geri beslemeli bir yükselteci analiz etme adımlarını sırala.', o: ['Örnekleme ve karıştırma tipini belirle', 'Geri besleme ağından β\'yı hesapla', 'Çevrim kazancı Aβ\'yı bul', 'A_f = A / (1 + Aβ) ile kapalı çevrim kazancını yaz'],
         e: 'Tip, β\'nın hangi büyüklükler arasında tanımlandığını belirler. β olmadan çevrim kazancı, çevrim kazancı olmadan A_f bulunamaz.', f: 'tip → β → Aβ → A_f' } ] },
-    { name: 'Bant genişliği ve hatalar', z: 2, qs: [
+    { name: 'Bant genişliği ve hatalar', z: 2, k: [
+      { h: 'Kazanç–bant genişliği çarpımı', p: 'Op-amp\'in açık çevrim kazancı frekans arttıkça düşer; kazanç ile bant genişliğinin çarpımı (GBW) sabittir. Kazancı 10 yaparsan bant genişliği GBW\'nin onda biri olur. Bu küçük sinyal sınırıdır.',
+        f: ['f_H = GBW / A_f'],
+        r: 'Gerçek hayatta: kazancı 100 olan bir ses yükseltecinin 20 kHz\'e kadar düz gitmesi için op-amp\'in GBW\'si en az 2 MHz olmalıdır.' },
+      { h: 'Eğim hızı: büyük sinyal sınırı', p: 'Çıkış en fazla SR (V/µs) hızıyla değişebilir. Sinüsün en dik yeri sıfır geçişidir ve orada eğim 2π·f·V_p\'dir. Bu değer SR\'yi aşarsa sinüs üçgene döner; büyük genlikte izin verilen frekans düşer.',
+        f: ['En büyük eğim = 2π·f·V_p', 'f_max = SR / (2π·V_p)'] },
+      { h: 'DC hatalar: ofset ve bias', p: 'Ofset gerilimi + girişe seri küçük bir pil gibidir ve (1 + R_F / R1) ile yükselir. Girişler nA düzeyinde bias akımı da çeker; − girişin akımı R_F\'den geçip çıkışta hata gerilimi yaratır. + girişe R1 ∥ R_F değerinde bir direnç koymak iki girişi dengeler.',
+        f: ['V_hata = V_OS·(1 + R_F / R1)', 'V_hata = I_B·R_F  (+ giriş toprakta)', 'R_p = R1 ∥ R_F'] },
+      { h: 'Geri besleme duyarsızlaştırır', p: 'A sıcaklıkla ya da üretimde değişse de kapalı çevrim kazancı (1 + Aβ) kat daha az değişir. Bu yüzden kazanç op-amp\'e değil dirençlere bağlıdır.',
+        f: ['ΔA_f / A_f = (ΔA / A) / (1 + Aβ)'] } ], qs: [
       { t: 'num', q: 'Op-amp\'in kazanç–bant genişliği çarpımı 1 MHz. Kazancı 20 olan evirmeyen yükseltecin bant genişliği kaç kHz?', a: 50, u: 'kHz',
         e: 'Tek kutuplu op-amp\'te GBW sabittir.', f: 'f_H = GBW / A = 1 MHz / 20 = 50 kHz' },
       { t: 'num', q: 'Eğim hızı (slew rate) 0,5 V/µs. 5 V tepeli sinüs bozulmadan en fazla kaç kHz olabilir?', a: 0.5e6 / (2 * Math.PI * 5) / 1e3, u: 'kHz',
@@ -700,7 +805,14 @@ UNITS.push(
         e: '− girişin bias akımı R_F üzerinden akar.', f: 'V_o = I_B · R_F = 100 nA × 1 MΩ = 100 mV' },
       { t: 'mc', q: 'Bias akımının çıkıştaki etkisini azaltmak için + girişle toprak arasına hangi direnç konur?', o: ['R1 ∥ R_F değerinde bir direnç', 'R1 + R_F değerinde', '1 Ω', 'Sonsuz (açık devre)'], a: 0,
         e: 'İki girişin gördüğü direnç eşitlenince eşit bias akımlarının etkileri birbirini götürür; geriye ofset akımı kalır.', f: 'R_p = R1 ∥ R_F' } ] },
-    { name: 'Kararlılık ve Schmitt', z: 3, qs: [
+    { name: 'Kararlılık ve Schmitt', z: 3, k: [
+      { h: 'Pozitif geri besleme: Schmitt', p: 'Çıkışın bir kesri + girişe verilirse fark büyütülür ve çıkış hemen bir uca (±V_doy) yapışır. Eşik çıkışa bağlı olduğu için yukarı ve aşağı geçiş eşikleri farklıdır; aradaki fark histerezistir. Gürültülü sinyal eşik çevresinde titreşse bile çıkış bir kez değişir.',
+        f: ['V_eşik = ±V_doy·R1 / (R1 + R2)', 'Histerezis = 2·V_doy·R1 / (R1 + R2)'], c: opNon(['R', 'R1', '4,7 kΩ'], ['R', 'R2', '47 kΩ'], { flip: 0 }),
+        r: 'Gerçek hayatta: termostat kombiyi 21 °C\'de kapatıp 19 °C\'de açar; histerezis olmasa röle eşik çevresinde sürekli tıklardı.' },
+      { h: 'Faz payı', p: 'Negatif geri besleme döngüsünde her kutup faz gecikmesi ekler. Çevrim kazancının 1 (0 dB) olduğu frekansta gecikme 180°\'ye ulaşırsa düzeltme ters döner ve devre salınır. Faz payı bu sınıra kalan mesafedir; 45°\'nin altı aşma ve çınlama getirir.',
+        f: ['PM = 180° + ∠Aβ(f_c)', 'Bir kutbun fazı: −arctan(f / f_p)', 'Kapasitif yük yeni kutup ekler: f_p = 1 / (2π·R_o·C_L)'] },
+      { h: 'Osilatör: bilerek kararsız', p: 'Salınım için döngüde kazanç tam 1, faz 0° olmalıdır. Wien köprüsü yalnız tek frekansta faz kaydırmaz ve orada sinyali 1/3\'e indirir; bu yüzden yükselteç kazancı 3 olmalıdır.',
+        f: ['f = 1 / (2π·R·C)', 'A·β = 3 · 1/3 = 1'] } ], qs: [
       { t: 'num', q: 'Eviren Schmitt tetikleyicide çıkış ±10 V. Histerezis genişliği kaç V?', c: opNon(['R', 'R1', '10 kΩ'], ['R', 'R2', '90 kΩ'], { flip: 0 }), a: 2, u: 'V',
         e: 'Pozitif geri besleme + girişini çıkışın bir kesrine bağlar. Çıkış durum değiştirince eşik de değişir.', f: 'V_eşik = ±10 × 10 / (10 + 90) = ±1 V → genişlik 2 V' },
       { t: 'num', q: 'Çevrim kazancının 1 (0 dB) olduğu frekansta faz −125°. Faz payı kaç derece?', a: 55, u: '°',
