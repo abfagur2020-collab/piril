@@ -51,13 +51,13 @@ try {
     assert.match(await page.locator('.dmm').textContent(), new RegExp(`${r[m1]}.*1 ölçüm`));
     assert.equal(await part(page, m1).getAttribute('aria-checked'), 'false');
     assert.ok(await page.locator('#ok').isDisabled());
-    if (!shot && ids.length >= 3) { // üç ölçülü ilk soru: biri ölçülmüş, ikisi gizli
+    if (shots && !shot && ids.length >= 3) { // üç ölçülü ilk soru: biri ölçülmüş, ikisi gizli
       shot = true;
-      await page.screenshot({ path: shots ? `${shots}/multimetre-light.png` : '/dev/null' });
+      await page.screenshot({ path: `${shots}/multimetre-light.png` });
       const dark = await open('dark');
       await go(dark, id);
       await part(dark, m1).click();
-      await dark.screenshot({ path: shots ? `${shots}/multimetre-dark.png` : '/dev/null' });
+      await dark.screenshot({ path: `${shots}/multimetre-dark.png` });
       await dark.close();
     }
     // Klavyeyle ölç (Enter) ve sayaç.

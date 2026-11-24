@@ -471,7 +471,7 @@ const SIMS = {
     calc: v => ({ T: v.R * v.C / 1e3 }), key: 'T', min: 0.48, max: 0.52, out: [['T', 'Zaman sabiti τ', 's']], glow: () => 0, p: ['C', 'T'] },
   bjt: { s: [['RB', 'R_B', 20, 200, 1, 200, 'kΩ'], ['RC', 'R_C (lamba)', 0.5, 3, 0.1, 1, 'kΩ']],
     calc: v => { const ic = Math.min(100 * 4.3 / v.RB, 11.8 / v.RC); return { IC: ic, VCE: 12 - ic * v.RC }; },
-    key: 'VCE', min: 5.7, max: 6.3, out: [['IC', 'I_C', 'mA'], ['VCE', 'V_CE', 'V']], glow: r => r.IC / 12, p: ['RC', 'IC'] }
+    key: 'VCE', min: 5.7, max: 6.3, out: [['IC', 'I_C', 'mA'], ['VCE', 'V_CE', 'V']], glow: r => r.IC / 12, p: ['RC', 'VCE'] }
 };
 
 const COLORS = ['siyah', 'kahverengi', 'kırmızı', 'turuncu', 'sarı', 'yeşil', 'mavi', 'mor', 'gri', 'beyaz'];
@@ -1216,10 +1216,16 @@ function bindReminder() {
 
 function bindBackup() {
   const st = $('#yst'), inp = $('#yfile'), note = (t, err) => { st.textContent = t; st.classList.toggle('err', err); };
-  $('#ydown').onclick = () => {
+  $('#ydown').onclick = async () => {
+    const name = `akimli-yedek-${new Date(dayNum() * 864e5).toISOString().slice(0, 10)}.json`, file = new File([JSON.stringify(S)], name, { type: 'application/json' });
+    // iPhone ana ekran uygulamasında <a download> çalışmaz; paylaşım menüsü Dosyalar'a kaydetmeyi sunar.
+    if (navigator.standalone && navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); note('Yedek paylaşıldı. Dosyayı güvenli bir yere koy.', false); }
+      catch (e) { if (e.name !== 'AbortError') note('Paylaşılamadı. Bir daha dene.', true); }
+      return;
+    }
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' }));
-    a.download = `akimli-yedek-${new Date(dayNum() * 864e5).toISOString().slice(0, 10)}.json`;
+    a.href = URL.createObjectURL(file); a.download = name;
     a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1e4);
     note('Yedek indirildi. Dosyayı güvenli bir yere koy.', false);
   };
