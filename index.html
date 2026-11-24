@@ -1588,7 +1588,9 @@ function flowParts(els, fl) {
   const holes = two.map(e => { const [cx, cy, dx, dy] = geo(e), hx = Math.max(Math.abs(dx), 14), hy = Math.max(Math.abs(dy), 14); return `<rect x="${cx - hx}" y="${cy - hy}" width="${2 * hx}" height="${2 * hy}"/>`; }).join('')
     + els.filter(e => BLOCK[e[0]]).map(e => { const [, x, y, bw, bh] = BLOCK[e[0]](...e.slice(1, 6)); return bh ? `<rect x="${x}" y="${y}" width="${bw}" height="${bh}"/>` : ''; }).join('');
   const src = els.filter(e => e[0].replace('-', '') === 'V').map(e => e[0].endsWith('-') ? [[e[1], e[2]], [e[3], e[4]], e] : [[e[3], e[4]], [e[1], e[2]], e]);
-  const marks = src.map(([p, m, e]) => [[p, m, '+', 'hot'], [m, p, '−', 'cold']].map(([q, o, s, c]) => {
+  // Kısa devre edilmiş kaynağın (uçları aynı gerilimde) +/− işareti yanıltır, çizilmez.
+  const pv = {}; fl.forEach(f => f.p.forEach((q, k) => pv[K(q)] = f.v[k]));
+  const marks = src.filter(([p, m]) => !(K(p) in pv && K(m) in pv && Math.abs(pv[K(p)] - pv[K(m)]) < 1e-6)).map(([p, m, e]) => [[p, m, '+', 'hot'], [m, p, '−', 'cold']].map(([q, o, s, c]) => {
     const v = e[1] === e[3], g = Math.sign(o[v ? 1 : 0] - q[v ? 1 : 0]);
     return `<text class="sp ${c}" text-anchor="middle" x="${v ? q[0] + (e[7] === 'l' ? 14 : -14) : q[0] + g * 16}" y="${v ? q[1] + g * 16 + 6 : q[1] + 24}">${s}</text>`;
   }).join('')).join('');
