@@ -535,8 +535,8 @@ const FLYBACK = [['VB', 360, 222],
   put(['D', 'D'], 150, 40, 230, 40), ...w(150, 120, 150, 190), ['N', 230, 40], put(['C', 'C', '', '', 'l'], 230, 40, 230, 190), ...w(230, 40, 295, 40),
   put(['R', 'R_L', ''], 295, 40, 295, 190), ...w(150, 190, 295, 190), ['T', 130, 214, 0, 0, 'N_p : N_s = 4 : 1']];
 const PRECHARGE = [['VB', 300, 232],
-  ['V', 30, 200, 30, 80, 'Paket\n110 V'], put(['SO', 'K1', 'ana'], 30, 80, 210, 80), ...w(60, 80, 60, 30), ['N', 60, 80], ['N', 210, 80],
-  put(['SO', 'K2', '', '|kapalı'], 60, 30, 130, 30), put(['R', 'R_pre', '47 Ω', '110 V'], 130, 30, 210, 30), ...w(210, 30, 210, 80, 250, 80),
+  ['V', 30, 200, 30, 80, 'Paket\n110 V'], put(['SO', 'K1', 'ana', '', 'b'], 30, 80, 210, 80), ...w(60, 80, 60, 30), ['N', 60, 80], ['N', 210, 80],
+  put(['SO', 'K2', 'kapalı'], 60, 30, 130, 30), put(['R', 'R_pre', '47 Ω', '110 V'], 130, 30, 210, 30), ...w(210, 30, 210, 80, 250, 80),
   put(['C', 'C_bus', '1 mF', '0 V', 'l'], 250, 80, 250, 200), ...w(30, 200, 250, 200)];
 
 // --- Karmaşık direnç devreleri ---
@@ -1243,7 +1243,7 @@ function bindBackup() {
     if (!p || typeof p !== 'object' || typeof p.xp !== 'number' || !p.done || typeof p.done !== 'object') return note('Bu dosya bir Akımlı yedeği değil. İlerlemen değişmedi.', true);
     const n = parseState(raw, Object.keys(QUESTIONS));
     if (!confirm(`Şu anki ilerlemen (${S.xp} XP, ${Object.keys(S.done).length} ders) silinip yedektekiyle (${n.xp} XP, ${Object.keys(n.done).length} ders) değiştirilsin mi?`)) return note('Yükleme iptal edildi.', false);
-    S = n; save(); route(); $('#yst').textContent = 'Yedek yüklendi.'; // route ekranı yeniden çizer
+    S = n; save(); route(); setTimeout(() => $('#yst').textContent = 'Yedek yüklendi.', 100); // route ekranı yeniden çizer; yeni canlı bölge önce yerleşmeli ki okunsun
   };
 }
 
@@ -1283,8 +1283,8 @@ const BIND = {
   ariza: q => {
     const hid = {}, seg = $$('.seg button'), val = p => reading(q.c.find(e => e[6] === p.dataset.id)); let olc = seg.length > 0, n = 0;
     const sel = p => { if (C.checked) return; $$('.part').forEach(x => x.setAttribute('aria-checked', x === p)); answer(p.dataset.id); };
-    const show = p => { const h = hid[p.dataset.id]; if (!h) return; $('.me', p).innerHTML = h[0]; p.setAttribute('aria-label', h[1]); hid[p.dataset.id] = null; n++; };
-    const meas = p => { const v = val(p); show(p); $('.dmm').innerHTML = `<small>${tx(p.dataset.id)}</small><b>${v ? esc(v) : '– – –'}</b><small>${v ? `${n} ölçüm` : 'Burada ölçüm yok'}</small>`; };
+    const show = p => { const h = hid[p.dataset.id]; if (!h) return; $('.me', p).innerHTML = h[0]; p.setAttribute('aria-label', h[1]); hid[p.dataset.id] = null; };
+    const meas = p => { const v = val(p); if (hid[p.dataset.id]) n++; show(p); $('.dmm').innerHTML = `<small>${tx(p.dataset.id)}</small><b>${v ? esc(v) : '– – –'}</b><small>${v ? `${n} ölçüm` : 'Burada ölçüm yok'}</small>`; };
     if (olc) $$('.part').forEach(p => { const v = val(p), t = $('.me', p), l = p.getAttribute('aria-label'); if (v && t) { hid[p.dataset.id] = [t.innerHTML, l]; t.textContent = '?'; p.setAttribute('aria-label', l.replace(', ölçülen ' + v, '')); } });
     seg.forEach((b, i) => b.onclick = () => { olc = !i; seg.forEach(x => x.setAttribute('aria-pressed', x === b)); });
     $$('.part').forEach(p => { p.onclick = () => (olc ? meas : sel)(p); p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (olc ? meas : sel)(p); } }; });
