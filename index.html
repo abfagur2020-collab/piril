@@ -906,8 +906,12 @@ function parseState(raw, validIds) {
   let p;
   try { p = JSON.parse(raw); } catch { return s; }
   if (!p || typeof p !== 'object') return s;
-  for (const k in s) if (typeof p[k] === typeof s[k] && Array.isArray(p[k]) === Array.isArray(s[k]) && p[k] !== null) s[k] = p[k];
+  for (const k in s) if (typeof p[k] === typeof s[k] && Array.isArray(p[k]) === Array.isArray(s[k]) && p[k] !== null && (typeof p[k] !== 'number' || Number.isFinite(p[k]))) s[k] = p[k];
   s.wrong = s.wrong.filter(id => validIds.includes(id));
+  // Yedek dosyası dışarıdan gelir ve done değerleri ekrana yazılır: yalnız bilinen dersler ve sayaç değerleri kalır.
+  const lessons = new Set(validIds.map(id => id.replace(/-[^-]+$/, ''))), count = v => Number.isInteger(v) && v >= 0;
+  s.done = Object.fromEntries(Object.entries(s.done).filter(([k, v]) => lessons.has(k) && count(v)));
+  s.ok = Object.fromEntries(Object.entries(s.ok).filter(([, v]) => count(v)));
   return s;
 }
 
@@ -1312,6 +1316,7 @@ const BIND = {
       $('#pn').textContent = ok ? 'Doğru tahmin.' : 'Tahminin tutmadı, simülasyonda kendin gör.';
       if (!ok) C.miss = `${x} artınca ${y} ${PRED[d].toLocaleLowerCase('tr')}.`;
       go = true; $$('.sl input').forEach(i => i.disabled = false); upd();
+      $('.sl input').focus(); // basılan düğme kilitlendi; odak açılan ilk kaydırıcıya geçer
     });
     m.s.forEach(s => $('#s-' + s[0]).oninput = upd); upd();
   }

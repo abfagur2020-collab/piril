@@ -33,14 +33,14 @@ const upload = async (name, text) => { await page.setInputFiles('#yfile', { name
 
 try {
   await page.goto(url);
-  await setState({ xp: 123, done: { r1: 3 }, wrong: [], streak: 2, last: 1 });
+  await setState({ xp: 123, done: { '1-1': 3 }, wrong: [], streak: 2, last: 1 });
   ok(await page.evaluate(() => S.xp) === 123, 'tohum durum yüklendi (xp 123)');
 
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#ydown')]);
   ok(/^akimli-yedek-\d{4}-\d{2}-\d{2}\.json$/.test(dl.suggestedFilename()), `dosya adı: ${dl.suggestedFilename()}`);
   const backup = await readFile(await dl.path(), 'utf8');
   const b = JSON.parse(backup);
-  ok(b.xp === 123 && b.done.r1 === 3, 'indirilen yedekte xp 123');
+  ok(b.xp === 123 && b.done['1-1'] === 3, 'indirilen yedekte xp 123');
 
   await setState({ xp: 0, done: {} });
   ok((await stored()).xp === 0, 'durum sıfırlandı');
@@ -57,6 +57,14 @@ try {
     ok(dialogs === 0 && (await stored()).xp === 123 && await page.evaluate(() => S.xp) === 123, `${text}: durum değişmedi, onay sorulmadı`);
     ok(await page.$eval('#yst', e => e.classList.contains('err') && /yedeği değil/.test(e.textContent)), `${text}: hata notu görünüyor`);
   }
+  // Kötü niyetli ya da bozuk alanlar: HTML, bilinmeyen ders, sonsuz sayı ayıklanır.
+  await page.evaluate(() => { window.__x = 0; document.querySelector('#yst').textContent = ''; });
+  await upload('kotu.json', JSON.stringify({ xp: 7, done: { '1-1': '<img src=x onerror="window.__x=1">', '1-2': 4, uydurma: 9 }, ok: { mc: 'x', num: 2 } }).replace('"xp":7', '"xp":1e999'));
+  const st = await page.evaluate(() => S);
+  ok(st.xp === 0 && JSON.stringify(st.done) === '{"1-2":4}' && JSON.stringify(st.ok) === '{"num":2}', `kötü alanlar ayıklandı ${JSON.stringify([st.xp, st.done, st.ok])}`);
+  await page.goto(url + '#ana'); await page.waitForTimeout(300);
+  ok(await page.evaluate(() => window.__x) === 0, 'yedekten gelen HTML çalışmadı');
+  await page.goto(url + '#profil'); await page.waitForSelector('#yup');
   ok(await page.$eval('#yst', e => e.getAttribute('aria-live')) === 'polite', 'not aria-live="polite"');
   ok(errors.length === 0, `konsolda hata yok ${errors.join(' | ')}`);
 } catch (e) { console.error(e); fails++; }
