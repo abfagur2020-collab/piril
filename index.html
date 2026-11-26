@@ -11,18 +11,18 @@
 :root{
   --bg:#eef3ee; --card:#fff; --ink:#12302c; --soft:#4b6661; --line:#c9d6cf;
   --mask:#15564c; --mask2:#0f463e; --silk:#eaf5ee; --copper:#d08a4a; --tin:#c9d4d0;
-  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc; --hi1:#fff1c7; --hi2:#d9ecff; --hot:#d63a22; --cold:#2a62c9; --bdo:.5;
+  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc; --hi1:#fff1c7; --hi2:#d9ecff; --hot:#d63a22; --cold:#2a62c9; --bdo:.5; --coinink:#5b3413;
   --disp:"Roboto Condensed","sans-serif-condensed","Avenir Next Condensed","Arial Narrow","Segoe UI",sans-serif;
   --body:Roboto,"Segoe UI",system-ui,sans-serif; --mono:"Roboto Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; color-scheme:dark}}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; --coinink:#4a2a0e; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; color-scheme:dark}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; --coinink:#4a2a0e; color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
@@ -60,6 +60,26 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--led);border-radius:5px;transition:width .3s}
 .hello{display:flex;align-items:center;gap:12px}
+/* Günlük görevler kartı */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.coin{width:22px;height:22px;flex:none}
+.qst{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:12px}
+.qst header{display:flex;align-items:center;gap:8px}
+.qst h2{flex:1;font-size:18px}
+.qst .jt{display:flex;align-items:center;gap:6px;font:700 18px var(--disp);font-variant-numeric:tabular-nums}
+.qst ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.qst li{display:grid;grid-template-columns:24px 1fr auto;gap:5px 10px;align-items:center}
+.qst .ck{grid-row:1/3;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.qst .ck svg{width:14px;height:14px}
+.qst li.ok .ck{background:var(--good);border-color:var(--good);color:var(--card)}
+.qst li p{margin:0;font-size:15px;line-height:1.3;min-width:0}
+.qst li.ok p{color:var(--soft)}
+.qst .bar{height:8px;grid-column:2}
+.qst li output{font:700 14px var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.qst .rw{grid-column:3;display:flex;align-items:center;justify-content:flex-end;gap:3px;font-size:13px;color:var(--soft)}
+.qst .rw .coin{width:15px;height:15px}
+.qst li.ok .bar i{background:var(--good)}
+.qst .note{margin:0}
 /* Hoş geldin: Pırıl uçarak gelir, kanat çırpar, balondan konuşur. */
 .hos{justify-content:center;align-items:center;text-align:center}
 .hos .pr{width:150px;animation:fly-in .9s cubic-bezier(.2,.8,.3,1.2),bob 2.4s ease-in-out .9s infinite}
@@ -220,6 +240,19 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 @keyframes ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}
 @keyframes ptitle{0%{transform:scale(0) rotate(-8deg);opacity:0}100%{transform:none;opacity:1}}
 @keyframes burst{0%{transform:translate(-50%,-50%) scale(0) rotate(0)}15%{transform:translate(-50%,-50%) scale(1.2);opacity:1}75%{opacity:1}100%{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(.6) rotate(var(--r));opacity:0}}
+.qtoast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));z-index:45;pointer-events:none;width:min(358px,calc(100% - 32px));display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:14px;background:var(--card);color:var(--ink);border:2px solid var(--copper);box-shadow:0 8px 24px rgba(0,0,0,.22);animation:qtoast 2.4s cubic-bezier(.2,.9,.3,1.2) forwards}
+.qtoast .coin{width:34px;height:34px;animation:qspin .8s ease-out}
+.qtoast div{flex:1;min-width:0;display:grid;line-height:1.3}
+.qtoast b{font:800 18px var(--disp)}
+.qtoast small{font-size:14px;color:var(--soft);overflow-wrap:anywhere}
+.qtoast strong{font:800 22px var(--disp);color:var(--copper);font-variant-numeric:tabular-nums}
+.qtoast.all{animation-duration:3.2s;background:linear-gradient(120deg,var(--hi1),var(--hi2))}
+.qtoast.all b{font-size:20px}
+.qtoast i{position:absolute;left:30px;top:50%;width:16px;height:16px;border-radius:50%;background:var(--copper);box-shadow:inset 0 0 0 3px color-mix(in oklch,var(--copper) 70%,var(--coinink));animation:burst var(--t) cubic-bezier(.1,.7,.3,1) var(--d) both}
+@media (prefers-reduced-motion:reduce){.qtoast,.qtoast .coin{animation:none}.qtoast i{display:none}}
+@keyframes qtoast{0%{transform:translate(-50%,-120%);opacity:0}12%,85%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,-120%);opacity:0}}
+@keyframes qspin{0%{transform:rotateY(0) scale(.4)}100%{transform:rotateY(720deg) scale(1)}}
 @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 @keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
 /* Her yeni ekran aşağıdan yumuşakça belirir; içerik anında değişir, yalnız görünüm canlanır. */
@@ -1596,7 +1629,7 @@ const XP_Z = [0, 4, 6, 8], XP_RIGHT = 4, XP_FINISH = 10, XP_PERFECT = 6, GOAL = 
 // Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
 const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
 
-const fresh = () => ({ xp: 0, done: {}, wrong: [], ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0 });
+const fresh = () => ({ xp: 0, done: {}, wrong: [], ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0] });
 
 function parseState(raw, validIds) {
   const s = fresh();
@@ -1609,6 +1642,8 @@ function parseState(raw, validIds) {
   const lessons = new Set(validIds.map(id => id.replace(/-[^-]+$/, ''))), count = v => Number.isInteger(v) && v >= 0;
   s.done = Object.fromEntries(Object.entries(s.done).filter(([k, v]) => lessons.has(k) && count(v)));
   s.ok = Object.fromEntries(Object.entries(s.ok).filter(([, v]) => count(v)));
+  if (!Number.isSafeInteger(s.coins) || s.coins < 0) s.coins = 0;
+  if (!Number.isInteger(s.qd) || s.qd < 0 || s.qp.length !== 3 || !s.qp.every(count)) { s.qd = -1; s.qp = [0, 0, 0]; }
   return s;
 }
 
@@ -1700,6 +1735,35 @@ const BADGES = [
   ['Tam devre', '38 dersin hepsini bitir', s => Object.keys(s.done).length >= 38]
 ];
 
+// Günlük görevler: her gün kolay, orta, zor gruptan birer görev. Seçim gün sayısından gelir; her cihazda ve yenilemede aynıdır.
+// [ad, hedef, jeton, ilerleme(olay, eski), aile]: aynı aileden iki görev aynı gün çıkmaz.
+const QUESTS = [
+  [['3 soruyu doğru çöz', 3, 3, (e, p) => p + e.ok], ['Bir ders bitir', 1, 3, (e, p) => p + e.fin], ['Bugün 20 XP topla', 20, 3, e => e.xp, 'xp']],
+  [['3 soruyu arka arkaya doğru yap', 3, 5, (e, p) => Math.max(p, e.combo), 'seri'], ['Bir arıza sorusu çöz', 1, 5, (e, p) => p + (e.ok && e.t === 'ariza')],
+    ['Bir simülasyon sorusu çöz', 1, 5, (e, p) => p + (e.ok && e.t === 'sim')], ['Tekrar’da 2 soru çöz', 2, 5, (e, p) => p + (e.ok && e.rev)]],
+  [['Hatasız bir ders bitir', 1, 8, (e, p) => p + e.perfect], ['Zor düzeyde 2 soru çöz', 2, 8, (e, p) => p + (e.ok && e.z === 3)],
+    ['Bugün 40 XP topla', 40, 8, e => e.xp, 'xp'], ['5 soruyu arka arkaya doğru yap', 5, 8, (e, p) => Math.max(p, e.combo), 'seri']]
+], QBONUS = 10;
+function dayQuests(t) {
+  const used = [];
+  return QUESTS.map((g, i) => {
+    let h = Math.imul(t * 3 + i + 1, 2654435761); h = Math.imul(h ^ h >>> 13, 1540483477); h = ((h ^ h >>> 15) >>> 0) % g.length;
+    while (g[h][4] && used.includes(g[h][4])) h = (h + 1) % g.length;
+    used.push(g[h][4]); return g[h];
+  });
+}
+const questP = (s, t) => s.qd === t ? s.qp : [0, 0, 0];
+// Bir cevaptan sonra ilerlemeyi işler; yeni biten görevleri ve kazanılan jetonu döner. Üçü birden bitince bonus gelir.
+function questEv(s, e, t) {
+  if (s.qd !== t) { s.qd = t; s.qp = [0, 0, 0]; }
+  const qs = dayQuests(t), was = s.qp.map((p, i) => p >= qs[i][1]);
+  s.qp = qs.map(([, g, , f], i) => Math.min(g, Math.max(s.qp[i], +f(e, s.qp[i]) || 0)));
+  const got = qs.filter((q, i) => !was[i] && s.qp[i] >= q[1]), all = got.length > 0 && s.qp.every((p, i) => p >= qs[i][1]);
+  const n = got.reduce((a, q) => a + q[2], 0) + (all ? QBONUS : 0);
+  s.coins += n;
+  return { got, all, n };
+}
+
 
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -1727,6 +1791,19 @@ function party(n) {
   const d = document.createElement('div'); d.className = 'party'; d.setAttribute('role', 'status');
   d.innerHTML = `${bits}<div class="pp"><div class="pr2"><span class="ring"></span><span class="ring"></span><span class="ring"></span>${mascot('iyi')}</div><h2>${title}</h2><p>⚡ ${n} doğru arka arkaya!</p></div>`;
   document.body.append(d); setTimeout(() => d.remove(), 2700);
+}
+// Bakır jeton; görev bitince üstte kısa bildirim. 3'lü kutlama açıksa onun bitmesini bekler. Ekran okuyucuya kalıcı canlı bölgeden gider.
+const COIN = '<svg viewBox="0 0 24 24" class="coin" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--copper)"/><circle cx="12" cy="12" r="8" fill="none" stroke="var(--coinink)" stroke-width="1.4" opacity=".5"/><path d="M13.4 6.5 8.8 13h3l-1.2 4.5L15.2 11h-3z" fill="var(--coinink)"/></svg>';
+function questToast(r, wait) {
+  setTimeout(() => {
+    const what = r.got.map(q => q[0]).join(', '), live = document.getElementById('qlive');
+    if (live) { live.textContent = ''; setTimeout(() => live.textContent = `${r.all ? 'Bugünkü görevlerin hepsi tamam' : 'Görev tamam'}: ${what}. +${r.n} jeton.`, 60); }
+    document.querySelectorAll('.qtoast').forEach(e => e.remove());
+    const d = document.createElement('div'); d.className = 'qtoast' + (r.all ? ' all' : ''); d.setAttribute('aria-hidden', 'true');
+    d.innerHTML = `${COIN}<div><b>${r.all ? 'Hepsi tamam!' : 'Görev tamam!'}</b><small>${r.all ? `+${QBONUS} bonus dahil` : esc(what)}</small></div><strong>+${r.n}</strong>`
+      + (r.all ? [...Array(14)].map((_, i) => { const a = i / 14 * 6.283; return `<i style="--x:${(Math.cos(a) * 120).toFixed(0)}px;--y:${(Math.sin(a) * 90).toFixed(0)}px;--r:0deg;--t:${1 + i % 3 * .25}s;--d:${(i % 4 * .08).toFixed(2)}s"></i>`; }).join('') : '');
+    document.body.append(d); buzz(r.all ? [15, 60, 15, 60, 30] : [10, 40, 10]); setTimeout(() => d.remove(), r.all ? 3300 : 2500);
+  }, wait);
 }
 function mascot(mood) { // iyi | normal | kotu
   const sad = mood === 'kotu', g = { iyi: 1, normal: .75, kotu: .12 }[mood], tilt = sad ? 38 : -22, ey = sad ? 39 : 36;
@@ -2044,6 +2121,8 @@ function mergeState(a, b) {
   const [hi, lo] = a.xp >= b.xp ? [a, b] : [b, a], m = JSON.parse(JSON.stringify(hi));
   for (const [k, v] of Object.entries(lo.done)) m.done[k] = Math.max(m.done[k] ?? 0, v);
   m.bestStreak = Math.max(hi.bestStreak, lo.bestStreak);
+  m.coins = Math.max(a.coins, b.coins); // görevler: aynı günse her görevde büyük ilerleme, değilse yeni günün kaydı
+  if (a.qd === b.qd) m.qp = a.qp.map((p, i) => Math.max(p, b.qp[i])); else [m.qd, m.qp] = a.qd > b.qd ? [a.qd, [...a.qp]] : [b.qd, [...b.qp]];
   return m;
 }
 
@@ -2233,6 +2312,7 @@ function home() {
   const [hi, sub] = !S.xp ? ['Akımlı’ya hoş geldin', 'İlk derste yükten başlıyoruz.'] : x >= GOAL ? ['Bugünkü hedef tamam', 'İstersen bir ders daha çöz.']
     : st ? ['Devam edelim', `Hedefe ${GOAL - x} XP kaldı.`] : ['Yeniden yakalım', 'Bir derslik 3 dakikan var mı?'];
   return `<main class="scr"><div class="stat"><span>${ICON.seri}${st} günlük seri</span><span>${ICON.xp}${S.xp} XP</span><div class="goal">${bar(x, GOAL, 'Günlük hedef')}Bugün ${x} / ${GOAL} XP</div></div>
+  ${questCard(t)}
   <div class="hello">${mascot(x >= GOAL ? 'iyi' : 'normal')}<div><h1 tabindex="-1">${hi}</h1><p>${sub}</p></div></div>
   ${UNITS.map((u, i) => {
     const ls = LESSONS.filter(l => l.unit === i);
@@ -2244,6 +2324,14 @@ function home() {
       return `<button class="node ${done ? 'done' : nx === l ? 'next' : ''}" data-go="${l.k ? 'konu' : 'ders'}-${l.id}" ${open ? '' : 'disabled'}><span class="pad"><i>${j + 1}</i></span><em><strong>${l.name}</strong><small>${done ? `En iyi ${S.done[l.id]}/${l.qs.length}` : open ? `${zTag(l.z)} · ${l.qs.length} soru` : `${zTag(l.z)} · önceki dersi bitir`}</small></em></button>`;
     }).join('')}</div></section>`;
   }).join('')}</main>${navBar('ana')}`;
+}
+
+function questCard(t) {
+  const qp = questP(S, t), ck = line24('<path stroke-width="3" d="M5 12l5 5 9-10"/>');
+  return `<section class="qst" aria-labelledby="qh"><header><h2 id="qh">Günlük görevler</h2><span class="jt">${COIN}${S.coins}<span class="sr"> bakır jeton</span></span></header>
+  <ul>${dayQuests(t).map(([n, g, c], i) => { const p = Math.min(qp[i], g), ok = p >= g;
+    return `<li class="${ok ? 'ok' : ''}"><span class="ck">${ok ? ck : ''}</span><p>${n}${ok ? '<span class="sr">, tamamlandı</span>' : ''}</p><output>${p}/${g}</output>${bar(p, g, n)}<span class="rw">+${c}${COIN}<span class="sr"> jeton</span></span></li>`; }).join('')}</ul>
+  <p class="note">Üçü de bitince +${QBONUS} bonus. Jetonlar yakında Pırıl’ın gardırobunda kullanılacak.</p></section>`;
 }
 
 const byZ = z => Object.keys(QUESTIONS).filter(id => QUESTIONS[id].z === z);
@@ -2446,6 +2534,8 @@ function check() {
   if (ok) { if (C.combo % 3 === 0) party(C.combo); else cheer(); }
   if (ok || C.lid) C.n++; else C.queue.push(id); // Tekrar'da yanlış soru kuyruğun sonuna döner
   if (C.lid && !C.queue.length) finishLesson(S, C.lid, C.right, C.total, dayNum());
+  const end = !!C.lid && !C.queue.length, qr = questEv(S, { ok, t: q.t, z: q.z, rev: !C.lid, combo: C.combo, fin: end, perfect: end && C.right === C.total, xp: todayXp(S, dayNum()) }, dayNum());
+  if (qr.n) questToast(qr, ok && C.combo % 3 === 0 ? 2600 : 0);
   save();
   const mark = (el, v) => { if (v === String(q.a)) el.classList.add('good'); else if (v === String(C.ans)) el.classList.add('bad'); };
   if (q.t === 'mc') $$('.opt').forEach(b => mark(b, b.dataset.i));
@@ -2528,6 +2618,7 @@ addEventListener('hashchange', route);
 // iOS klavyesi sayfayı küçültmez; alt çubuğu klavyenin üstüne taşı. Android'de fark 0 çıkar.
 const vv = window.visualViewport;
 if (vv) vv.onresize = vv.onscroll = () => document.documentElement.style.setProperty('--kb', (vv.scale > 1.01 ? 0 : Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop))) + 'px');
+document.body.insertAdjacentHTML('beforeend', '<div id="qlive" class="sr" aria-live="polite"></div>');
 route();
 shareState();
 if (S.rem) armReminder(false); // kayıt silinmişse açılışta yeniden kurar
