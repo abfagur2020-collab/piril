@@ -25,7 +25,7 @@ const MOCK = {
   firestore: `const db = () => JSON.parse(localStorage.__fbdb || '{}'), put = d => localStorage.__fbdb = JSON.stringify(d);
     export const getFirestore = () => ({}); export const doc = (d, c, id) => c + '/' + id;
     export async function getDoc(p) { const d = db()[p]; return { exists: () => !!d, data: () => d }; }
-    export async function setDoc(p, v) { const d = db(); d[p] = v; put(d); window.__writes = (window.__writes || 0) + 1; }
+    export async function setDoc(p, v, o) { const d = db(); d[p] = o?.merge ? { ...d[p], ...v } : v; put(d); window.__writes = (window.__writes || 0) + 1; }
     export async function deleteDoc(p) { const d = db(); delete d[p]; put(d); }`
 };
 const browser = await chromium.launch(), errs = [];

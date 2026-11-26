@@ -1,0 +1,23 @@
+# Her akşam 20.00 (Türkiye) civarı, günlük hedefini tutturmayan abonelere hatırlatma bildirimi gönderir.
+# Gizli değerler: FIREBASE_SA (Firebase servis hesabı JSON), VAPID_PRIVATE (bildirim gizli anahtarı). Kurulum: FIREBASE.md
+name: Günlük hatırlatma
+on:
+  schedule:
+    - cron: '47 16 * * *' # 16:47 UTC = 19:47 TR; GitHub zamanlayıcısı birkaç dakika gecikebilir
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gonder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock firebase-admin@13.0.2 web-push@3.6.7
+      - run: node .github/hatirlat/gonder.mjs
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}

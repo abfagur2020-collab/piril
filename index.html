@@ -2057,7 +2057,7 @@ async function cloudInit() {
   cloud = { au, fs, auth, db: fs.getFirestore(a) };
   await new Promise(res => au.onAuthStateChanged(auth, u => {
     const was = cloudUser?.uid; cloudUser = u; res();
-    if (u && u.uid !== was) cloudPull();
+    if (u && u.uid !== was) cloudPull().then(() => S.rem && self.Notification?.permission === 'granted' && swReg().then(r => r && !r.periodicSync && pushArm(r))).catch(() => {});
     cloudUI();
   }));
   return cloud;
@@ -2079,7 +2079,7 @@ async function cloudPush() {
   }
   if (cloudUser !== u) return; // bu arada çıkış yapıldı
   const t = Date.now();
-  await cloud.fs.setDoc(cloudRef(), { s: JSON.stringify(S), t, xp: S.xp });
+  await cloud.fs.setDoc(cloudRef(), { s: JSON.stringify(S), t, xp: S.xp }, { merge: true }); // merge: abonelik alanları (p, ps) kalır
   setMeta({ uid: u.uid, t }); cloudMsg = `Son yedek ${hhmm(t)}`; cloudUI();
 }
 // Girişte, açılışta ve "Şimdi eşitle"de: durum ekranda görünerek eşitlenir.
@@ -2165,20 +2165,45 @@ if (FB && syncMeta().uid) cloudLoad().catch(() => { cloudMsg = 'Buluta bağlanı
 const swReg = () => 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration() : Promise.resolve(null);
 // Durum: 'yok' (tarayıcı desteklemiyor), 'izin' (bildirim izni yok), 'arka' (arka plan kontrolü yok), 'tamam'.
 async function armReminder(ask) {
+  // İzin ilk iş istenir: iPhone izni yalnız dokunuşla aynı anda sorar, araya bekleme girmemeli.
+  const perm = self.Notification && Notification.permission === 'default' && ask ? Notification.requestPermission() : null;
   const reg = await swReg();
   if (!reg || !self.Notification) return 'yok';
-  if (Notification.permission !== 'granted' && (!ask || await Notification.requestPermission() !== 'granted')) return 'izin';
-  if (!reg.periodicSync) return 'arka';
+  if ((perm ? await perm : Notification.permission) !== 'granted') return 'izin';
+  if (!reg.periodicSync) return pushArm(reg);
   try {
-    if ((await navigator.permissions.query({ name: 'periodic-background-sync' })).state !== 'granted') return 'arka';
+    if ((await navigator.permissions.query({ name: 'periodic-background-sync' })).state !== 'granted') return pushArm(reg);
     await reg.periodicSync.register('hatirlat', { minInterval: 3600e3 }); // tarayıcı en sık 12 saatte bir çalıştırır
     return 'tamam';
-  } catch { return 'arka'; }
+  } catch { return pushArm(reg); }
+}
+/* Arka planda kendi kendine kontrol edemeyen cihazlarda (iPhone, bilgisayar) hatırlatma sunucudan gelir (Web Push):
+   abonelik Firestore'daki kullanıcı belgesine (p) yazılır; GitHub zamanlayıcısı her akşam hedefi tutmayanlara gönderir
+   (.github/hatirlat/gonder.mjs). Bu yüzden Google ile giriş gerekir. */
+const VAPID = 'BKhMK4-LOyEZK-9Y0-pHLIJrYddHFeZ-dgVJR4iSBxDeZl7KrIvUQ5ltNvBeLPnUokFIC79OheKat5sNbR_cqEI';
+async function pushArm(reg) {
+  if (!FB || !reg?.pushManager) return 'arka';
+  if (!cloudUser && syncMeta().uid) await cloudLoad().catch(() => {});
+  if (!cloudUser) return 'giris';
+  try {
+    const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: Uint8Array.from(atob(VAPID.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)) });
+    await cloudPush(); // belge yoksa önce oluşsun (kurallar s, t, xp ister)
+    await cloud.fs.setDoc(cloudRef(), { p: JSON.stringify(sub) }, { merge: true });
+    return 'sunucu';
+  } catch { return 'hata'; }
+}
+async function pushOff() {
+  const sub = await (await swReg())?.pushManager?.getSubscription().catch(() => null);
+  await sub?.unsubscribe().catch(() => {});
+  if (cloudUser) await cloud.fs.setDoc(cloudRef(), { p: '' }, { merge: true }).catch(() => {});
 }
 const REM_NOTE = {
   yok: 'Bu tarayıcı bildirim göstermiyor. iPhone’da önce Paylaş › Ana Ekrana Ekle ile kur, sonra uygulamadan aç.',
   izin: 'Bildirim izni verilmedi. Açmak için telefonun ayarlarında bu uygulamanın bildirimlerine izin ver.',
-  arka: 'Bildirim izni tamam, ama bu cihaz arka planda kontrol yapmaya izin vermiyor. Hatırlatıcı Android’de, ana ekrana eklenmiş uygulamada çalışır; iPhone ve bilgisayar bunu desteklemiyor.',
+  arka: 'Bildirim izni tamam, ama bu cihaz arka planda kontrol yapmaya da sunucu bildirimine de izin vermiyor.',
+  giris: 'Bu cihazda hatırlatma internet üzerinden gelir; bunun için aşağıdaki Hesap bölümünden Google ile giriş yap. Girince hatırlatıcı kendiliğinden açılır.',
+  sunucu: 'Açık. Günlük hedefini tamamlamadığın günlerde akşam 20.00 civarı hatırlatırım; tamamladıysan rahatsız etmem.',
+  hata: 'Bildirim aboneliği kurulamadı. İnternetini kontrol edip seçimi yeniden yap.',
   tamam: 'Açık. O gün hedefini tamamlamadıysan hatırlatırım. Kontrol zamanını telefon seçer, genelde günde bir iki kez; 22.00 ile 09.00 arası bildirim gelmez.'
 };
 const pct = (a, b) => Math.min(100, Math.round(a / b * 100));
@@ -2245,8 +2270,8 @@ function profile() {
 
 function bindReminder() {
   const sel = $('#rem'), st = $('#remst'), test = $('#remtest');
-  const show = r => { st.textContent = S.rem ? REM_NOTE[r] : 'Kapalı. Açarsan, o gün ders çözmediğinde telefonuna kısa bir hatırlatma gelir.'; st.classList.toggle('err', !!S.rem && r !== 'tamam'); test.hidden = !S.rem || r === 'yok' || r === 'izin'; };
-  sel.onchange = async () => { S.rem = +sel.value; save(); show(S.rem ? await armReminder(true) : 'tamam'); };
+  const show = r => { st.textContent = S.rem ? REM_NOTE[r] : 'Kapalı. Açarsan, o gün ders çözmediğinde telefonuna kısa bir hatırlatma gelir.'; st.classList.toggle('err', !!S.rem && !['tamam', 'sunucu', 'giris'].includes(r)); test.hidden = !S.rem || ['yok', 'izin', 'giris'].includes(r); };
+  sel.onchange = async () => { S.rem = +sel.value; save(); if (!S.rem) pushOff(); show(S.rem ? await armReminder(true) : 'tamam'); };
   test.onclick = async () => (await swReg())?.showNotification('Akımlı', { body: 'Bildirimler çalışıyor. Hatırlatmalar böyle görünecek.', icon: 'icon-192.png', tag: 'deneme' });
   (S.rem ? armReminder(false) : Promise.resolve('tamam')).then(show);
 }

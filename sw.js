@@ -1,5 +1,5 @@
 // Sayfa ağdan önce denenir (3 sn), olmazsa önbellekten açılır; internet varken her açılış en yeni sürümdür.
-const CACHE = 'piril-9ee4c73a0f';
+const CACHE = 'piril-6a7ccaa491';
 const FILES = ['./', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x.startsWith('piril-') && x !== CACHE).map(x => caches.delete(x)))).then(() => self.clients.claim())));
@@ -45,6 +45,11 @@ async function remind() {
   await c.put('gonderildi', new Response(String(today)));
 }
 self.addEventListener('periodicsync', e => { if (e.tag === 'hatirlat') e.waitUntil(remind()); });
+// Sunucudan gelen hatırlatma (iPhone ve bilgisayar): her push bir bildirim göstermek zorunda (userVisibleOnly).
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data.json(); } catch {}
+  e.waitUntil(self.registration.showNotification(d.title || 'Akımlı', { body: d.body || 'Bugünkü dersin seni bekliyor.', icon: 'icon-192.png', badge: 'icon-192.png', tag: 'hatirlat' }));
+});
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(clients.matchAll({ type: 'window' }).then(w => w.length ? w[0].focus() : clients.openWindow('./')));

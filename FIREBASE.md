@@ -21,6 +21,19 @@ Neden: Firebase'in kendi giriş penceresi firebaseapp.com'da çalışır; iPhone
 "missing initial state" hatası verir. Google düğmesi kimlik belgesini doğrudan uygulamaya verir, uygulama Firebase'e
 `signInWithCredential` ile girer. Düğme Safari'de Google'a girili hesabı "… olarak devam et" diye gösterir.
 
+## 2c. Günlük hatırlatma bildirimi (iPhone ve bilgisayar için)
+iPhone, ana ekrandaki web uygulamasının arka planda kendi kendine kontrol yapmasına izin vermez; bildirim yalnız
+sunucudan gelebilir (Web Push). Sunucu olarak GitHub Actions kullanılır: `.github/workflows/hatirlat.yml` her akşam
+~20.00'de (TR) `.github/hatirlat/gonder.mjs`'i çalıştırır; abonesi olan ve o gün hedefini tutturmayan kullanıcıya
+bildirim gider. Karar ve metin `sw.js`'teki `reminderText` ile aynıdır (Android'deki telefon içi kontrol).
+1. Firestore → **Kurallar**: bu klasördeki `firestore.rules`'u yapıştır → **Yayınla** (p ve ps alanları eklendi).
+2. Firebase konsolu → ⚙ **Proje ayarları** → **Hizmet hesapları** → **Yeni özel anahtar oluştur** → JSON iner.
+3. GitHub deposu → **Settings → Secrets and variables → Actions → New repository secret**:
+   - `FIREBASE_SA`: indirilen JSON dosyasının tüm içeriği.
+   - `VAPID_PRIVATE`: bildirim gizli anahtarı (açık anahtarı `index.html`'deki `VAPID`; çift birlikte üretildi).
+4. **Actions → Günlük hatırlatma → Run workflow** ile elle dene; günlükte "gönderilen" sayısı görünür.
+Kullanıcı tarafı: Profil → Hatırlatıcı açılır, Google ile giriş yapılmış olmalı; iPhone'da uygulama ana ekrana eklenmiş olmalı (iOS 16.4+).
+
 ## 3. Veritabanı
 1. **Firestore Database** → **Veritabanı oluştur** → konum `eur3 (europe-west)` → **Üretim modunda başla**.
 2. **Kurallar** sekmesine bu klasördeki `firestore.rules` dosyasının içeriğini yapıştır → **Yayınla**.
