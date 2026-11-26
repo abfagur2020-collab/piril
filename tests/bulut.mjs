@@ -55,6 +55,8 @@ await page.evaluate(() => {
 await page.goto(url + '#profil'); await page.reload(); await page.waitForSelector('#hesap button');
 ok(fbReq === 0, 'giriş yapılmamışken açılışta Firebase yüklenmez');
 ok(/Google ile giriş yap/.test(await hesap()), 'giriş düğmesi görünür');
+// İlk dokunuş Firebase'i hazırlar (Safari pencereyi yalnız beklemesiz dokunuşla açar), sonrakiler pencereyi açar.
+await page.click('#cin'); await page.waitForFunction(() => /hazırlandı/.test(document.querySelector('#hesap').textContent)); ok(true, 'ilk dokunuş Google\'ı hazırlar');
 await page.evaluate(() => window.__popup = 'closed'); await page.click('#cin');
 await page.waitForFunction(() => /iptal/.test(document.getElementById('hesap').textContent));
 ok(true, 'pencere kapatılınca "Giriş iptal edildi"');

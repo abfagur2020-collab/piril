@@ -25,12 +25,18 @@ try {
   // 3. Bir kez: yeniden yüklenince ana sayfa
   await page.reload(); await page.waitForSelector('.pcb');
   assert.equal(await page.locator('.hos').count(), 0);
-  // 4. Hesabım var: Google girişi (sahte) başarılı olunca ana sayfa
-  await page.evaluate(() => { localStorage.removeItem('piril-hos'); cloudSignIn = async () => {}; route(); });
+  // 4a. iPhone Safari: Google penceresi dokunuşla aynı anda açılmalı (signInWithPopup'tan önce await yok)
+  assert.equal(await page.evaluate(() => { window.__sync = false; cloud = { au: { GoogleAuthProvider: class { setCustomParameters() {} }, signInWithPopup: () => { window.__sync = true; return Promise.resolve(); } }, auth: {} }; cloudSignIn(); return window.__sync; }), true, 'pencere beklemeden açılmadı');
+  // 4b. Firebase hazır değilken düğme beklemede
+  await page.evaluate(() => { localStorage.removeItem('piril-hos'); cloud = null; cloudP = new Promise(() => {}); route(); });
+  await page.click('[data-h="2"]');
+  assert.ok(await page.locator('#hin').isDisabled()); assert.match(await page.textContent('#hin'), /hazırlanıyor/);
+  // 4c. Hesabım var: Google girişi (sahte) başarılı olunca ana sayfa
+  await page.evaluate(() => { localStorage.removeItem('piril-hos'); cloud = {}; cloudP = null; cloudSignIn = async () => {}; route(); });
   await page.click('[data-h="2"]');
   await page.click('#hin'); await page.waitForSelector('.pcb');
   // 5. Giriş başarısızsa mesaj, ekran kalır
-  await page.evaluate(() => { localStorage.removeItem('piril-hos'); cloudSignIn = async () => { const x = new Error('popup'); x.code = 'akimli/popup'; throw x; }; route(); });
+  await page.evaluate(() => { localStorage.removeItem('piril-hos'); cloud = {}; cloudP = null; cloudSignIn = async () => { const x = new Error('popup'); x.code = 'akimli/popup'; throw x; }; route(); });
   await page.click('[data-h="2"]'); await page.click('#hin');
   await page.waitForFunction(() => /Safari veya Chrome/.test(document.querySelector('#hmsg').textContent));
   assert.equal(await page.locator('.hos').count(), 1);
