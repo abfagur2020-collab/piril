@@ -39,8 +39,9 @@ page.on('console', m => m.type() === 'error' && errs.push(m.text())); page.on('p
 page.on('dialog', d => d.accept());
 const hesap = () => page.textContent('#hesap');
 
-// 1. Yapılandırmasız gerçek dosya: Hesap bölümü yok, Firebase yüklenmez
-await page.goto(pathToFileURL(src).href + '#profil'); await page.waitForSelector('h1');
+// 1. Yapılandırmasız kopya: Hesap bölümü yok, Firebase yüklenmez
+const bos = path.join(path.dirname(tmp), 'bos.html'); fs.writeFileSync(bos, html.replace(FBLINE, 'const FB = null;'));
+await page.goto(pathToFileURL(bos).href + '#profil'); await page.waitForSelector('h1');
 ok(!(await page.locator('#hesap').count()) && fbReq === 0, 'FB null: Hesap bölümü yok, Firebase yüklenmedi');
 
 // 2. Bu cihazda 10 XP, bulutta 500 XP'lik daha yeni kayıt

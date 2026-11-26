@@ -1959,7 +1959,7 @@ function shareState() {
 }
 /* ---------- Bulut yedeği: Google ile giriş (Firebase). FB null iken bölüm görünmez, uygulama eskisi gibi yalnız cihazda çalışır. ---------- */
 // Firebase web yapılandırması gizli bilgi değildir; veriye erişimi Firestore kuralları sınırlar (bkz. FIREBASE.md).
-const FB = null; // { apiKey: '…', authDomain: '…', projectId: '…', appId: '…' }
+const FB = { apiKey: 'AIzaSyAurR_YyeBkbi9ua7C6xb_r0UP_g3113Q0', authDomain: 'piril-be8a2.firebaseapp.com', projectId: 'piril-be8a2', appId: '1:602752745524:web:ffbea0f011563e27444a61' };
 const FBV = '13.4.0', SYNC = 'piril-bulut'; // SYNC: { uid, t: son eşitlenen bulut zamanı, pending: yönlendirmeli giriş sürüyor }
 var cloud = null, cloudUser = null, cloudMsg = '', cloudTimer = 0, cloudBusy = false;
 const syncMeta = () => { try { return JSON.parse(localStorage.getItem(SYNC)) || {}; } catch { return {}; } };
