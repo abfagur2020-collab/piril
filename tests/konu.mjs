@@ -12,6 +12,7 @@ const browser = await chromium.launch();
 const errs = [];
 async function open(scheme) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  await page.addInitScript(() => localStorage.setItem('piril-hos', '1')); // hoş geldin ekranı tests/hos.mjs'te
   await page.emulateMedia({ colorScheme: scheme });
   page.on('console', m => m.type() === 'error' && errs.push(m.text()));
   page.on('pageerror', e => errs.push(e.message));

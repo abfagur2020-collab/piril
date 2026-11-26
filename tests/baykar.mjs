@@ -6,6 +6,7 @@ const url = pathToFileURL(fileURLToPath(new URL('../index.html', import.meta.url
 let fail = 0; const ok = (c, m) => { if (!c) { console.log('HATA ' + m); fail++; } };
 const browser = await chromium.launch(), errs = [];
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+await page.addInitScript(() => localStorage.setItem('piril-hos', '1')); // hoş geldin ekranı tests/hos.mjs'te
 page.on('console', m => m.type() === 'error' && errs.push(m.text())); page.on('pageerror', e => errs.push(e.message));
 await page.goto(url);
 const u = await page.evaluate(() => { const i = UNITS.findIndex(u => u.name === 'Baykar Sınav'); return { i: i + 1, n: UNITS[i].lessons.map(l => l.qs.length), last: i === UNITS.length - 1 }; });

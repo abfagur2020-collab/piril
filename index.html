@@ -60,6 +60,16 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--led);border-radius:5px;transition:width .3s}
 .hello{display:flex;align-items:center;gap:12px}
+/* Hoş geldin: Pırıl uçarak gelir, kanat çırpar, balondan konuşur. */
+.hos{justify-content:center;align-items:center;text-align:center}
+.hos .pr{width:150px;animation:fly-in .9s cubic-bezier(.2,.8,.3,1.2),bob 2.4s ease-in-out .9s infinite}
+.hos .pr .w{transform-box:fill-box;transform-origin:center;animation:flap .18s ease-in-out infinite alternate}
+.bubble{font-family:var(--body);font-weight:500;position:relative;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;font-size:18px;line-height:1.45;max-width:340px;animation:scr-in .3s ease-out .5s both}
+.bubble::before{content:"";position:absolute;top:-11px;left:50%;margin-left:-10px;border:10px solid transparent;border-top:0;border-bottom-color:var(--line)}
+.hos .acts{display:grid;gap:12px;width:100%;max-width:340px;animation:scr-in .3s ease-out .7s both}
+@keyframes fly-in{from{transform:translate(140px,-220px) rotate(25deg) scale(.5);opacity:0}}
+@keyframes bob{50%{transform:translateY(-8px)}}
+@keyframes flap{to{transform:scaleY(.35)}}
 .hello svg{width:84px;flex:none}
 .hello div{min-width:0}
 .hello p{color:var(--soft)}
@@ -1677,7 +1687,7 @@ function mascot(mood) { // iyi | normal | kotu
   const mouth = { iyi: 'M50 47q10 11 20 0', normal: 'M52 48q8 5 16 0', kotu: 'M52 52q8-7 16 0' }[mood];
   return `<svg viewBox="0 0 120 120" aria-hidden="true" class="${mood === 'iyi' ? 'hop' : ''}">
   <circle cx="60" cy="88" r="31" fill="#f6b932" opacity="${g * .38}" class="${sad ? '' : 'glow'}"/>
-  <g fill="#9fd6c6" fill-opacity=".8" stroke="#15564c" stroke-width="2"><ellipse cx="29" cy="68" rx="20" ry="9" transform="rotate(${-tilt} 29 68)"/><ellipse cx="91" cy="68" rx="20" ry="9" transform="rotate(${tilt} 91 68)"/></g>
+  <g class="w" fill="#9fd6c6" fill-opacity=".8" stroke="#15564c" stroke-width="2"><ellipse cx="29" cy="68" rx="20" ry="9" transform="rotate(${-tilt} 29 68)"/><ellipse cx="91" cy="68" rx="20" ry="9" transform="rotate(${tilt} 91 68)"/></g>
   <path d="M46 70h28v22a14 14 0 0 1-28 0z" fill="#6b5a2a" stroke="#15564c" stroke-width="2.5"/><path d="M47 71h26v21a13 13 0 0 1-26 0z" fill="#ffc93f" opacity="${g}"/>
   <path d="M52 77v13" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="${g * .8}"/><path d="M42 64h36v7H42z" fill="#15564c"/>
   <path d="M50 22V12l-8-7M70 22V12l8-7" fill="none" stroke="#d08a4a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2371,6 +2381,7 @@ function route() {
   const h = location.hash.slice(1), d = /^(ders|konu)-(.+)$/.exec(h), l = d && LESSONS.find(x => x.id === d[2]);
   if (shown) scrollMem[shown] = scrollY;
   shown = null;
+  if (!h && needHos()) return welcome();
   // konu-: önce konu anlatımı; düğmesi ders-'e gider, geri tuşu anlatıma döner.
   if (l && unlocked(l)) return d[1] === 'konu' && l.k ? intro(l) : start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
   if (h === 'tekrar-coz' && S.wrong.length) return start(S.wrong, null);
@@ -2383,6 +2394,30 @@ function route() {
   focusTop(scrollMem[shown] || 0);
   // Uygulama yeni açıldığında sıradaki ders ekranın ortasına gelir.
   if (shown === 'ana' && !(shown in scrollMem) && S.xp) $('.node.next')?.scrollIntoView({ block: 'center' });
+}
+/* ---------- Hoş geldin: ilk açılışta Pırıl karşılar, hesabı sorar. Giriş isteğe bağlı (App Store 5.1.1(v)). ---------- */
+const HOS = 'piril-hos';
+const needHos = () => { try { return !localStorage.getItem(HOS) && !syncMeta().uid; } catch { return false; } };
+function welcome(step = 0) {
+  shown = null;
+  const say = [
+    'Merhaba, ben <b>Pırıl</b>! Günde 3 dakikada elektroniği birlikte öğreneceğiz. Burada yeni misin?',
+    'Hoş geldin! İlerlemen kaybolmasın diye Google hesabınla kaydolabilirsin. İstersen hesapsız da başlayabilirsin.',
+    'Tekrar hoş geldin! Google hesabınla gir, kaldığın yerden devam et.'
+  ][step];
+  const acts = step === 0 ? `<button class="btn" data-h="1">Ben yeniyim</button><button class="btn alt" data-h="2">Hesabım var</button>`
+    : (FB ? `<button class="btn" id="hin">Google ile ${step === 1 ? 'kaydol' : 'giriş yap'}</button>` : '') + `<button class="btn alt" id="hskip">${step === 1 ? 'Hesapsız başla' : 'Şimdilik geç'}</button>`;
+  app.innerHTML = `<main class="scr hos"><div class="pr">${mascot('iyi').replace('<svg ', '<svg role="img" aria-label="Pırıl" ')}</div><h1 class="bubble" tabindex="-1">${say}</h1><div class="acts">${acts}</div><p class="note" id="hmsg" aria-live="polite"></p></main>`;
+  $('h1').focus({ preventScroll: true });
+  $$('[data-h]').forEach(b => b.onclick = () => { buzz(8); welcome(+b.dataset.h); });
+  const done = () => { try { localStorage.setItem(HOS, '1'); } catch {} route(); };
+  if (step) $('#hskip').onclick = done;
+  const hin = $('#hin');
+  if (hin) hin.onclick = async () => {
+    hin.disabled = true; $('#hmsg').textContent = 'Google açılıyor…';
+    try { await cloudSignIn(); done(); }
+    catch (e) { hin.disabled = false; $('#hmsg').textContent = e?.code === 'akimli/popup' ? 'Google penceresi açılamadı. Uygulamayı Safari veya Chrome\'da açıp dene; şimdilik hesapsız da başlayabilirsin.' : 'Giriş tamamlanmadı. Bir daha dene ya da hesapsız başla.'; }
+  };
 }
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 // Kısa titreşim yalnız destekleyen telefonda (Android); iPhone Safari desteklemez, sessizce geçer.
