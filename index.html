@@ -75,8 +75,13 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .node{display:flex;align-items:center;gap:14px;width:100%;height:96px;text-align:left;color:inherit;position:relative;border-radius:10px}
 .node:nth-of-type(even){padding-left:56px}
 .node:focus-visible{outline-color:#fff;outline-offset:-3px}
-.pad{width:64px;height:64px;border-radius:50%;background:var(--copper);display:grid;place-items:center;flex:none;transition:transform .12s ease-out}
-.node:active:not([disabled]) .pad{transform:scale(.94)}
+.pad{width:64px;height:64px;border-radius:50%;background:var(--copper);display:grid;place-items:center;flex:none;transition:transform .1s ease-out,box-shadow .1s ease-out;box-shadow:0 4px 0 color-mix(in oklch,var(--copper) 60%,#000)}
+.node:active:not([disabled]) .pad{transform:translateY(4px);box-shadow:0 0 0 color-mix(in oklch,var(--copper) 60%,#000)}
+/* Dokununca pedin LED'i yanar, sonra ders açılır. */
+.node.zap .pad i{animation:zap .32s ease-out forwards}
+.node.zap .pad{animation:halo .32s ease-out forwards}
+@keyframes zap{40%{background:var(--led);color:var(--ledink);transform:scale(1.25)}100%{background:var(--led);color:var(--ledink);transform:scale(1.1)}}
+@keyframes halo{100%{box-shadow:0 0 0 6px color-mix(in oklch,var(--led) 55%,transparent),0 0 28px 14px color-mix(in oklch,var(--led) 45%,transparent)}}
 .pad i{width:34px;height:34px;border-radius:50%;background:var(--mask2);display:grid;place-items:center;font:700 16px var(--mono);color:var(--silk)}
 .node.done .pad{background:var(--tin)}
 .node.done .pad i{background:var(--led);color:var(--ledink)}
@@ -96,8 +101,8 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .kind{font:13px var(--mono);color:var(--soft)}
 .q{font-family:var(--body);font-size:20px;font-weight:600;line-height:1.35}
 .opts{display:grid;gap:10px}
-.opt{width:100%;min-height:54px;padding:10px 14px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:10px;display:flex;gap:12px;align-items:center;font-size:17px;transition:transform .1s ease-out}
-.opt:active:not([disabled]){transform:scale(.985)}
+.opt{width:100%;min-height:54px;padding:10px 14px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:10px;display:flex;gap:12px;align-items:center;font-size:17px;transition:transform .08s ease-out,box-shadow .08s ease-out;box-shadow:0 3px 0 var(--line)}
+.opt:active:not([disabled]){transform:translateY(3px);box-shadow:0 0 0 var(--line)}
 .opt[aria-pressed=true]{border-color:var(--copper);background:var(--sel)}
 .opt.good{border-color:var(--good);background:var(--goodbg)}
 .opt.bad{border-color:var(--bad);background:var(--badbg)}
@@ -168,10 +173,21 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
   padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .foot.good{background:var(--goodbg)}
 .foot.bad{background:var(--badbg)}
-.btn{width:100%;min-height:52px;border-radius:10px;background:var(--led);color:var(--ledink);font-weight:700;font-size:17px;padding:8px 16px;transition:transform .1s ease-out}
-.btn:active:not([disabled]){transform:scale(.98)}
-.btn[disabled]{background:var(--line);color:var(--soft);cursor:default}
-.btn.alt{background:none;border:2px solid var(--line);color:var(--ink)}
+.btn{width:100%;min-height:52px;border-radius:10px;background:var(--led);color:var(--ledink);font-weight:700;font-size:17px;padding:8px 16px;transition:transform .08s ease-out,box-shadow .08s ease-out;box-shadow:0 4px 0 color-mix(in oklch,var(--led) 55%,#000)}
+.btn:active:not([disabled]){transform:translateY(4px);box-shadow:none}
+.btn[disabled]{background:var(--line);color:var(--soft);cursor:default;box-shadow:none}
+.btn.alt{background:var(--card);border:2px solid var(--line);color:var(--ink);box-shadow:0 4px 0 var(--line)}
+/* Geri bildirim aşağıdan kayarak gelir; doğruda maskot kıvılcım saçar, yanlışta çubuk sarsılır. */
+.foot.good,.foot.bad{animation:rise .24s ease-out}
+.foot.bad .fb{animation:shake .36s ease-in-out .1s}
+.fb>svg{overflow:visible}
+.spark{animation:spark .6s ease-out forwards;opacity:0}
+@keyframes rise{from{transform:translateY(24px);opacity:.4}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
+/* Her yeni ekran aşağıdan yumuşakça belirir; içerik anında değişir, yalnız görünüm canlanır. */
+.scr{animation:scr-in .22s ease-out}
+@keyframes scr-in{from{opacity:0;transform:translateY(14px)}}
 .fb{display:grid;grid-template-columns:72px 1fr;gap:0 12px}
 .fb>svg{width:72px}
 .fb>div{min-width:0;display:grid;gap:4px;align-content:center}
@@ -1654,6 +1670,8 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const SUB = /(\p{L})_([\p{L}\d]+)/gu;
 const tx = s => esc(s).replace(SUB, '$1<sub>$2</sub>');
 
+// Doğru cevapta ampulden saçılan 8 kıvılcım (yalnız süs, ekran okuyucudan gizli).
+const sparks = () => [...Array(8)].map((_, i) => { const a = i * Math.PI / 4; return `<circle class="spark" cx="60" cy="84" r="4" fill="var(--led)" style="--dx:${(Math.cos(a) * 48).toFixed(0)}px;--dy:${(Math.sin(a) * 48).toFixed(0)}px;animation-delay:${i % 2 * 40}ms"/>`; }).join('');
 function mascot(mood) { // iyi | normal | kotu
   const sad = mood === 'kotu', g = { iyi: 1, normal: .75, kotu: .12 }[mood], tilt = sad ? 38 : -22, ey = sad ? 39 : 36;
   const mouth = { iyi: 'M50 47q10 11 20 0', normal: 'M52 48q8 5 16 0', kotu: 'M52 52q8-7 16 0' }[mood];
@@ -1666,7 +1684,7 @@ function mascot(mood) { // iyi | normal | kotu
   <circle cx="60" cy="40" r="25" fill="#1f7566" stroke="#15564c" stroke-width="2.5"/>
   <circle cx="50" cy="36" r="8.500" fill="#fff"/><circle cx="70" cy="36" r="8.500" fill="#fff"/><circle cx="51" cy="${ey}" r="4" fill="#12302c"/><circle cx="69" cy="${ey}" r="4" fill="#12302c"/>
   ${sad ? '<path d="M41 27l10-4M79 27l-10-4" stroke="#0c3a33" stroke-width="3" stroke-linecap="round"/>' : ''}
-  <path d="${mouth}" fill="none" stroke="#eaf5ee" stroke-width="3" stroke-linecap="round"/></svg>`;
+  <path d="${mouth}" fill="none" stroke="#eaf5ee" stroke-width="3" stroke-linecap="round"/>${mood === 'iyi' ? sparks() : ''}</svg>`;
 }
 
 const line24 = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -2332,7 +2350,7 @@ function check() {
   if (C.fl) { if (!$('#akb')) { $('.fig').insertAdjacentHTML('afterend', FLOWBTN); $('#akb').onclick = flowToggle; } showFlow(true); } // açıklama görsel olsun
   const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
   const foot = $('.foot'), hint = !ok && (q.t === 'num' || q.t === 'oku') ? clue(C.ans, q.a) : '';
-  foot.className = 'foot ' + (ok ? 'good' : 'bad');
+  foot.className = 'foot ' + (ok ? 'good' : 'bad'); buzz(ok ? 12 : [20, 40, 20]);
   foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_Z[q.z]} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
   if (q.s) { $('main').insertAdjacentHTML('beforeend', `<section class="kart sol"><h2>Çözüm</h2><ol>${q.s.map(x => `<li>${tx(x)}</li>`).join('')}</ol></section>`); }
   if (q.t === 'sim' && C.miss) $('.fb h2').insertAdjacentHTML('afterend', `<p>${tx(C.miss)}</p>`);
@@ -2366,10 +2384,15 @@ function route() {
   // Uygulama yeni açıldığında sıradaki ders ekranın ortasına gelir.
   if (shown === 'ana' && !(shown in scrollMem) && S.xp) $('.node.next')?.scrollIntoView({ block: 'center' });
 }
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+// Kısa titreşim yalnız destekleyen telefonda (Android); iPhone Safari desteklemez, sessizce geçer.
+const buzz = ms => { if (!calm.matches) navigator.vibrate?.(ms); };
 app.addEventListener('click', e => {
   const b = e.target.closest('[data-go]');
   if (!b || b.disabled) return;
-  if ('#' + b.dataset.go === location.hash) route(); else location.hash = b.dataset.go;
+  const go = () => '#' + b.dataset.go === location.hash ? route() : location.hash = b.dataset.go;
+  buzz(8);
+  if (b.classList.contains('node') && !calm.matches) { b.classList.add('zap'); setTimeout(go, 300); } else go();
 });
 addEventListener('hashchange', route);
 // iOS klavyesi sayfayı küçültmez; alt çubuğu klavyenin üstüne taşı. Android'de fark 0 çıkar.
