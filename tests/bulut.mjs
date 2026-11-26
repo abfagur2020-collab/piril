@@ -15,7 +15,8 @@ const MOCK = {
     const fire = () => { localStorage.__fbuser = JSON.stringify(st.user); st.cbs.forEach(cb => cb(st.user)); };
     export const getAuth = () => ({ get currentUser() { return st.user; } });
     export function onAuthStateChanged(a, cb) { st.cbs.push(cb); setTimeout(() => cb(st.user)); }
-    export class GoogleAuthProvider { setCustomParameters() {} }
+    export class GoogleAuthProvider { setCustomParameters() {} static credential(t) { return t; } }
+    export async function signInWithCredential(a, c) { if (c !== 'tok') { const e = new Error('x'); e.code = 'auth/invalid-credential'; throw e; } st.user = { uid: 'u1', email: 'test@ornek.com' }; fire(); return { user: st.user }; }
     export async function signInWithPopup() { if (window.__popup) { const e = new Error('x'); e.code = window.__popup === 'closed' ? 'auth/popup-closed-by-user' : 'auth/popup-blocked'; throw e; } st.user = { uid: 'u1', email: 'test@ornek.com' }; fire(); }
     export async function signInWithRedirect() {}
     export async function signOut() { st.user = null; fire(); }
@@ -34,6 +35,11 @@ await ctx.route('https://www.gstatic.com/firebasejs/**', r => {
   fbReq++; const n = /firebase-(\w+)\.js/.exec(r.request().url())[1];
   r.fulfill({ status: 200, contentType: 'text/javascript', headers: { 'access-control-allow-origin': '*' }, body: MOCK[n] });
 });
+// Sahte Google Identity Services: düğme dokununca kimlik belgesi verir (__gisBad ise geçersiz belge).
+let gisReq = 0;
+await ctx.route('https://accounts.google.com/gsi/client', r => { gisReq++; r.fulfill({ status: 200, contentType: 'text/javascript', body: `window.google = { accounts: { id: {
+  initialize(o) { window.__gis = o; },
+  renderButton(el, o) { const b = document.createElement('button'); b.id = 'gmock'; b.textContent = 'Google ile oturum aç'; b.onclick = () => window.__gis.callback({ credential: window.__gisBad ? 'bad' : 'tok' }); el.append(b); } } } };` }); });
 const page = await ctx.newPage();
 page.on('console', m => m.type() === 'error' && errs.push(m.text())); page.on('pageerror', e => errs.push(e.message));
 page.on('dialog', d => d.accept());
@@ -55,15 +61,13 @@ await page.evaluate(() => {
 await page.goto(url + '#profil'); await page.reload(); await page.waitForSelector('#hesap button');
 ok(fbReq === 0, 'giriş yapılmamışken açılışta Firebase yüklenmez');
 ok(/Google ile giriş yap/.test(await hesap()), 'giriş düğmesi görünür');
-// İlk dokunuş Firebase'i hazırlar (Safari pencereyi yalnız beklemesiz dokunuşla açar), sonrakiler pencereyi açar.
-await page.click('#cin'); await page.waitForFunction(() => /hazırlandı/.test(document.querySelector('#hesap').textContent)); ok(true, 'ilk dokunuş Google\'ı hazırlar');
-await page.evaluate(() => window.__popup = 'closed'); await page.click('#cin');
-await page.waitForFunction(() => /iptal/.test(document.getElementById('hesap').textContent));
-ok(true, 'pencere kapatılınca "Giriş iptal edildi"');
-await page.evaluate(() => window.__popup = 'blocked'); await page.click('#cin');
-await page.waitForFunction(() => /Chrome veya Safari/.test(document.getElementById('hesap').textContent));
-ok(true, 'açılır pencere engellenince yol gösteren mesaj');
-await page.evaluate(() => window.__popup = ''); await page.click('#cin');
+// İlk dokunuş Google'ın düğmesini getirir (GIS); o düğme kimlik belgesi verir, Firebase'e belgeyle girilir.
+ok(gisReq === 0, 'Google betiği açılışta yüklenmez');
+await page.click('#cin'); await page.waitForSelector('#gmock'); ok(gisReq === 1, 'ilk dokunuş Google düğmesini getirir');
+await page.evaluate(() => window.__gisBad = true); await page.click('#gmock');
+await page.waitForFunction(() => /tamamlanmadı/.test(document.getElementById('hesap').textContent));
+ok(true, 'geçersiz belgede "Giriş tamamlanmadı"');
+await page.evaluate(() => window.__gisBad = false); await page.click('#cin'); await page.waitForSelector('#gmock'); await page.click('#gmock');
 await page.waitForFunction(() => /Son yedek/.test(document.getElementById('hesap')?.textContent || ''));
 const m = await page.evaluate(() => ({ xp: S.xp, done: S.done, best: S.bestStreak, meta: JSON.parse(localStorage.getItem('piril-bulut')), cloud: JSON.parse(JSON.parse(localStorage.__fbdb)['users/u1'].s) }));
 ok(m.xp === 500 && m.done['1-1'] === 6 && m.done['1-2'] === 3 && m.best === 9, 'birleştirme: yüksek XP temel, derslerin en iyisi, en uzun seri');
@@ -94,7 +98,7 @@ await page.waitForSelector('#cin');
 ok(await page.evaluate(() => S.xp === 900 && !(localStorage.getItem('piril-bulut') || '').includes('u1')), 'çıkışta ilerleme cihazda kalır');
 
 // 6. Hesap silme
-await page.click('#cin'); await page.waitForSelector('#cdel'); await page.click('#cdel');
+await page.click('#cin'); await page.waitForSelector('#gmock'); await page.click('#gmock'); await page.waitForSelector('#cdel'); await page.click('#cdel');
 await page.waitForFunction(() => window.__deleted && /silindi/.test(document.getElementById('hesap').textContent));
 ok(await page.evaluate(() => !JSON.parse(localStorage.__fbdb)['users/u1'] && S.xp >= 900), 'hesap silinince bulut kaydı gider, cihazdaki ilerleme kalır');
 ok(!(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)), 'profilde yatay taşma yok');

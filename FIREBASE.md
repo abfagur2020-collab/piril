@@ -11,6 +11,16 @@ Uygulama, `index.html` içindeki `const FB = null;` satırı doluysa Profil ekra
 1. **Authentication** → **Başlayın** → **Sign-in method** → **Google** → Etkinleştir → destek e-postasını seç → Kaydet.
 2. **Authentication → Settings → Authorized domains** → **Alan adı ekle** → `abfagur2020-collab.github.io`.
 
+## 2b. Google düğmesine uygulamanın adresini tanıt (iPhone için şart)
+Giriş, Google'ın kendi düğmesiyle (Google Identity Services) yapılır; düğme uygulamanın adresinde çalışmak için izin ister.
+1. https://console.cloud.google.com/apis/credentials?project=piril-be8a2 → **OAuth 2.0 İstemci Kimlikleri** altında **Web client (auto created by Google Service)**.
+2. **Yetkili JavaScript kaynakları** → **URI ekle** → `https://abfagur2020-collab.github.io` (sonunda / ve /piril yok) → **Kaydet**.
+3. Birkaç dakika sonra `node tests/gis-koken.mjs` "Hepsi geçti" demeli.
+
+Neden: Firebase'in kendi giriş penceresi firebaseapp.com'da çalışır; iPhone Safari siteler arası depolamayı ayırdığı için
+"missing initial state" hatası verir. Google düğmesi kimlik belgesini doğrudan uygulamaya verir, uygulama Firebase'e
+`signInWithCredential` ile girer. Düğme Safari'de Google'a girili hesabı "… olarak devam et" diye gösterir.
+
 ## 3. Veritabanı
 1. **Firestore Database** → **Veritabanı oluştur** → konum `eur3 (europe-west)` → **Üretim modunda başla**.
 2. **Kurallar** sekmesine bu klasördeki `firestore.rules` dosyasının içeriğini yapıştır → **Yayınla**.
@@ -24,7 +34,7 @@ Bu değerler gizli bilgi değildir (her Firebase web uygulamasında sayfanın i�
 
 ## Nasıl çalışır
 - Giriş isteğe bağlıdır. Girişsiz kullanım tam çalışır (App Store 5.1.1(v)).
-- Giriş yalnız açılır pencereyle yapılır: uygulama github.io'da, Firebase alanı firebaseapp.com'da olduğu için yönlendirmeli giriş güncel tarayıcılarda dönüşte tamamlanmaz. Pencere açılamazsa kullanıcıya Chrome veya Safari'de açması söylenir.
+- Giriş Google düğmesiyle (GIS) yapılır, Firebase'e kimlik belgesiyle girilir (bkz. 2b). Firebase'in açılır penceresi ve yönlendirmeli girişi iPhone Safari'de çalışmaz.
 - Her kullanıcının tek belgesi vardır: `users/{uid}`. Cevaplardan 3 sn sonra yazılır; uygulama arka plana geçince hemen yazılır.
 - Her yazmadan önce bulut okunur. Başka cihaz daha yeni bir kayıt bıraktıysa birleştirilir: XP'si yüksek olan temel, biten derslerin en iyi puanı ve en uzun seri ikisinden alınır.
 - Hesabı sil: bulut belgesi ve Firebase kullanıcısı silinir, bu cihazdaki ilerleme kalır (App Store ve Google Play hesap silme şartı).

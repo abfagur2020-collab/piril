@@ -66,6 +66,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .hos .pr .w{transform-box:fill-box;transform-origin:center;animation:flap .18s ease-in-out infinite alternate}
 .bubble{font-family:var(--body);font-weight:500;position:relative;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;font-size:18px;line-height:1.45;max-width:340px;animation:scr-in .3s ease-out .5s both}
 .bubble::before{content:"";position:absolute;top:-11px;left:50%;margin-left:-10px;border:10px solid transparent;border-top:0;border-bottom-color:var(--line)}
+.gbtn{display:flex;justify-content:center;min-height:44px}
 .hos .acts{display:grid;gap:12px;width:100%;max-width:340px;animation:scr-in .3s ease-out .7s both}
 @keyframes fly-in{from{transform:translate(140px,-220px) rotate(25deg) scale(.5);opacity:0}}
 @keyframes bob{50%{transform:translateY(-8px)}}
@@ -2053,17 +2054,29 @@ addEventListener('online', () => cloudUser && cloudPull());
 
 // Yalnız açılır pencere: uygulama github.io'da, Firebase alanı firebaseapp.com'da olduğu için sayfa yönlendirmeli giriş
 // üçüncü taraf depolamayı engelleyen tarayıcılarda (güncel Chrome, Safari) dönüşte tamamlanmaz.
-// iPhone Safari açılır pencereyi yalnız dokunuşla aynı anda açar: signInWithPopup'tan önce hiçbir await olmamalı.
-// Bu yüzden Firebase ekran açılınca önceden yüklenir (cloudLoad); hazır değilse düğme beklemede kalır.
-function cloudSignIn() {
-  if (!cloud) { const x = new Error('hazır değil'); x.code = 'akimli/notready'; cloudLoad().catch(() => {}); return Promise.reject(x); }
-  const { au, auth } = cloud, p = new au.GoogleAuthProvider();
-  p.setCustomParameters({ prompt: 'select_account' });
-  return au.signInWithPopup(auth, p).catch(e => {
-    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
-      const x = new Error('popup'); x.code = 'akimli/popup'; throw x;
-    }
-    throw e;
+/* Google ile giriş Google Identity Services (GIS) düğmesiyle yapılır, Firebase'e kimlik belgesiyle girilir.
+   Neden: Firebase'in kendi penceresi firebaseapp.com'da çalışır; iPhone Safari siteler arası depolamayı ayırdığı için
+   "missing initial state" hatası verir. GIS düğmesi uygulamanın kendi adresinde çalışır ve Safari'de Google'a
+   girili hesabı "… olarak devam et" diye gösterir. Kimlik herkese açıktır; Google Cloud'da yetkili JS kaynağı
+   olarak https://abfagur2020-collab.github.io ekli olmalıdır (FIREBASE.md). */
+const GCID = '602752745524-g5fsnnnmmtnguldemtdki1rcknv036ni.apps.googleusercontent.com';
+let gisP = null, gisDone = null;
+const gisLoad = () => gisP ||= new Promise((res, rej) => {
+  const t = document.createElement('script'); t.src = 'https://accounts.google.com/gsi/client'; t.async = true;
+  t.onload = () => { if (!window.google?.accounts) return t.onerror(); google.accounts.id.initialize({ client_id: GCID, callback: gisCred, ux_mode: 'popup', itp_support: true }); res(google); };
+  t.onerror = () => { gisP = null; t.remove(); rej(new Error('gis')); };
+  document.head.append(t);
+});
+async function gisCred(r) {
+  try { const { au, auth } = await cloudLoad(); await au.signInWithCredential(auth, au.GoogleAuthProvider.credential(r.credential)); gisDone?.(null); }
+  catch (e) { gisDone?.(e); }
+}
+// el içine Google'ın düğmesi çizilir; done(hata | null) giriş bitince çağrılır.
+function gisButton(el, text, done) {
+  gisDone = done;
+  return gisLoad().then(g => {
+    el.textContent = '';
+    g.accounts.id.renderButton(el, { type: 'standard', theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'filled_black' : 'outline', size: 'large', text, shape: 'pill', logo_alignment: 'center', width: Math.min(340, el.clientWidth || 340), locale: 'tr' });
   });
 }
 async function cloudSignOut() { await cloudPush().catch(() => {}); await cloud.au.signOut(cloud.auth); setMeta({}); cloudMsg = ''; }
@@ -2087,9 +2100,15 @@ function cloudUI() {
       <p class="note" aria-live="polite">${esc(cloudMsg)}</p>
       <button class="btn alt" id="csync" ${cloudBusy ? 'disabled' : ''}>Şimdi eşitle</button><button class="btn alt" id="cout">Çıkış yap</button><button class="btn alt" id="cdel">Hesabı sil</button>`
     : `<p class="note">İstersen Google hesabınla gir: ilerlemen buluta yedeklenir, telefon değiştirsen de kaybolmaz. Girmeden de uygulamayı tam kullanabilirsin.</p>
-      <button class="btn" id="cin" ${off ? 'disabled' : ''}>Google ile giriş yap</button><p class="note" aria-live="polite">${esc(off ? 'Giriş için internet gerekir.' : cloudMsg)}</p>`;
-  const act = (id, f, done) => { const b = document.getElementById(id); if (b) b.onclick = async () => { b.disabled = true; try { await f(); if (done) cloudMsg = done; } catch (e) { cloudMsg = e?.code === 'akimli/notready' ? 'Google hazırlandı. Pencerenin açılması için bir daha dokun.' : e?.code === 'akimli/popup' ? 'Bu tarayıcı Google giriş penceresini açamadı. Açılır pencerelere izin ver ya da uygulamayı Chrome veya Safari’de aç.' : e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request' ? 'Giriş iptal edildi.' : 'Olmadı, bir daha dene.'; } cloudUI(); }; };
-  act('cin', () => { cloudMsg = 'Google açılıyor…'; return cloudSignIn(); });
+      <button class="btn" id="cin" ${off ? 'disabled' : ''}>Google ile giriş yap</button><div class="gbtn" id="gbtn" hidden></div><p class="note" aria-live="polite">${esc(off ? 'Giriş için internet gerekir.' : cloudMsg)}</p>`;
+  const act = (id, f, done) => { const b = document.getElementById(id); if (b) b.onclick = async () => { b.disabled = true; try { await f(); if (done) cloudMsg = done; } catch (e) { cloudMsg = 'Olmadı, bir daha dene.'; } cloudUI(); }; };
+  const cin = document.getElementById('cin'), gb = document.getElementById('gbtn');
+  if (cin) cin.onclick = () => {
+    cin.disabled = true; cin.textContent = 'Google hazırlanıyor…';
+    const msg = t => { cloudMsg = t; cloudUI(); };
+    gisButton(gb, 'signin_with', e => msg(e ? 'Giriş tamamlanmadı, bir daha dene.' : '')).then(() => { cin.hidden = true; gb.hidden = false; })
+      .catch(() => msg('Google\'a bağlanılamadı. İnternetini kontrol et.'));
+  };
   act('csync', cloudPull);
   act('cout', cloudSignOut, 'Çıkış yaptın. İlerlemen bu cihazda duruyor.');
   const del = document.getElementById('cdel');
@@ -2410,21 +2429,18 @@ function welcome(step = 0) {
     'Tekrar hoş geldin! Google hesabınla gir, kaldığın yerden devam et.'
   ][step];
   const acts = step === 0 ? `<button class="btn" data-h="1">Ben yeniyim</button><button class="btn alt" data-h="2">Hesabım var</button>`
-    : (FB ? `<button class="btn" id="hin">Google ile ${step === 1 ? 'kaydol' : 'giriş yap'}</button>` : '') + `<button class="btn alt" id="hskip">${step === 1 ? 'Hesapsız başla' : 'Şimdilik geç'}</button>`;
+    : (FB ? `<div class="gbtn" id="gbtn"><p class="note">Google hazırlanıyor…</p></div>` : '') + `<button class="btn alt" id="hskip">${step === 1 ? 'Hesapsız başla' : 'Şimdilik geç'}</button>`;
   app.innerHTML = `<main class="scr hos"><div class="pr">${mascot('iyi').replace('<svg ', '<svg role="img" aria-label="Pırıl" ')}</div><h1 class="bubble" tabindex="-1">${say}</h1><div class="acts">${acts}</div><p class="note" id="hmsg" aria-live="polite"></p></main>`;
   $('h1').focus({ preventScroll: true });
   $$('[data-h]').forEach(b => b.onclick = () => { buzz(8); welcome(+b.dataset.h); });
   const done = () => { try { localStorage.setItem(HOS, '1'); } catch {} route(); };
   if (step) $('#hskip').onclick = done;
-  const hin = $('#hin');
-  if (FB && step) cloudLoad().then(() => { if (hin?.isConnected && hin.textContent.startsWith('Google hazır')) { hin.disabled = false; hin.textContent = hin.dataset.t; } })
-    .catch(() => { if (hin?.isConnected) $('#hmsg').textContent = 'Google\'a bağlanılamadı. İnternetini kontrol et ya da hesapsız başla.'; });
-  if (hin && !cloud) { hin.dataset.t = hin.textContent; hin.disabled = true; hin.textContent = 'Google hazırlanıyor…'; }
-  if (hin) hin.onclick = async () => {
-    hin.disabled = true; $('#hmsg').textContent = 'Google açılıyor…';
-    try { await cloudSignIn(); done(); }
-    catch (e) { hin.disabled = false; $('#hmsg').textContent = e?.code === 'akimli/popup' ? 'Google penceresi açılamadı. Uygulamayı Safari veya Chrome\'da açıp dene; şimdilik hesapsız da başlayabilirsin.' : 'Giriş tamamlanmadı. Bir daha dene ya da hesapsız başla.'; }
-  };
+  const gb = $('#gbtn');
+  if (gb) cloudLoad().catch(() => {}); // belge gelince Firebase hazır olsun
+  if (gb) gisButton(gb, step === 1 ? 'signup_with' : 'continue_with', e => {
+    if (!e) return done();
+    if (gb.isConnected) $('#hmsg').textContent = 'Giriş tamamlanmadı. Bir daha dene ya da hesapsız başla.';
+  }).catch(() => { if (gb.isConnected) { gb.textContent = ''; $('#hmsg').textContent = 'Google\'a bağlanılamadı. İnternetini kontrol et ya da hesapsız başla.'; } });
 }
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 // Kısa titreşim yalnız destekleyen telefonda (Android); iPhone Safari desteklemez, sessizce geçer.
