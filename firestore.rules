@@ -1,0 +1,14 @@
+rules_version = '2';
+// Her kullanıcı yalnız kendi belgesini (users/{uid}) okuyup yazabilir ve silebilir.
+// Belge: { s: ilerleme JSON metni, t: yazma zamanı (ms), xp: toplam XP }.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['s', 't', 'xp'])
+        && request.resource.data.s is string && request.resource.data.s.size() < 200000
+        && request.resource.data.t is int && request.resource.data.xp is int;
+    }
+  }
+}

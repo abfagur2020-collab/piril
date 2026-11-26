@@ -1951,12 +1951,118 @@ const KEY = 'piril-v1', app = document.getElementById('app');
 const $ = (s, r = app) => r.querySelector(s), $$ = (s, r = app) => [...r.querySelectorAll(s)];
 let saveOk = true, S;
 try { S = parseState(localStorage.getItem(KEY), Object.keys(QUESTIONS)); } catch { S = fresh(); saveOk = false; }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveOk = true; } catch { saveOk = false; } shareState(); };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveOk = true; } catch { saveOk = false; } shareState(); cloudQueue(); };
 // Hizmet çalışanı localStorage okuyamaz; hatırlatıcının ihtiyacı olan özeti önbelleğe yazarız.
 function shareState() {
   const d = { rem: S.rem, day: S.day, dayXp: S.dayXp, goal: GOAL, last: S.last, streak: S.streak, freeze: S.freeze, wrong: S.wrong.length };
   try { caches.open('akimli-durum').then(c => c.put('durum', new Response(JSON.stringify(d)))).catch(() => {}); } catch {}
 }
+/* ---------- Bulut yedeği: Google ile giriş (Firebase). FB null iken bölüm görünmez, uygulama eskisi gibi yalnız cihazda çalışır. ---------- */
+// Firebase web yapılandırması gizli bilgi değildir; veriye erişimi Firestore kuralları sınırlar (bkz. FIREBASE.md).
+const FB = null; // { apiKey: '…', authDomain: '…', projectId: '…', appId: '…' }
+const FBV = '13.4.0', SYNC = 'piril-bulut'; // SYNC: { uid, t: son eşitlenen bulut zamanı, pending: yönlendirmeli giriş sürüyor }
+var cloud = null, cloudUser = null, cloudMsg = '', cloudTimer = 0, cloudBusy = false;
+const syncMeta = () => { try { return JSON.parse(localStorage.getItem(SYNC)) || {}; } catch { return {}; } };
+const setMeta = m => { try { localStorage.setItem(SYNC, JSON.stringify(m)); } catch {} };
+
+// İki cihazın ilerlemesi: XP'si yüksek olan temel alınır, biten derslerin en iyi puanı ve en uzun seri ikisinden gelir.
+function mergeState(a, b) {
+  const [hi, lo] = a.xp >= b.xp ? [a, b] : [b, a], m = JSON.parse(JSON.stringify(hi));
+  for (const [k, v] of Object.entries(lo.done)) m.done[k] = Math.max(m.done[k] ?? 0, v);
+  m.bestStreak = Math.max(hi.bestStreak, lo.bestStreak);
+  return m;
+}
+
+async function cloudLoad() {
+  if (cloud) return cloud;
+  const base = `https://www.gstatic.com/firebasejs/${FBV}/firebase-`;
+  const [app, au, fs] = await Promise.all(['app', 'auth', 'firestore'].map(n => import(base + n + '.js')));
+  const a = app.initializeApp(FB), auth = au.getAuth(a);
+  cloud = { au, fs, auth, db: fs.getFirestore(a) };
+  await new Promise(res => au.onAuthStateChanged(auth, u => {
+    const was = cloudUser?.uid; cloudUser = u; res();
+    if (u && u.uid !== was) cloudPull();
+    if (!u && syncMeta().pending) setMeta({});
+    cloudUI();
+  }));
+  return cloud;
+}
+const cloudRef = () => cloud.fs.doc(cloud.db, 'users', cloudUser.uid);
+const hhmm = t => new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+// Her yazmadan önce bulut okunur: başka cihaz daha yeni bir kayıt bıraktıysa önce birleştirilir, böylece hiçbir cihaz ötekinin ilerlemesini ezmez.
+async function cloudPush() {
+  if (!cloudUser) return;
+  const u = cloudUser, meta = syncMeta(), snap = await cloud.fs.getDoc(cloudRef());
+  if (snap.exists()) {
+    const d = snap.data();
+    if (meta.uid !== u.uid || d.t > (meta.t || 0)) {
+      const before = JSON.stringify(S);
+      S = mergeState(S, parseState(d.s, Object.keys(QUESTIONS)));
+      if (JSON.stringify(S) !== before) { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} shareState(); if (!C) route(); }
+    }
+  }
+  if (cloudUser !== u) return; // bu arada çıkış yapıldı
+  const t = Date.now();
+  await cloud.fs.setDoc(cloudRef(), { s: JSON.stringify(S), t, xp: S.xp });
+  setMeta({ uid: u.uid, t }); cloudMsg = `Son yedek ${hhmm(t)}`; cloudUI();
+}
+// Girişte, açılışta ve "Şimdi eşitle"de: durum ekranda görünerek eşitlenir.
+async function cloudPull() {
+  cloudBusy = true; cloudMsg = 'Eşitleniyor…'; cloudUI();
+  try { await cloudPush(); } catch { cloudMsg = 'Bulutla eşitlenemedi. İnternet gelince yeniden denenecek.'; }
+  cloudBusy = false; cloudUI();
+}
+// save() her kayıtta çağırır; arka arkaya cevaplar tek yazmada toplanır.
+function cloudQueue() {
+  if (!cloudUser) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(() => (cloudTimer = 0, cloudPush()).catch(() => { cloudMsg = 'Yedeklenemedi, internet gelince denenecek.'; cloudUI(); }), 3000);
+}
+addEventListener('visibilitychange', () => { if (document.hidden && cloudTimer && cloudUser) { clearTimeout(cloudTimer); cloudTimer = 0; cloudPush().catch(() => {}); } });
+addEventListener('online', () => cloudUser && cloudPull());
+
+async function cloudSignIn() {
+  const { au, auth } = await cloudLoad(), p = new au.GoogleAuthProvider();
+  p.setCustomParameters({ prompt: 'select_account' });
+  try { await au.signInWithPopup(auth, p); }
+  catch (e) {
+    if (e.code !== 'auth/popup-blocked' && e.code !== 'auth/operation-not-supported-in-this-environment') throw e;
+    setMeta({ ...syncMeta(), pending: 1 }); await au.signInWithRedirect(auth, p); // açılır pencere yoksa sayfa Google'a gidip döner
+  }
+}
+async function cloudSignOut() { await cloudPush().catch(() => {}); await cloud.au.signOut(cloud.auth); setMeta({}); cloudMsg = ''; }
+// Hesap silme: bulut kaydı ve Google bağlantısı silinir; bu cihazdaki ilerleme kalır.
+async function cloudDelete() {
+  const { au, fs, auth } = cloud, u = cloudUser;
+  await fs.deleteDoc(cloudRef());
+  try { await au.deleteUser(u); }
+  catch (e) { if (e.code !== 'auth/requires-recent-login') throw e; await au.reauthenticateWithPopup(u, new au.GoogleAuthProvider()); await au.deleteUser(u); }
+  clearTimeout(cloudTimer); cloudTimer = 0; setMeta({}); cloudMsg = 'Hesabın ve bulut yedeğin silindi. Bu cihazdaki ilerlemen duruyor.';
+  if (auth.currentUser) await au.signOut(auth);
+}
+
+// Profil ekranındaki Hesap bölümü; giriş durumu değişince yeniden çizilir.
+function cloudUI() {
+  const box = document.getElementById('hesap');
+  if (!box) return;
+  const off = !navigator.onLine;
+  box.innerHTML = cloudUser
+    ? `<p class="note">Google hesabıyla girdin: <b>${esc(cloudUser.email || cloudUser.displayName || '')}</b>. İlerlemen her cevaptan sonra buluta yedeklenir; başka telefonda aynı hesapla girince kaldığın yerden devam edersin.</p>
+      <p class="note" aria-live="polite">${esc(cloudMsg)}</p>
+      <button class="btn alt" id="csync" ${cloudBusy ? 'disabled' : ''}>Şimdi eşitle</button><button class="btn alt" id="cout">Çıkış yap</button><button class="btn alt" id="cdel">Hesabı sil</button>`
+    : `<p class="note">İstersen Google hesabınla gir: ilerlemen buluta yedeklenir, telefon değiştirsen de kaybolmaz. Girmeden de uygulamayı tam kullanabilirsin.</p>
+      <button class="btn" id="cin" ${off ? 'disabled' : ''}>Google ile giriş yap</button><p class="note" aria-live="polite">${esc(off ? 'Giriş için internet gerekir.' : cloudMsg)}</p>`;
+  const act = (id, f, done) => { const b = document.getElementById(id); if (b) b.onclick = async () => { b.disabled = true; try { await f(); if (done) cloudMsg = done; } catch (e) { cloudMsg = e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request' ? 'Giriş iptal edildi.' : 'Olmadı, bir daha dene.'; } cloudUI(); }; };
+  act('cin', () => { cloudMsg = 'Google açılıyor…'; return cloudSignIn(); });
+  act('csync', cloudPull);
+  act('cout', cloudSignOut, 'Çıkış yaptın. İlerlemen bu cihazda duruyor.');
+  const del = document.getElementById('cdel');
+  if (del) del.onclick = () => { if (confirm('Hesabın ve buluttaki yedeğin kalıcı olarak silinsin mi? Bu geri alınamaz. Bu cihazdaki ilerlemen silinmez.')) { del.disabled = true; cloudDelete().catch(() => { cloudMsg = 'Silinemedi, bir daha dene.'; }).then(cloudUI); } };
+}
+// Daha önce giriş yapıldıysa açılışta arka planda bağlan; internet yoksa sessizce geç.
+if (FB && (syncMeta().uid || syncMeta().pending)) cloudLoad().catch(() => { cloudMsg = 'Buluta bağlanılamadı.'; });
+
 const swReg = () => 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration() : Promise.resolve(null);
 // Durum: 'yok' (tarayıcı desteklemiyor), 'izin' (bildirim izni yok), 'arka' (arka plan kontrolü yok), 'tamam'.
 async function armReminder(ask) {
@@ -2033,7 +2139,7 @@ function profile() {
   <h2>Hatırlatıcı</h2><label class="sel"><span>Bildirim sıklığı</span><select id="rem">${['Kapalı', 'Her gün', '2 günde bir'].map((n, i) => `<option value="${i}" ${S.rem === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
   <p class="note" id="remst" aria-live="polite"></p><button class="btn alt" id="remtest" hidden>Deneme bildirimi gönder</button>
   <h2>Rozetler (${got}/${BADGES.length})</h2><ul class="bdg">${BADGES.map(([n, d, f]) => `<li>${badgeSvg(f(S))}<span><b>${n}</b>${d}${f(S) ? '. Kazanıldı' : ''}</span></li>`).join('')}</ul>
-  <h2>Yedek</h2><p class="note">İlerlemen yalnızca bu tarayıcıda durur. Telefon değiştirmeden ya da site verisini silmeden önce yedeğini indir.</p>
+  ${FB ? '<h2>Hesap</h2><div id="hesap"></div>' : ''}<h2>Yedek</h2><p class="note">İlerlemen yalnızca bu tarayıcıda durur. Telefon değiştirmeden ya da site verisini silmeden önce yedeğini indir.</p>
   <button class="btn alt" id="ydown">Yedeği indir</button><button class="btn alt" id="yup">Yedeği yükle</button><input type="file" id="yfile" accept=".json,application/json" hidden>
   <p class="note" id="yst" aria-live="polite"></p></main>${navBar('profil')}`;
 }
@@ -2252,7 +2358,7 @@ function route() {
   C = null;
   shown = h === 'profil' ? 'profil' : h.startsWith('tekrar') ? 'tekrar' : 'ana';
   app.innerHTML = { profil: profile, tekrar: review, ana: home }[shown]();
-  if (shown === 'profil') { bindReminder(); bindBackup(); }
+  if (shown === 'profil') { bindReminder(); bindBackup(); cloudUI(); }
   focusTop(scrollMem[shown] || 0);
   // Uygulama yeni açıldığında sıradaki ders ekranın ortasına gelir.
   if (shown === 'ana' && !(shown in scrollMem) && S.xp) $('.node.next')?.scrollIntoView({ block: 'center' });

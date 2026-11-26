@@ -1,5 +1,5 @@
 // Sayfa ağdan önce denenir (3 sn), olmazsa önbellekten açılır; internet varken her açılış en yeni sürümdür.
-const CACHE = 'piril-9c2700557c';
+const CACHE = 'piril-eeb1b1465a';
 const FILES = ['./', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x.startsWith('piril-') && x !== CACHE).map(x => caches.delete(x)))).then(() => self.clients.claim())));
