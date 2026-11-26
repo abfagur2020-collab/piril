@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { run, trNow, GOAL } from '../.github/hatirlat/gonder.mjs';
 const now = new Date('2026-11-26T16:47:00Z'), { today, hour } = trNow(now);
 assert.equal(hour, 19, 'Türkiye saati 19');
-const st = o => JSON.stringify({ rem: 1, day: today, dayXp: 0, last: today - 1, streak: 5, freeze: true, wrong: [], ...o });
+const st = o => JSON.stringify({ rem: 1, day: today, dayXp: 0, last: today - 1, streak: 5, freeze: true, box: {}, ...o });
 const sub = JSON.stringify({ endpoint: 'https://push.example/1', keys: { p256dh: 'a', auth: 'b' } });
 const docs = [
   { id: 'seri', s: st({ day: today - 1, dayXp: 40 }), p: sub },            // dün çalıştı, bugün yok: seri uyarısı
@@ -26,4 +26,8 @@ assert.deepEqual(upd, { seri: { ps: today }, yari: { ps: today }, gitti: { p: ''
 assert.deepEqual(out, { sent: 2, skip: 6, gone: 1, fail: 0 });
 // Gece 23'te gönderilmez
 assert.equal((await run({ docs: [docs[0]], now: new Date('2026-11-26T20:30:00Z'), send: async () => { throw new Error('x'); }, update: async () => {} })).sent, 0);
+// Tekrar kutusu: yalnız vadesi gelenler sayılır; eski wrong listesi de okunur
+const one = async s => { let b; await run({ docs: [{ id: 'k', s, p: sub }], now, rnd: () => 0, send: async (x, pl) => { b = JSON.parse(pl).body; }, update: async () => {} }); return b; };
+assert.match(await one(st({ day: today - 1, last: today, box: { '1-1-1': [0, today], '1-1-2': [1, today - 2], '1-1-3': [2, today + 3] } })), /Tekrar kutunda 2 soru/);
+assert.match(await one(JSON.stringify({ rem: 1, day: today - 1, last: today, streak: 5, wrong: ['1-1-1'] })), /Tekrar kutunda 1 soru/);
 console.log('Hepsi geçti');
