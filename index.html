@@ -1759,7 +1759,7 @@ function hints(q) {
   const e = q.t !== 'ariza' && q.e && !leaks(q, q.e) ? q.e : q.t === 'sira' ? (/^\d/.test(q.o[0]) ? 'Önce hepsini aynı birime çevir, sonra karşılaştır.' : 'Hangi adım olmadan ötekiler yapılamaz? Oradan başla.') : q.t === 'mc' && /yanlış/i.test(q.q) ? 'İfadeleri tek tek sına: tek bir sözcük (yalnız, her zaman, tam) bir ifadeyi yanlış yapabilir.' : HINT0[q.t === 'oku' ? 'kur' : q.t];
   let f = (q.f || '').replace(/\s*\([A-E] şıkkı[^)]*\)\s*$/, ''), out = '';
   if (q.t === 'sim') f = f.split(', örneğin')[0];
-  if ((q.t === 'ariza' && !/^Beklenen/.test(f)) || (q.t === 'mc' && !/\d/.test(f))) f = '';
+  if ((q.t === 'ariza' && !/^Beklenen/.test(f)) || (q.t === 'mc' && (!/\d/.test(f) || /∞|= 0( V)?$/.test(f)))) f = ''; // kavram sorusunda ∞ ya da sıfır sonucu cevabı söyler
   // Sondaki "= sonuç" kısımlarını sağdan kes; kalan son parçada yerine koyma ya da işlem yoksa atla.
   const p = f.split('=');
   for (let n = p.length; f && n >= 1 && !out; n--) {
