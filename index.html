@@ -11,18 +11,18 @@
 :root{
   --bg:#eef3ee; --card:#fff; --ink:#12302c; --soft:#4b6661; --line:#c9d6cf;
   --mask:#15564c; --mask2:#0f463e; --silk:#eaf5ee; --copper:#d08a4a; --tin:#c9d4d0;
-  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc; --hi1:#fff1c7; --hi2:#d9ecff; --hot:#d63a22; --cold:#2a62c9; --bdo:.5; --coinink:#5b3413;
+  --led:#f6b932; --ledink:#2c1f02; --good:#17703f; --goodbg:#dcf1e3; --bad:#b02f1f; --badbg:#fbe4df; --focus:#0b63c4; --sel:#fff1cc; --hi1:#fff1c7; --hi2:#d9ecff; --hot:#d63a22; --cold:#2a62c9; --bdo:.5; --coinink:#5b3413; --term:#a65d1c;
   --disp:"Roboto Condensed","sans-serif-condensed","Avenir Next Condensed","Arial Narrow","Segoe UI",sans-serif;
   --body:Roboto,"Segoe UI",system-ui,sans-serif; --mono:"Roboto Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; --coinink:#4a2a0e; color-scheme:dark}}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; --coinink:#4a2a0e; --term:#f0b27a; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0b1c1a; --card:#12302c; --ink:#e4f0ea; --soft:#9bb8b0; --line:#2a4b45;
   --mask:#134c43; --mask2:#0d3a33; --silk:#eaf5ee; --copper:#d9955a; --tin:#b9c6c1;
-  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; --coinink:#4a2a0e; color-scheme:dark}
+  --led:#f6b932; --ledink:#2c1f02; --good:#6fd79a; --goodbg:#123d28; --bad:#ff9c8b; --badbg:#46201b; --focus:#8cc4ff; --sel:#4a3c12; --hi1:#3a3110; --hi2:#123049; --hot:#ff7657; --cold:#5ea8ff; --bdo:.72; --coinink:#4a2a0e; --term:#f0b27a; color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
@@ -307,6 +307,29 @@ dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:ri
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .sel{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .sel select{min-height:48px;min-width:150px;font:inherit;padding:0 12px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+/* Dokun-öğren: altı noktalı terim, alttan açılan kart ve Sözlük */
+.term{font:inherit;color:inherit;user-select:text;-webkit-user-select:text;text-align:inherit;display:inline;padding:0;border-radius:3px;text-decoration:underline dotted var(--term) 2px;text-underline-offset:.22em}
+.term[aria-expanded=true]{background:var(--sel)}
+.tpop{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;width:min(488px,calc(100% - 24px));display:grid;gap:8px;padding:16px;background:var(--card);border:2px solid var(--term);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);animation:tpin .2s ease-out}
+@keyframes tpin{from{transform:translate(-50%,24px);opacity:.4}}
+.tpop[hidden]{display:none}
+.tpop:focus{outline:none}
+.tpop p{font-size:16px;line-height:1.5}
+.tpa{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.tpa .btn{min-height:46px;font-size:15px}
+.szo{position:fixed;inset:0;z-index:25;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+.szo>.scr{max-width:520px;margin:0 auto}
+.szon,.szon body{overflow:hidden}
+.szq{-webkit-appearance:none;appearance:none;width:100%;min-height:50px;padding:0 14px;background:var(--card);border:2px solid var(--line);border-radius:10px;font-size:17px}
+.szq:focus{border-color:var(--copper)}
+.szg[hidden],.sze[hidden]{display:none}
+.szg h2{font:700 15px var(--mono);color:var(--soft);border-bottom:1px solid var(--line);padding-bottom:4px}
+.szg dl{margin:8px 0 0;display:grid;gap:8px}
+.sze{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.sze.on{border:2px solid var(--term)}
+.sze dt,.sze dd{padding:0;border:0;margin:0;text-align:left}
+.sze dt{font-weight:700}
+.sze dd{margin-top:2px;font:15px/1.5 var(--body);color:var(--soft)}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px)}#app{min-height:calc(100dvh - env(safe-area-inset-top,0px))}</style>
 </head><body>
@@ -1826,6 +1849,212 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const SUB = /(\p{L})_([\p{L}\d]+)/gu;
 const tx = s => esc(s).replace(SUB, '$1<sub>$2</sub>');
 
+/* ---------- Dokun-öğren: terim sözlüğü ---------- */
+// [başlık, anahtarlar, tanım]. Anahtarlar "|" ile ayrılır; sonda * varsa ek alabilir (dirençlerde), yoksa tam kelime (LED'e gibi kesme ekine izin var).
+// Küçük Latin harfli anahtarlar büyük-küçük harfe bakmadan (Türkçe İ/ı ile), büyük harfli, _'li ve Yunan simgeler (V_CE, LED, τ) birebir aranır.
+const TERMS = [
+  ['Yük (Q)', 'yük|yükü|yüke|yükün|yükler|yükleri|yükte|yükten', 'İki anlamı var. Elektrik yükü maddenin elektrik özelliğidir; birimi coulomb (C), bir elektron 1,6×10⁻¹⁹ C taşır. Devrede ise yük, kaynağın beslediği elemandır (lamba, motor, R_L).'],
+  ['Coulomb (C)', 'coulomb*', 'Yük birimi. 1 C, 1 A akımın 1 saniyede taşıdığı yüktür; yaklaşık 6,25×10¹⁸ elektron eder.'],
+  ['Coulomb sayma', 'coulomb say*', 'Akımı zamanla toplayıp (integral) çekilen yükü bulma yöntemi. Küçük bir ölçüm ofseti bile zamanla birikir, bu yüzden OCV ile düzeltilir.'],
+  ['Elektron', 'elektron*', 'Atomun eksi yüklü parçacığı; yükü 1,6×10⁻¹⁹ C büyüklüğündedir. Metal telde akımı serbest elektronlar taşır.'],
+  ['Akım (I)', 'akım*', 'Bir kesitten saniyede geçen yük miktarı: I = Q / t. Birimi amper (A); 1 A, saniyede 1 C demektir.'],
+  ['Konvansiyonel akım', 'konvansiyonel*', 'Akımın + uçtan − uca aktığı kabul edilen yönü. Metal telde elektronlar tersine akar; hesapta fark etmez.'],
+  ['Ampermetre', 'ampermetre*', 'Akım ölçer. Devre açılıp seri bağlanır; ideal ampermetrenin iç direnci 0 Ω\'dur.'],
+  ['Voltmetre', 'voltmetre*', 'Gerilim ölçer. Elemanın iki ucuna paralel bağlanır; ideal voltmetrenin iç direnci sonsuzdur, akım çekmez.'],
+  ['Multimetre', 'multimetre*', 'Gerilim, akım ve direnç ölçebilen el aleti. Akım ölçerken seri, gerilim ölçerken paralel bağlanır.'],
+  ['Gerilim (V)', 'gerilim*', 'İki nokta arasındaki elektriksel potansiyel farkı; 1 C yükü taşırken aktarılan enerjidir. Birimi volt (V): 1 V = 1 J/C.'],
+  ['Gerilim düşümü', 'düşüm*', 'Akım bir elemandan geçerken uçları arasında oluşan gerilim. Dirençte V = I·R kadardır.'],
+  ['Güç (P)', 'güç*|gücü*|güce', 'Saniyede aktarılan enerji: P = V·I. Birimi watt (W); 1 W = 1 J/s.'],
+  ['Enerji (W, E)', 'enerji*', 'İş yapabilme yeteneği; güç ile sürenin çarpımıdır (W = P·t). Birimi joule (J); elektrikte Wh da kullanılır, 1 Wh = 3600 J.'],
+  ['kWh, Wh', 'kwh|wh', 'Enerji birimleri, güç değil. 1 kW\'lık cihaz 1 saat çalışınca 1 kWh harcar; 1 Wh = 3600 J.'],
+  ['Kapasite (Ah, mAh)', 'kapasite*|mah|ah', 'Bir pilin ya da bataryanın verebileceği toplam yük. 1 Ah = 3600 C; 2000 mAh = 2 Ah.'],
+  ['Kaynak', 'kaynak*|kaynağ*', 'Devreye enerji veren eleman. İdeal gerilim kaynağı akımdan bağımsız sabit gerilim, ideal akım kaynağı sabit akım verir.'],
+  ['Pasif işaret kuralı', 'pasif işaret*', 'Akım elemanın + ucundan giriyorsa P = V·I o elemanın aldığı güçtür. Sonuç negatifse eleman güç veriyordur (kaynak gibi).'],
+  ['Direnç (R)', 'direnç*|direnc*', 'Akıma karşı gösterilen zorluk: R = V / I. Birimi ohm (Ω); büyük direnç, aynı gerilimde daha az akım demektir.'],
+  ['İç direnç (r)', 'iç direnç*|iç direnc*', 'Gerçek bir kaynağın içindeki küçük seri direnç. Akım çekildikçe üzerinde gerilim düşer, uç gerilimi azalır: V_uç = E − I·r.'],
+  ['Eşdeğer direnç (R_eş)', 'eşdeğer direnç*|eşdeğer direnc*|R_eş', 'Bir direnç grubunun yerine konabilecek, kaynaktan aynı akımı çeken tek direnç. Seride toplanır, paralelde en küçük koldan da küçük çıkar.'],
+  ['Ohm yasası', 'ohm yasas*', 'Direnci sabit kalan elemanda gerilim, akım ile direncin çarpımıdır: V = I·R.'],
+  ['İletkenlik (G)', 'iletkenlik*|iletkenliğ*', 'Direncin tersi: G = 1 / R. Birimi siemens (S).'],
+  ['Tolerans', 'tolerans*', 'Gerçek değerin yazılı değerden ne kadar sapabileceği. Altın bant ±%5, gümüş bant ±%10 demektir.'],
+  ['Seri bağlantı', 'seri*', 'Elemanlar arka arkaya, tek yol üzerinde bağlıdır. Hepsinden aynı akım geçer, gerilimler toplanır.'],
+  ['Paralel bağlantı (∥)', 'paralel*', 'Elemanların iki ucu da aynı iki düğüme bağlıdır. Hepsinin gerilimi aynıdır, kol akımları toplanır.'],
+  ['Ters paralel diyot', 'ters paralel*', 'Bobine, normalde akım geçirmeyecek yönde paralel bağlanan diyot. Anahtar kapanınca bobin akımına yol açar, gerilim sıçramasını önler.'],
+  ['Düğüm', 'düğüm*', 'İki ya da daha fazla elemanın birleştiği bağlantı noktası. Aynı düğümdeki her noktanın gerilimi aynıdır.'],
+  ['Toprak (0 V)', 'toprak*|toprağ*', 'Gerilimlerin ölçüldüğü 0 V başvuru noktası. Bir noktanın gerilimi denince toprağa göre gerilimi kastedilir.'],
+  ['Kısa devre', 'kısa devre*', 'İki nokta arasında direnci sıfıra yakın yol. Üzerinde gerilim düşmez, akım çok büyüyebilir.'],
+  ['Açık devre', 'açık devre*', 'Akımın geçemediği kopuk yol; direnç sonsuz gibidir. Akım sıfırdır ve kaynağın gerilimi kopuk yerin uçlarında görünür.'],
+  ['Çevrim', 'çevrim*', 'Devrede başladığın noktaya dönen kapalı yol (döngü). KVL bir çevrim boyunca uygulanır.'],
+  ['KVL (Kirchhoff gerilim yasası)', 'KVL|kirchhoff gerilim*', 'Kapalı bir çevrimde gerilimlerin toplamı sıfırdır. Yani kaynak gerilimi, çevrimdeki düşümlerin toplamına eşittir.'],
+  ['KCL (Kirchhoff akım yasası)', 'KCL|kirchhoff akım*', 'Bir düğüme giren akımların toplamı, çıkan akımların toplamına eşittir.'],
+  ['Gerilim bölücü', 'gerilim bölücü*|bölücü*', 'Seri iki direnç; çıkış aradaki noktadan alınır: V_çıkış = V·R2 / (R1 + R2).'],
+  ['Akım bölücü', 'akım bölücü*', 'Paralel kollara ayrılan akım dirençlerle ters orantılı paylaşılır: I1 = I·R2 / (R1 + R2). Büyük akım küçük dirençten geçer.'],
+  ['Thévenin eşdeğeri (V_Th, R_Th)', 'thévenin*|thevenin*|V_Th|R_Th', 'Doğrusal bir devrenin iki ucundan görülen hâli: açık uç gerilimi V_Th ile ona seri R_Th. R_Th, gerilim kaynakları kısa devre edilince uçlardan görülen dirençtir.'],
+  ['Norton eşdeğeri (I_N)', 'norton*|I_N|R_N', 'Thévenin\'in akım kaynaklı hâli: uçlar kısa devre edilince akan I_N ile ona paralel R_N = R_Th. I_N = V_Th / R_Th.'],
+  ['Süperpozisyon', 'süperpozisyon*', 'Birden çok kaynaklı doğrusal devrede her kaynağın etkisini ayrı bulup toplama. Diğer gerilim kaynakları kısa, akım kaynakları açık devre yapılır; güç bu yolla toplanmaz.'],
+  ['Wheatstone köprüsü', 'wheatstone*', 'Kaynağa paralel iki gerilim bölücü koldan oluşan devre. R1/R2 = R3/R4 ise orta noktalar arası gerilim sıfırdır, köprü dengededir.'],
+  ['Şönt direnç', 'şönt*', 'Akımı ölçmek için akım yoluna seri konan çok küçük direnç. Üzerindeki gerilim V = I·R ile akımı verir.'],
+  ['Kelvin (4 uçlu) ölçüm', 'kelvin*', 'Akım bir çift uçtan verilir, gerilim ayrı bir çiftten okunur. Gerilim uçlarından akım geçmediği için kablo ve lehim direnci sonuca girmez.'],
+  ['Kondansatör', 'kondansatör*', 'Arası yalıtkanla ayrılmış iki levhadan oluşan, yük ve enerji depolayan eleman: Q = C·V. DC\'de dolunca akım geçirmez, açık devre gibidir.'],
+  ['Kapasitans, sığa (C)', 'sığa*|kapasitans*|kapasitif*', 'Kondansatörün volt başına depoladığı yük: C = Q / V. Birimi farad (F); pratikte µF, nF ve pF kullanılır.'],
+  ['Farad (F)', 'farad*', 'Sığa birimi. 1 F, 1 V\'ta 1 C yük depolayan sığadır; 1 µF = 10⁻⁶ F.'],
+  ['Zaman sabiti (τ)', 'zaman sabit*|τ', 'RC devresinde τ = R·C (saniye). Her τ\'da kalan farkın yaklaşık %63\'ü kapanır; 5τ sonunda kondansatör dolmuş sayılır.'],
+  ['Kesim frekansı (f_c)', 'kesim frekans*|köşe frekans*|f_c', 'Filtrenin geçirme sınırı: RC filtrede f_c = 1 / (2π·R·C) ve çıkış girişin 0,707 katına (−3 dB) iner. Geri besleme döngüsünde ise çevrim kazancının 1 olduğu frekanstır.'],
+  ['Alçak geçiren filtre', 'alçak geçiren*', 'Düşük frekansları geçirip yüksek frekansları zayıflatan filtre. RC\'de kondansatör hızlı değişimleri yutar.'],
+  ['Desibel (dB)', 'db', 'Oranı logaritmik gösteren birim; gerilimde 20·log(V_o / V_i). −3 dB, genliğin 0,707 katına inmesidir.'],
+  ['Frekans (f)', 'frekans*', 'Saniyedeki tekrar sayısı. Birimi hertz (Hz); f = 1 / T.'],
+  ['Periyot (T)', 'periyot*|periyod*', 'Bir tekrarın süresi: T = 1 / f.'],
+  ['Genlik', 'genlik*|genliğ*', 'Sinyalin sıfırdan en büyük sapması, yani dalganın ne kadar büyük olduğu.'],
+  ['rms (etkin değer)', 'rms', 'Aynı dirençte aynı ısıyı veren DC değer. Sinüste V_rms = V_p / √2; prizdeki 230 V rms değeridir.'],
+  ['Tepe değeri (V_p)', 'tepe değer*|V_p', 'Sinüsün en büyük anlık değeri: V_p = √2·V_rms.'],
+  ['DC (doğru akım)', 'DC', 'Yönü ve değeri zamanla değişmeyen akım ya da gerilim (pil, akü).'],
+  ['AC (alternatif akım)', 'AC', 'Yönü ve değeri periyodik değişen akım ya da gerilim; şebekede 50 Hz sinüstür.'],
+  ['Empedans (Z)', 'empedans*', 'AC\'de akıma karşı toplam zorluk; direnç ve reaktansın birleşimidir: Z = R + jX. Birimi ohm (Ω).'],
+  ['Diyot', 'diyot*|diyod*', 'Akımı yalnız anottan katoda geçiren yarı iletken eleman. İletimde üzerinde yaklaşık sabit gerilim düşer (silisyumda ≈ 0,7 V).'],
+  ['Anot ve katot', 'anot*|anod*|katot*|katod*', 'Diyodun iki ucu; akım anottan katoda geçer. LED\'de uzun bacak anottur, sembolde çizgili uç katottur.'],
+  ['Schottky diyot', 'schottky*', 'Metal–yarı iletken eklemli diyot. İleri gerilimi düşüktür (≈ 0,3 V), hızlı anahtarlanır.'],
+  ['Zener diyot (V_Z)', 'zener*|V_Z', 'Ters yönde belli bir gerilimde (V_Z) iletime geçip gerilimi orada sabit tutan diyot. Seri dirençle basit bir regülatör olur.'],
+  ['LED', 'LED', 'Işık yayan diyot. İletimde üzerinde rengine göre yaklaşık sabit V_F düşer (kırmızıda ≈ 2 V); akımı seri dirençle sınırlanmalıdır.'],
+  ['İleri gerilim (V_F, V_D)', 'V_F|V_D', 'İletimdeki diyot ya da LED\'in uçlarında düşen gerilim; akımdan neredeyse bağımsızdır.'],
+  ['Ters kutuplama', 'ters kutuplu*|ters yönde', 'Diyot ya da jonksiyonda katodun anoda göre daha pozitif olması. Diyot bu yönde akım geçirmez (zener kendi gerilimine kadar).'],
+  ['Doğrultma', 'doğrult*', 'AC\'yi tek yönlü akıma çevirme. Yarım dalgada bir diyot, köprü doğrultucuda dört diyot kullanılır.'],
+  ['Dalgalanma (ripple)', 'dalgalanma*', 'DC çıkıştaki küçük periyodik iniş çıkış (ΔV). Doğrultucuda kondansatör, dönüştürücüde L ve C ile küçültülür.'],
+  ['Transistör', 'transistör*', 'Küçük bir kontrol sinyaliyle büyük akımı açıp kapayan ya da yükselten yarı iletken. Kendisi enerji üretmez, akışı ayarlar.'],
+  ['BJT', 'BJT', 'Bipolar jonksiyon transistör: bazdan giren küçük akım, kollektörden emetöre akan büyük akımı kontrol eder. Uçları baz (B), kollektör (C), emetör (E).'],
+  ['npn ve pnp', 'npn|pnp', 'BJT\'nin iki türü. npn\'de baz pozitif sürülür ve akım kollektörden emetöre akar; pnp\'de yönler terstir.'],
+  ['Baz (B)', 'baz|bazdan|bazın|baza|bazda', 'BJT\'nin kontrol ucu. Buradan giren küçük baz akımı (I_B) kollektör akımını belirler.'],
+  ['Kollektör (C)', 'kollektör*', 'BJT\'de büyük akımın girdiği uç (npn\'de). Aktif bölgede kollektör akımı I_C = β·I_B\'dir.'],
+  ['Emetör (E)', 'emetör*', 'BJT\'de akımın çıktığı uç (npn\'de). Emetör akımı baz ve kollektör akımlarının toplamıdır: I_E = I_C + I_B.'],
+  ['Emetör izleyici', 'emetör izleyic*', 'Çıkışı emetörden alınan BJT katı. Çıkış, girişi bir V_BE (≈ 0,7 V) aşağıdan izler; gerilim kazancı ≈ 1, akım kazancı büyüktür.'],
+  ['Beta (β)', 'β|beta', 'BJT\'de akım kazancı: aktif bölgede I_C = β·I_B (tipik 50–300). Geri besleme konusunda β, çıkışın girişe geri dönen kesridir.'],
+  ['I_B (baz akımı)', 'I_B', 'BJT\'nin bazına giren küçük kontrol akımı. Op-amp konusunda aynı simge giriş bias akımı için de kullanılır.'],
+  ['I_C (kollektör akımı)', 'I_C', 'BJT\'nin kollektöründen geçen büyük akım. Aktif bölgede I_C = β·I_B; doyumda devre buna üst sınır koyar.'],
+  ['I_E (emetör akımı)', 'I_E', 'BJT\'nin emetöründen çıkan akım: I_E = I_C + I_B = (β + 1)·I_B.'],
+  ['V_BE', 'V_BE', 'Baz–emetör gerilimi. Silisyum BJT iletimdeyken yaklaşık 0,7 V\'tur.'],
+  ['V_CE', 'V_CE', 'Kollektör–emetör gerilimi. Aktif bölgede beslemenin ortalarında olur; doyumda yaklaşık 0,2 V\'a iner.'],
+  ['V_CC, V_BB', 'V_CC|V_BB', 'V_CC transistör devresinin pozitif besleme gerilimidir; V_BB baz devresini besleyen gerilimdir.'],
+  ['Aktif bölge', 'aktif bölge*', 'BE jonksiyonu ileri, BC ters kutuplu çalışma. I_C = β·I_B ile orantılıdır; transistör yükselteç gibi davranır.'],
+  ['Doyum', 'doy*', 'Bir büyüklüğün daha fazla artamadığı sınır. BJT\'de iki jonksiyon da ileridir ve V_CE ≈ 0,2 V olur; op-amp\'te çıkış besleme sınırına yapışır; bobinde çekirdek doyunca endüktans düşer.'],
+  ['Kesim', 'kesim*', 'Transistörün ya da anahtarın tamamen kapalı, akım geçirmediği durum. BJT\'de baz akımı sıfırdır.'],
+  ['Q noktası', 'q noktas*', 'Durgun çalışma noktası: sinyal yokken transistörün DC akımı ve gerilimi (I_C, V_CE).'],
+  ['Kutuplama', 'kutupla*', 'Transistörü istenen çalışma noktasına oturtmak için verilen DC gerilim ve akımlar.'],
+  ['Jonksiyon', 'jonksiyon*', 'Yarı iletkende p ve n bölgelerinin birleştiği eklem. BJT\'de BE ve BC olmak üzere iki tane vardır; ısıl hesapta T_j bunun sıcaklığıdır.'],
+  ['Kazanç (A)', 'kazanç*|kazanc*', 'Çıkışın girişe oranı, A = V_o / V_i. Eksi işaret, sinyalin ters çevrildiğini gösterir.'],
+  ['g_m (geçiş iletkenliği)', 'g_m', 'V_BE\'deki küçük değişimin kollektör akımını ne kadar değiştirdiği: g_m = I_C / V_T. Birimi siemens (S).'],
+  ['V_T (ısıl gerilim)', 'V_T', 'Oda sıcaklığında yaklaşık 25 mV olan sabit (kT/q). Diyot ve BJT denklemlerinde görünür.'],
+  ['Op-amp', 'op-amp*|opamp*', 'İşlemsel yükselteç: iki girişi (+ ve −) arasındaki farkı çok büyük kazançla yükselten entegre. Geri beslemeyle kazancı dış dirençler belirler.'],
+  ['Eviren', 'eviren*', 'Sinyalin işaretini ters çeviren. Op-amp\'in − girişi eviren giriştir; eviren yükselteçte V_o = −(R_F / R1)·V_i.'],
+  ['Evirmeyen', 'evirmeyen*|eviremeyen*', 'Sinyalin işaretini koruyan. Evirmeyen yükselteçte sinyal + girişe gelir: V_o = (1 + R_F / R1)·V_i.'],
+  ['Gerilim izleyici', 'gerilim izleyic*|izleyic*', 'Kazancı 1 olan op-amp devresi; çıkış girişi aynen izler. Giriş akım çekmediği için zayıf bir kaynağı yükten ayırır (tampon).'],
+  ['R_F (geri besleme direnci)', 'R_F|R_f', 'Op-amp çıkışından − girişe bağlanan direnç. R1 ile birlikte devrenin kazancını belirler.'],
+  ['Sanal toprak', 'sanal toprak*|sanal toprağ*', 'Negatif geri beslemeli op-amp\'te + giriş topraktayken − girişin de 0 V\'ta kalması. Bu uç toprağa bağlı değildir, oradan toprağa akım akmaz.'],
+  ['Sanal kısa devre', 'sanal kısa devre*', 'Negatif geri beslemeli ideal op-amp\'te iki girişin aynı gerilimde olması (V₊ ≈ V₋). Girişler arasından akım akmaz; gerçek bir kısa devre değildir.'],
+  ['Geri besleme', 'geri besleme*', 'Çıkışın bir kısmını girişe geri vermek. Negatif geri besleme hatayı küçültüp kazancı sabitler; pozitif geri besleme farkı büyütür (Schmitt, osilatör).'],
+  ['Açık çevrim', 'açık çevrim*', 'Geri besleme olmadan çalışma. Op-amp\'in açık çevrim kazancı (A) çok büyüktür, 10⁵ düzeyinde.'],
+  ['Kapalı çevrim kazancı (A_f)', 'kapalı çevrim*|A_f', 'Geri beslemeli devrenin kazancı: A_f = A / (1 + Aβ). Aβ ≫ 1 ise A_f ≈ 1/β olur.'],
+  ['Çevrim kazancı (Aβ)', 'çevrim kazanc*|Aβ', 'Geri besleme döngüsünde bir tur dolaşan sinyalin gördüğü kazanç. Kararlılık buradan okunur.'],
+  ['Bant genişliği (GBW)', 'bant genişliğ*|GBW', 'Yükseltecin kazancını koruduğu frekans aralığı. Op-amp\'te kazanç × bant genişliği (GBW) yaklaşık sabittir: f_H = GBW / A_f.'],
+  ['Eğim hızı (SR)', 'eğim hız*|slew rate|SR', 'Op-amp çıkışının değişebileceği en büyük hız (V/µs). Sinüste bozulmasız en yüksek frekans f_max = SR / (2π·V_p).'],
+  ['Ofset gerilimi (V_OS)', 'ofset*|V_OS', 'Girişler eşitken bile çıkışta hata yaratan küçük iç gerilim (birkaç mV). Evirmeyen kazançla birlikte yükselir.'],
+  ['Bias akımı', 'bias*', 'Op-amp girişlerinin çektiği çok küçük DC akım (nA düzeyi). Geri besleme direncinden geçince çıkışta hata gerilimi yaratır.'],
+  ['Ortak mod, CMRR', 'ortak mod*|CMRR', 'Ortak mod, iki girişe birlikte gelen gerilimdir (ör. parazit). CMRR, fark kazancının ortak mod kazancına oranıdır: A_fark / A_ortak.'],
+  ['Fark yükselteci', 'fark yükselte*', 'İki giriş arasındaki farkı yükseltip ortak gerilimi yok sayan op-amp devresi: V_o = (R2/R1)·(V₂ − V₁).'],
+  ['Enstrümantasyon yükselteci', 'enstrümantasyon*', 'Girişleri tamponlanmış, kazancı tek bir R_G direnciyle ayarlanan, CMRR\'si yüksek fark yükselteci. Sensör ölçümünde kullanılır.'],
+  ['Toplayıcı', 'toplayıc*', 'Girişlerin ağırlıklı toplamını ters işaretli veren eviren op-amp devresi: V_o = −R_F·(V₁/R1 + V₂/R2).'],
+  ['İntegral alıcı', 'integral alıc*', 'Geri beslemede kondansatör olan op-amp devresi; çıkış girişin zamana göre integralidir. Sabit giriş doğrusal rampa verir.'],
+  ['Türev alıcı', 'türev alıc*', 'Girişte kondansatör olan op-amp devresi; çıkış girişin değişim hızıyla orantılıdır: V_o = −R_F·C·dV_i/dt.'],
+  ['Schmitt tetikleyici', 'schmitt*', 'Pozitif geri beslemeli karşılaştırıcı. Yukarı ve aşağı geçiş eşikleri farklıdır; gürültülü girişte çıkış bir kez değişir.'],
+  ['Histerezis', 'histerezis*', 'Bir sistemin çıkışının geçmişe bağlı olması; Schmitt\'te iki eşik arasındaki fark. Bataryada şarj ve deşarj gerilim eğrilerinin farklı olmasıdır.'],
+  ['Faz payı (PM)', 'faz pay*|PM', 'Çevrim kazancının 1 (0 dB) olduğu frekansta fazın −180°\'ye uzaklığı. 45°\'nin altı aşma ve çınlama getirir.'],
+  ['Kutup', 'kutup*|kutb*', 'Motorda mıknatıs alanının N ya da S ucu; P kutup = P/2 kutup çifti. Frekans cevabında ise kazancın düşmeye, fazın gecikmeye başladığı frekanstır (f_p).'],
+  ['Osilatör', 'osilatör*|osilasyon*|salınım*', 'Kendi kendine periyodik sinyal üreten devre. Salınım için döngüde kazanç tam 1, faz 0° olmalıdır.'],
+  ['MOSFET', 'MOSFET', 'Gerilimle kontrol edilen transistör: gate–source gerilimi (V_GS) drain–source kanalını açar. Gate\'e kalıcı akım gitmez.'],
+  ['Gate, drain, source', 'gate*|drain*|source*', 'MOSFET\'in üç ucu. Gate kontrol ucudur ve kanaldan yalıtılmıştır; ana akım drain ile source arasından akar.'],
+  ['V_GS', 'V_GS', 'MOSFET\'in gate–source gerilimi. V_th\'yi aşınca kanal açılır; tam iletim için çok üstünde (ör. 10 V) olmalıdır.'],
+  ['V_th (eşik gerilimi)', 'V_th', 'MOSFET\'in iletmeye yeni başladığı V_GS. Bu gerilimde MOSFET henüz tam açık değildir.'],
+  ['V_DS', 'V_DS', 'MOSFET\'in drain–source gerilimi. Kapanışta bobin yüzünden sıçrarsa MOSFET\'i yakabilir.'],
+  ['R_DS(on)', 'R_DS(on)', 'Tam iletimdeki MOSFET\'in drain–source direnci (mΩ düzeyi). İletim kaybı P = I²·R_DS(on); sıcaklıkla artar.'],
+  ['Low-side ve high-side', 'low-side*|high-side*', 'Low-side anahtar yük ile toprak arasında, high-side anahtar besleme ile yük arasında durur. High-side N-MOSFET\'in gate\'i beslemenin üstüne çıkarılmalıdır (bootstrap).'],
+  ['Bootstrap', 'bootstrap*', 'High-side MOSFET\'in gate\'ini sürmek için her periyotta dolan, beslemenin üstüne gerilim sağlayan kondansatör düzeni.'],
+  ['Q_g (gate yükü)', 'Q_g', 'MOSFET\'i açmak için gate\'e verilmesi gereken toplam yük (nC). Sürücü her açılışta bunu sağlar.'],
+  ['Gövde diyodu', 'gövde diyo*', 'MOSFET yapısında drain ile source arasında doğal olarak bulunan diyot. Ölü zamanda akımı taşır.'],
+  ['PWM', 'PWM', 'Darbe genişlik modülasyonu: anahtar sabit frekansta açılıp kapanır, açık kalma oranı (D) değiştirilerek ortalama gerilim ayarlanır.'],
+  ['Görev oranı (D)', 'görev oran*', 'Bir periyotta anahtarın iletimde kaldığı sürenin periyoda oranı (0–1 ya da %). PWM\'de V_ort = D·V.'],
+  ['Bobin (endüktör)', 'bobin*|endüktör*', 'Tel sargısından oluşan, enerjiyi manyetik alanda depolayan eleman. Akımı aniden değişemez; DC kalıcı durumda kısa devre gibidir.'],
+  ['Endüktans (L)', 'endüktans*', 'Bobinin akım değişimine karşı koyma ölçüsü: v = L·di/dt. Birimi henry (H); pratikte µH ve mH kullanılır.'],
+  ['Kaçak endüktans', 'kaçak endüktans*', 'Trafo sargıları arasında tam bağlanamayan akıdan doğan küçük seri endüktans. Anahtar kesilince gerilim sıçraması yapar.'],
+  ['H köprüsü', 'h köprüs*|h köprü', 'Dört anahtarlı devre; çaprazdaki iki anahtar iletince motor bir yönde, öteki çift iletince ters yönde döner.'],
+  ['Shoot-through', 'shoot-through*', 'Aynı koldaki üst ve alt anahtarın birlikte iletip beslemeyi kısa devre etmesi. Çok büyük akım anahtarları yakar.'],
+  ['Ölü zaman', 'ölü zaman*', 'Bir anahtar kapandıktan sonra öteki açılmadan önce bırakılan kısa bekleme. Shoot-through\'u önler.'],
+  ['Zıt EMK (E)', 'zıt emk*', 'Dönen motorun hızıyla orantılı ürettiği, uygulanan gerilime karşı koyan gerilim: E = K_e·ω.'],
+  ['Armatür (R_a, L_a)', 'armatür*|R_a|L_a', 'DC motorun dönen, akım taşıyan sargısı. Direnci R_a, endüktansı L_a ile gösterilir.'],
+  ['Tork (T)', 'tork*', 'Döndürme momenti; birimi Nm. DC motorda akımla orantılıdır: T = K_t·I.'],
+  ['K_t ve K_e', 'K_t|K_e', 'Motor sabitleri. K_t tork sabitidir (T = K_t·I, Nm/A); K_e zıt EMK sabitidir (E = K_e·ω, V·s/rad). SI\'da sayısal olarak eşittirler.'],
+  ['Kv', 'kv', 'Motorun yüksüz hızının gerilime oranı (rpm/V). Kv\'si düşük motor amper başına daha çok tork verir.'],
+  ['Açısal hız (ω)', 'ω', 'Dönme hızı, rad/s cinsinden. rpm\'den çevirmek için: ω = n·2π / 60.'],
+  ['rpm', 'rpm', 'Dakikadaki tur sayısı. 1000 rpm ≈ 105 rad/s.'],
+  ['Rotor ve stator', 'rotor*|stator*', 'Motorun dönen kısmı rotor, duran kısmı statordur.'],
+  ['Fırça', 'fırça*', 'Fırçalı DC motorda dönen sargıya akım taşıyan kayan kontak. Akım yönünü mekanik olarak çevirir (komütatör).'],
+  ['BLDC motor', 'BLDC|fırçasız*', 'Fırçasız DC motor: mıknatıslar rotorda, sargılar statordadır. Sürücü sargıları rotor konumuna göre sırayla anahtarlar.'],
+  ['Komütasyon', 'komütasyon*', 'Motor sargılarındaki akımın sırayla bir sargıdan ötekine aktarılması. Fırçalı motorda fırçalar, BLDC\'de sürücü yapar.'],
+  ['Hall sensörü', 'hall*', 'Manyetik alanı algılayan sensör. BLDC\'de üç Hall sensörü rotor konumunu 60° elektriksel çözünürlükle verir.'],
+  ['Asenkron motor', 'asenkron*', 'Rotoru stator alanından biraz yavaş dönen AC motor (indüksiyon motoru). Hız farkı (kayma) rotorda akım ve tork doğurur.'],
+  ['Senkron hız (n_s)', 'senkron*|n_s', 'Stator döner alanının hızı: n_s = 120·f / P (rpm, P kutup sayısı). Senkron motor tam bu hızda döner.'],
+  ['Kayma (s)', 'kayma|kaymadan', 'Asenkron motorda rotorun senkron hızdan geri kalma oranı: s = (n_s − n) / n_s.'],
+  ['Step motor', 'step motor*|mikro adım*', 'Her darbede sabit bir açı dönen motor; konum darbeler sayılarak bilinir. Mikro adımda her tam adım küçük parçalara bölünür.'],
+  ['FOC', 'FOC|i_q|i_d', 'Alan yönlendirmeli kontrol: faz akımlarını rotorla dönen i_d ve i_q bileşenlerine ayırır. Torku i_q belirler, i_d normalde sıfır tutulur.'],
+  ['V/f kontrol', 'v/f', 'Asenkron motorda gerilimi frekansla orantılı değiştirme. Akı V/f ile orantılı olduğu için sabit kalır, çekirdek doymaz.'],
+  ['Akı (Φ)', 'akı|akıya|akısı|akısına|akıdan|akıyla|Φ', 'Manyetik akı: bir yüzeyden geçen manyetik alan miktarı. Birimi weber (Wb).'],
+  ['Rejeneratif fren', 'rejen*', 'Frenlenen motorun jeneratör gibi çalışıp enerjiyi bus\'a ya da bataryaya geri vermesi.'],
+  ['Bus (DC bara)', 'bus*|bara*|C_bus', 'Sürücü ya da inverterin DC besleme hattı. Üzerindeki büyük bus kondansatörü (C_bus) ani akımları karşılar.'],
+  ['İnverter', 'inverter*', 'DC\'yi AC\'ye çeviren güç devresi; motor sürücülerinde üç fazlı köprüdür.'],
+  ['Ön şarj (R_pre)', 'ön şarj*|R_pre', 'Ana kontaktör kapanmadan önce bus kondansatörünü bir dirençle (R_pre) yavaşça doldurma. Ani akım darbesini ve kontak kaynamasını önler.'],
+  ['Kontaktör ve röle', 'kontaktör*|röle*', 'Bobinle çekilen kontaklarla devreyi açıp kapayan elektromekanik anahtar. Kontaktör büyük akımlar için yapılmış rölesidir.'],
+  ['Sigorta', 'sigorta*', 'Aşırı akımda erip devreyi açan koruma elemanı.'],
+  ['Anahtar', 'anahtar|anahtarı|anahtarın|anahtarda|anahtarlar*', 'Devreyi açıp kapayan eleman. Kapalı anahtar iletir ve üzerinde 0 V düşer; açık anahtar akımı keser.'],
+  ['BMS', 'BMS', 'Batarya yönetim sistemi: hücre gerilimlerini, akımı ve sıcaklığı izler; sınır aşılınca akımı keser ve hücreleri dengeler.'],
+  ['Hücre', 'hücre*', 'Bataryanın tek elektrokimyasal birimi. Paket, hücrelerin seri ve paralel bağlanmasıyla kurulur (10S4P: 10 seri grup, her grupta 4 paralel).'],
+  ['Li-ion', 'li-ion*', 'Lityum iyon pil: hafif ve enerji yoğun. Aşırı şarj, derin deşarj ve yanlış sıcaklıkta kalıcı hasar görür.'],
+  ['NMC ve LFP', 'NMC|LFP', 'Li-ion kimyaları. NMC: nominal 3,6 V, tam dolu 4,2 V. LFP: nominal 3,2 V, tam dolu 3,65 V; gerilim eğrisi çok düzdür.'],
+  ['Nominal gerilim', 'nominal*', 'Bir hücrenin ortalama, tasarım gerilimi; enerji hesabında kullanılır (NMC\'de 3,6 V).'],
+  ['C oranı', 'c oran*', 'Şarj ya da deşarj akımının kapasiteye oranı. 1C paketi bir saatte boşaltır; 50 Ah pakette 1C = 50 A.'],
+  ['SoC (şarj durumu)', 'soc', 'Kalan yükün kapasiteye oranı (%). Coulomb sayma ve dinlenmiş OCV ile tahmin edilir.'],
+  ['OCV', 'OCV', 'Açık devre gerilimi: yük bağlı değilken, dinlenmiş hücrenin gerilimi. SoC tahmininde kullanılır.'],
+  ['Balans (dengeleme)', 'balans*', 'Seri hücreleri aynı doluluğa getirme. Pasif balans fazlalığı dirençte ısıya çevirir, aktif balans enerjiyi hücreler arasında taşır.'],
+  ['Termal kaçak', 'termal kaçak*|termal kaçağ*', 'Hücrenin ısınmasının kendini besleyip kontrolden çıkması; yangına yol açabilir.'],
+  ['Buck dönüştürücü', 'buck', 'Gerilim düşüren anahtarlamalı dönüştürücü: V_o = D·V_in. Akım ise girişten büyük olur.'],
+  ['Boost dönüştürücü', 'boost', 'Gerilim yükselten anahtarlamalı dönüştürücü: V_o = V_in / (1 − D).'],
+  ['Buck-boost', 'buck-boost', 'Çıkışı girişe göre ters işaretli dönüştürücü; büyüklüğü |V_o| = V_in·D / (1 − D).'],
+  ['Flyback', 'flyback*', 'Trafolu, yalıtımlı buck-boost. Anahtar iletirken enerji çekirdekte depolanır, kesimde sekondere aktarılır.'],
+  ['Cuk dönüştürücü', 'cuk', 'Girişte ve çıkışta birer bobin taşıyan, enerjiyi ara kondansatörle aktaran ters işaretli dönüştürücü.'],
+  ['CCM ve DCM', 'CCM|DCM|süreksiz*', 'CCM (sürekli iletim): endüktör akımı periyot boyunca sıfıra inmez. DCM (süreksiz iletim): akım her periyotta sıfıra iner, çıkış yüke de bağlı olur.'],
+  ['Anahtarlama düğümü', 'anahtarlama düğüm*|faz düğüm*', 'Anahtar, diyot ve endüktörün birleştiği, kare dalga yapan düğüm.'],
+  ['Verim (η)', 'verim*|η', 'Çıkış gücünün giriş gücüne oranı: η = P_çıkış / P_giriş. Aradaki fark ısıya gider.'],
+  ['Trafo (primer, sekonder)', 'trafo*|primer*|sekonder*|sarım oran*', 'Manyetik bağlı sargılar: primer girişe, sekonder çıkışa bağlıdır. Gerilimi sarım oranıyla ölçekler ve giriş ile çıkışı yalıtır.'],
+  ['RHPZ', 'RHPZ|sağ yarı düzlem*', 'Sağ yarı düzlem sıfırı: boost ve flyback\'te D artınca çıkışın önce ters yönde tepki vermesi. Döngü kesimi bunun epey altında tutulur.'],
+  ['ESR', 'ESR', 'Kondansatörün eşdeğer seri direnci. Dalgalanma akımıyla gerilim dalgalanması ve ısınma yaratır.'],
+  ['Isıl direnç (R_th)', 'ısıl direnç*|ısıl direnc*|R_th', 'Her watt için kaç derece ısınma olduğu (°C/W). Jonksiyondan havaya kadar seri ısıl dirençler toplanır.'],
+  ['EMI', 'EMI', 'Elektromanyetik girişim: bir devrenin yaydığı ya da dışarıdan aldığı istenmeyen gürültü.'],
+  ['Ferrit boncuk', 'ferrit*', 'Yüksek frekansta empedansı artan, gürültüyü ısıya çeviren manyetik bileşen. Fazla DC akımda doyar.'],
+  ['Regülatör', 'regülatör*|regüle*', 'Giriş ya da yük değişse de çıkış gerilimini sabit tutan devre.'],
+  ['Entegre (IC)', 'entegre*', 'Birçok devre elemanını tek yonga üzerinde toplayan devre. 555 zamanlayıcı ve op-amp birer entegredir.'],
+  ['I²C', 'I²C', 'İki hatlı (SDA veri, SCL saat) seri haberleşme yolu. Hatlar open-drain\'dir ve pull-up dirençleriyle beslemeye çekilir.'],
+  ['MCU', 'MCU', 'Mikrodenetleyici: işlemci, bellek ve giriş/çıkışları tek yongada toplayan küçük bilgisayar.']
+];
+// İki arama: küçük harfli anahtarlar Türkçe küçültülmüş metinde, simgeler özgün metinde. Uzun anahtar önce denenir ("kısa devre" > "devre").
+const TRE = [0, 1].map(cs => {
+  const ks = TERMS.flatMap(([, k], i) => k.split('|').map(w => [w.replace(/\*$/, ''), w.endsWith('*'), i])).filter(([w]) => (w.includes('_') || !/[a-zçğıöşüé]/.test(w)) === !!cs).sort((a, b) => b[0].length - a[0].length);
+  return { ix: ks.map(k => k[2]), re: new RegExp('(?<![\\p{L}\\p{N}_])(?:' + ks.map(([w, st]) => `(${(cs ? w : w.toLocaleLowerCase('tr')).replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')})${st ? '\\p{L}*' : ''}(?![\\p{L}\\p{N}_])`).join('|') + ')', 'gu') };
+});
+// tx() + her terimin ekrandaki ilk geçişini dokunulabilir düğme yapar. Eşleşme ham metinde yapılır; parçalar ayrı ayrı tx()'ten geçer.
+function txg(s, seen = new Set()) {
+  s = String(s); const lo = s.toLocaleLowerCase('tr'), hits = [];
+  TRE.forEach((r, cs) => { if (!cs && lo.length !== s.length) return; for (const m of (cs ? s : lo).matchAll(r.re)) hits.push([m.index, m[0].length, r.ix[m.findIndex((g, j) => j && g !== undefined) - 1]]); });
+  hits.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+  let out = '', at = 0;
+  for (const [i, n, t] of hits) { if (i < at || seen.has(t)) continue; seen.add(t); out += tx(s.slice(at, i)) + `<button type="button" class="term" data-t="${t}" aria-haspopup="dialog" aria-expanded="false" aria-controls="tpop">${tx(s.slice(i, i + n))}</button>`; at = i + n; }
+  return out + tx(s.slice(at));
+}
+
 // Doğru cevapta ampulden saçılan 8 kıvılcım (yalnız süs, ekran okuyucudan gizli).
 const sparks = () => [...Array(8)].map((_, i) => { const a = i * Math.PI / 4; return `<circle class="spark" cx="60" cy="84" r="4" fill="var(--led)" style="--dx:${(Math.cos(a) * 48).toFixed(0)}px;--dy:${(Math.sin(a) * 48).toFixed(0)}px;animation-delay:${i % 2 * 40}ms"/>`; }).join('');
 // Her doğruda kısa tebrik; 3, 6, 9… doğru arka arkaya gelince tam ekran kutlama. Süs: ekran okuyucuya kısa metin gider.
@@ -2406,6 +2635,7 @@ function profile() {
   return `<main class="scr"><h1 tabindex="-1">Profil</h1><dl class="tbl"><dt>Toplam XP</dt><dd>${S.xp}</dd><dt>Bugün</dt><dd>${todayXp(S, t)} / ${GOAL} XP</dd><dt>Seri</dt><dd>${liveStreak(S, t)} gün</dd><dt>En uzun seri</dt><dd>${S.bestStreak} gün</dd>
   <dt>Kaçırma hakkı</dt><dd>${S.freeze ? 'Var' : `${S.refill} gün sonra`}</dd><dt>Biten ders</dt><dd>${Object.keys(S.done).length} / ${LESSONS.length}</dd></dl>
   <p class="note">Bir gün kaçırırsan serin bozulmaz. Kullandığın hak, 7 günlük seriyle geri gelir.</p>${saveOk ? '' : '<p class="note err">Bu tarayıcı kayda izin vermiyor. İlerlemen sayfa kapanınca silinir.</p>'}
+  <h2>Sözlük</h2><p class="note">Derslerdeki terim ve simgelerin kısa açıklamaları. Ders metninde altı noktalı kelimeye dokunarak da açabilirsin.</p><button class="btn alt" data-go="sozluk">Sözlüğü aç</button>
   <h2>Hatırlatıcı</h2><label class="sel"><span>Bildirim sıklığı</span><select id="rem">${['Kapalı', 'Her gün', '2 günde bir'].map((n, i) => `<option value="${i}" ${S.rem === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
   <p class="note" id="remst" aria-live="polite"></p><button class="btn alt" id="remtest" hidden>Deneme bildirimi gönder</button>
   <h2>Rozetler (${got}/${BADGES.length})</h2><ul class="bdg">${BADGES.map(([n, d, f]) => `<li>${badgeSvg(f(S))}<span><b>${n}</b>${d}${f(S) ? '. Kazanıldı' : ''}</span></li>`).join('')}</ul>
@@ -2449,6 +2679,61 @@ function bindBackup() {
     if (!confirm(`Şu anki ilerlemen (${S.xp} XP, ${Object.keys(S.done).length} ders) silinip yedektekiyle (${n.xp} XP, ${Object.keys(n.done).length} ders) değiştirilsin mi?`)) return note('Yükleme iptal edildi.', false);
     S = n; save(); route(); setTimeout(() => $('#yst').textContent = 'Yedek yüklendi.', 100); // route ekranı yeniden çizer; yeni canlı bölge önce yerleşmeli ki okunsun
   };
+}
+
+/* ---------- Dokun-öğren açılır kartı ve Sözlük ---------- */
+document.body.insertAdjacentHTML('beforeend', '<div id="tpop" class="tpop" role="dialog" aria-labelledby="tph" aria-describedby="tpd" tabindex="-1" hidden></div>');
+const tpop = document.getElementById('tpop'); let termBtn = null;
+function termOpen(b) {
+  const t = TERMS[b.dataset.t]; termClose(false); termBtn = b;
+  tpop.innerHTML = `<h2 id="tph">${tx(t[0])}</h2><p id="tpd">${tx(t[2])}</p><div class="tpa"><button type="button" class="btn alt" id="tpgo">Sözlükte aç</button><button type="button" class="btn alt" id="tpx">Kapat</button></div>`;
+  tpop.hidden = false; b.setAttribute('aria-expanded', 'true'); tpop.focus({ preventScroll: true });
+  $('#tpx', tpop).onclick = () => termClose();
+  $('#tpgo', tpop).onclick = () => szOpen(+b.dataset.t);
+}
+function termClose(back = true) {
+  if (tpop.hidden) return;
+  tpop.hidden = true; const b = termBtn; termBtn = null;
+  if (b) { b.setAttribute('aria-expanded', 'false'); if (back && b.isConnected) b.focus({ preventScroll: true }); }
+}
+// Yakalama evresinde: terime dokunmak sorunun kendi tıklama işleyicilerine ulaşmaz; dışarı dokunmak kartı kapatır.
+document.addEventListener('click', e => {
+  const b = e.target.closest?.('.term');
+  if (b) { e.stopPropagation(); e.preventDefault(); return b === termBtn ? termClose() : termOpen(b); }
+  if (!e.target.closest?.('#tpop')) termClose(false);
+}, true);
+addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (document.getElementById('szo')) szClose(); else termClose(); });
+
+const szHay = i => TERMS[i].join(' ').toLocaleLowerCase('tr');
+function sozluk(over) {
+  const g = {};
+  TERMS.map((t, i) => [t[0].replace(/^[^\p{L}]+/u, ''), i]).sort((a, b) => a[0].localeCompare(b[0], 'tr')).forEach(([n, i]) => (g[n[0].toLocaleUpperCase('tr')] ||= []).push(i));
+  return `<main class="scr"><div class="top"><button class="x" ${over ? 'id="szx"' : 'data-go="profil"'} aria-label="Kapat">${ICON.x}</button><p class="kind">${TERMS.length} terim</p></div><h1 tabindex="-1">Sözlük</h1>
+  <input type="search" class="szq" id="szq" placeholder="Terim ara, örneğin direnç" aria-label="Sözlükte ara" autocomplete="off" enterkeyhint="search"><p class="note" id="szn" aria-live="polite"></p>
+  ${Object.entries(g).map(([h, is]) => `<section class="szg"><h2>${h}</h2><dl>${is.map(i => `<div class="sze" id="sz-${i}"><dt>${tx(TERMS[i][0])}</dt><dd>${tx(TERMS[i][2])}</dd></div>`).join('')}</dl></section>`).join('')}</main>`;
+}
+function bindSozluk(r, t) {
+  const q = $('#szq', r), n = $('#szn', r);
+  q.oninput = () => {
+    const v = q.value.trim().toLocaleLowerCase('tr'); let c = 0;
+    $$('.sze', r).forEach(e => { const on = !v || szHay(+e.id.slice(3)).includes(v); e.hidden = !on; c += on; });
+    $$('.szg', r).forEach(s => s.hidden = !$('.sze:not([hidden])', s));
+    n.textContent = !v ? '' : c ? `${c} terim bulundu.` : 'Bu aramayla eşleşen terim yok.';
+  };
+  if (t >= 0) { const e = $('#sz-' + t, r); e.classList.add('on'); e.scrollIntoView({ block: 'center' }); }
+}
+// Ders sırasında "Sözlükte aç": oturum bozulmasın diye sözlük üstte açılır, X ile soruya dönülür.
+let szBack = null;
+function szOpen(t) {
+  szBack = termBtn; termClose(false);
+  const o = document.createElement('div');
+  o.id = 'szo'; o.className = 'szo'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Sözlük');
+  o.innerHTML = sozluk(true); document.body.append(o); document.documentElement.classList.add('szon');
+  $('#szx', o).onclick = szClose; bindSozluk(o, t); $('h1', o).focus({ preventScroll: true });
+}
+function szClose() {
+  document.getElementById('szo')?.remove(); document.documentElement.classList.remove('szon');
+  if (szBack?.isConnected) szBack.focus({ preventScroll: true }); szBack = null;
 }
 
 /* ---------- Soru oturumu ---------- */
@@ -2563,9 +2848,9 @@ const SIMVIEW = {
 // Konu anlatımı: sorulardan önce kısa kartlar. Alttaki düğme tek dokunuşla sorulara geçirir.
 function intro(l) {
   C = null;
-  const n = l.k.length, sim = (c, p) => `<div class="fig" id="${p}sv"></div><div class="read" id="${p}rd"></div><div>${simSliders(c.sim, p)}</div><p class="note" id="${p}warn" aria-live="polite"></p>`;
+  const n = l.k.length, seen = new Set(), sim = (c, p) => `<div class="fig" id="${p}sv"></div><div class="read" id="${p}rd"></div><div>${simSliders(c.sim, p)}</div><p class="note" id="${p}warn" aria-live="polite"></p>`;
   app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="ana" aria-label="Çık">${ICON.x}</button><p class="kind">Konu anlatımı · ${n} kart</p></div><h1 tabindex="-1">${tx(l.name)}</h1>
-  ${l.k.map((c, i) => `<section class="kart"><p class="kind">${i + 1}/${n}</p><h2>${tx(c.h)}</h2><p>${tx(c.p)}</p>${c.f ? `<div class="frm">${c.f.map(x => `<code>${tx(x)}</code>`).join('')}</div>` : ''}${c.c ? `<div class="fig">${circuit(c.c, { flow: c.fl || true })}</div>` : ''}${c.sim ? sim(c, `k${i}-`) : ''}${c.r ? `<div class="real"><b>Gerçek hayatta</b><p>${tx(c.r.replace(/^Gerçek hayatta:?\s*/i, ''))}</p></div>` : ''}</section>`).join('')}</main>
+  ${l.k.map((c, i) => `<section class="kart"><p class="kind">${i + 1}/${n}</p><h2>${tx(c.h)}</h2><p>${txg(c.p, seen)}</p>${c.f ? `<div class="frm">${c.f.map(x => `<code>${tx(x)}</code>`).join('')}</div>` : ''}${c.c ? `<div class="fig">${circuit(c.c, { flow: c.fl || true })}</div>` : ''}${c.sim ? sim(c, `k${i}-`) : ''}${c.r ? `<div class="real"><b>Gerçek hayatta</b><p>${tx(c.r.replace(/^Gerçek hayatta:?\s*/i, ''))}</p></div>` : ''}</section>`).join('')}</main>
   <div class="foot"><button class="btn" data-go="ders-${l.id}">Sorulara başla</button></div>`;
   l.k.forEach((c, i) => { if (!c.sim) return; const p = `k${i}-`, draw = () => simDraw(c.sim, p); SIMS[c.sim].s.forEach(s => $(`#${p}s-${s[0]}`).oninput = draw); draw(); });
   focusTop();
@@ -2588,7 +2873,7 @@ function hintStep() {
 function question() {
   const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false; C.hint = 0; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; if (!C.fl?.length) C.fl = null; // fl: null akışı kapatır
   app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
-  <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1>${hintBox(q)}</div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
+  <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${txg(q.q)}</h1>${hintBox(q)}</div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
   $('#ok').onclick = check;
   if ($('#akb')) $('#akb').onclick = flowToggle;
@@ -2614,12 +2899,12 @@ function check() {
   if (q.t === 'mc') $$('.opt').forEach(b => mark(b, b.dataset.i));
   if (q.t === 'ariza') $$('.part').forEach(p => mark(p, p.dataset.id));
   if (q.t === 'sira' && !ok) $$('.opt').sort((a, b) => a.dataset.i - b.dataset.i).forEach((b, i) => { $('kbd', b).textContent = i + 1; b.parentNode.append(b); });
-  $$('main button:not(.x):not(#akb),main input').forEach(b => b.disabled = true);
+  $$('main button:not(.x):not(#akb):not(.term),main input').forEach(b => b.disabled = true);
   if (C.fl) { if (!$('#akb')) { $('.fig').insertAdjacentHTML('afterend', FLOWBTN); $('#akb').onclick = flowToggle; } showFlow(true); } // açıklama görsel olsun
   const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
   const foot = $('.foot'), hint = !ok && (q.t === 'num' || q.t === 'oku') ? clue(C.ans, q.a) : '';
   foot.className = 'foot ' + (ok ? 'good' : 'bad'); buzz(ok ? 12 : [20, 40, 20]);
-  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${xp} XP` : 'Yanlış'}</h2>${ok && C.hint ? `<p class="note">İpucu: −${XP_Z[q.z] - xp} XP</p>` : ''}${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${xp} XP` : 'Yanlış'}</h2>${ok && C.hint ? `<p class="note">İpucu: −${XP_Z[q.z] - xp} XP</p>` : ''}${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${txg(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
   if (q.s) { $('main').insertAdjacentHTML('beforeend', `<section class="kart sol"><h2>Çözüm</h2><ol>${q.s.map(x => `<li>${tx(x)}</li>`).join('')}</ol></section>`); }
   if (q.t === 'sim' && C.miss) $('.fb h2').insertAdjacentHTML('afterend', `<p>${tx(C.miss)}</p>`);
   $('#nx').onclick = () => C.queue.length ? question() : finish();
@@ -2638,7 +2923,7 @@ function finish() {
 function route() {
   const h = location.hash.slice(1), d = /^(ders|konu)-(.+)$/.exec(h), l = d && LESSONS.find(x => x.id === d[2]);
   if (shown) scrollMem[shown] = scrollY;
-  shown = null;
+  shown = null; termClose(false); if (document.getElementById('szo')) szClose();
   if (!h && needHos()) return welcome();
   // konu-: önce konu anlatımı; düğmesi ders-'e gider, geri tuşu anlatıma döner.
   if (l && unlocked(l)) return d[1] === 'konu' && l.k ? intro(l) : start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
@@ -2647,6 +2932,7 @@ function route() {
   const pz = /^pratik-([123])$/.exec(h);
   if (pz) { const ids = byZ(+pz[1]), p = shuffle(ids.length).slice(0, 8); return start(p.map(i => ids[i]), null, true); }
   C = null;
+  if (h === 'sozluk') { app.innerHTML = sozluk(); bindSozluk(app); return focusTop(); }
   shown = h === 'profil' ? 'profil' : h.startsWith('tekrar') ? 'tekrar' : 'ana';
   app.innerHTML = { profil: profile, tekrar: review, ana: home }[shown]();
   if (shown === 'profil') { bindReminder(); bindBackup(); cloudUI(); }
