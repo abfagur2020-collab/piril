@@ -161,6 +161,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .kart .fig{background:var(--bg)}
 .real{display:grid;gap:4px;padding:12px 14px;border-radius:10px;background:linear-gradient(120deg,var(--hi1),var(--hi2))}
 .real b{font:700 14px var(--disp)}
+.sol ol{margin:0;padding-left:22px;display:grid;gap:8px;font-size:16px;line-height:1.5}
 
 /* Alt eylem ve geri bildirim */
 .foot{position:sticky;bottom:var(--kb,0px);z-index:5;display:grid;gap:10px;background:var(--bg);border-top:1px solid var(--line);margin-inline:calc(-1*var(--gl)) calc(-1*var(--gr));
@@ -1262,7 +1263,276 @@ Object.assign(SIMS, {
     calc: v => ({ Vm: (2 * v.D / 100 - 1) * v.V }), key: 'Vm', min: 9.3, max: 9.9, out: [['Vm', 'Motor ortalaması (işaretli)', 'V']], glow: r => Math.abs(r.Vm) / 48, p: ['D', 'Vm'] }
 });
 
-const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, z: l.z, qs: l.qs, k: l.k })));
+
+// --- Baykar Sınav: 2027 Bahar Dönemi Staj, Elektrik Motor Sürücü ve Güç Sistemleri (20 soru) ---
+// Her soruda s: çözüm adımları (cevaptan sonra her zaman görünür). fa: akış cevabı gösterdiği için yalnız cevaptan sonra.
+// Akışlar elle hesaplandı (mA, V); değerler soruların çözümünden gelir.
+const BK_OPINV = [['VB', 390, 230, -30],
+  ['V', 40, 180, 40, 96, 'V_1\n8 V', 'Kaynak'], ['G', 40, 180], put(['R', 'R1', '2 kΩ'], 40, 96, 128, 96), ...w(128, 96, 160, 96), ['N', 128, 96], ...w(128, 96, 128, 40),
+  put(['R', 'R_L', '4 kΩ'], 128, 40, 238, 40), ...w(238, 40, 238, 112), ['O', 160, 112, 0], ...w(216, 112, 268, 112), ['N', 238, 112],
+  ['P', 272, 112, 0, 0, 'V_o', '', 'r'], ...w(160, 128, 146, 128), put(['R', 'R_C', '2 kΩ', '', 'l'], 146, 128, 146, 196), ['G', 146, 196]];
+const BK_FL1 = [{ p: [[40, 96], [128, 96], [128, 40], [238, 40], [238, 112], [216, 112]], v: [8, 0, 0, -16, -16, -16], i: 4 }];
+
+const BK_REG = [['VB', 330, 262],
+  ['V', 30, 230, 30, 40, 'V_i\n28 V', 'Kaynak'], ...w(30, 40, 190, 40), ['N', 100, 40], put(['R', 'R', '300 Ω'], 100, 40, 100, 130),
+  ['N', 100, 130], ...w(100, 130, 150, 130), put(['Z', 'V_Z', '12,7 V'], 100, 230, 100, 130), ['Q', 150, 130, 0, 0, 'β = 40'], ...w(190, 40, 190, 102),
+  ...w(190, 158, 260, 158), ['N', 260, 158], put(['R', 'R_L', '1,5 kΩ'], 260, 158, 260, 230), ...w(30, 230, 260, 230), ['N', 100, 230], ['G', 180, 230],
+  ['T', 300, 150, 0, 0, 'V_o']];
+const BK_FL4 = [{ p: [[30, 40], [100, 40]], v: [28, 28], i: 58.8 }, { p: [[100, 40], [100, 130]], v: [28, 12.7], i: 51 },
+  { p: [[100, 130], [100, 230]], v: [12.7, 0], i: 50.8 }, { p: [[100, 130], [150, 130], [164, 130], [164, 138]], v: [12.7, 12.7, 12.7, 12], i: 0.195 },
+  { p: [[100, 40], [190, 40], [190, 102], [164, 122], [164, 138]], v: [28, 28, 28, 28, 12], i: 7.8 },
+  { p: [[164, 138], [190, 158], [260, 158], [260, 230], [100, 230]], v: [12, 12, 12, 0, 0], i: 8 }, { p: [[100, 230], [30, 230]], v: [0, 0], i: 58.8 }];
+
+const BK_CLIP = [['VB', 330, 212],
+  ['AC', 40, 180, 40, 40, '10 sin ωt', 'Kaynak'], put(['R', 'R', '1 kΩ (örnek)'], 40, 40, 160, 40), ['N', 160, 40], ...w(160, 40, 250, 40),
+  put(['D', 'D'], 160, 40, 160, 110), ['V', 160, 180, 160, 110, 'V_bat\n5 V (örnek)'], ...w(40, 180, 250, 180), ['N', 160, 180],
+  ['P', 254, 40, 0, 0, '+', '', 'r'], ['P', 254, 180, 0, 0, '−', '', 'r'], ['T', 270, 112, 0, 0, 'V_o']];
+const BK_FL5 = [{ p: [[40, 40], [160, 40], [160, 110], [160, 180], [40, 180]], v: [10, 5, 5, 0, 0], i: 5 }];
+
+const BK_TWO = [['VB', 440, 290, -40],
+  ['P', 40, 96, 0, 0, 'V_in\n−3,5 V', '', 'l'], put(['R', 'R1', '2 kΩ'], 40, 96, 128, 96), ...w(128, 96, 160, 96), ['N', 128, 96], ...w(128, 96, 128, 40),
+  put(['R', 'R2', '2 kΩ'], 128, 40, 238, 40), ...w(238, 40, 238, 112), ['O', 160, 112, 0], ...w(216, 112, 268, 112), ['N', 238, 112],
+  ['P', 30, 160, 0, 0, '+2 V', '', 'l'], put(['R', 'R3', '1 kΩ'], 30, 160, 110, 160), ['N', 110, 160], ...w(110, 160, 110, 128, 160, 128),
+  put(['R', 'R4', '1 kΩ'], 110, 160, 110, 240), ['G', 110, 240],
+  ['O', 268, 128, 1], ...w(324, 128, 354, 128), ['N', 340, 128], ['P', 358, 128, 0, 0, 'V_out', '', 'r'],
+  ...w(340, 128, 340, 200), put(['R', 'R5', '2,2 kΩ'], 340, 200, 254, 200), ['N', 254, 200], ...w(254, 200, 254, 144, 268, 144),
+  put(['R', 'R6', '2,2 kΩ', '', 'l'], 254, 200, 254, 270), ['G', 254, 270]];
+const BK_FL7 = [{ p: [[216, 112], [238, 112], [238, 40], [128, 40], [128, 96], [40, 96]], v: [5.5, 5.5, 5.5, 1, 1, -3.5], i: 2.25 },
+  { p: [[30, 160], [110, 160], [110, 240]], v: [2, 1, 0], i: 1 },
+  { p: [[324, 128], [340, 128], [340, 200], [254, 200], [254, 270]], v: [11, 11, 11, 5.5, 0], i: 2.5 }];
+
+const BK_PP = [['VB', 370, 240, -40],
+  ['P', 30, 120, 0, 0, '+5 V', '', 'l'], put(['R', 'R_B', '10 kΩ'], 30, 120, 110, 120), ['N', 110, 120], ...w(110, 120, 110, 80, 150, 80), ...w(110, 120, 110, 160, 150, 160),
+  ['Q', 150, 80, 0, 0, 'Q1'], ['QP', 150, 160, 0, 0, 'Q2'], ...w(190, 52, 190, 20), ['P', 190, 20, 0, 0, '+5 V', '', 't'],
+  ...w(190, 108, 190, 132), ['N', 190, 120], ...w(190, 120, 260, 120), put(['R', 'R_L', '1 kΩ'], 260, 120, 260, 200), ['G', 260, 200],
+  ...w(190, 188, 190, 216), ['P', 190, 220, 0, 0, '−5 V', '', 'r'], ['T', 225, 108, 0, 0, 'V_out']];
+const BK_FL8 = [{ p: [[30, 120], [110, 120], [110, 80], [150, 80], [164, 80], [164, 88]], v: [5, 4.61, 4.61, 4.61, 4.61, 3.91], i: 0.0387 },
+  { p: [[190, 20], [190, 52], [164, 72], [164, 88]], v: [5, 5, 5, 3.91], i: 3.87 },
+  { p: [[164, 88], [190, 108], [190, 120], [260, 120], [260, 200]], v: [3.91, 3.91, 3.91, 3.91, 0], i: 3.91 }];
+
+const BK_DCM = loop('v', [['R', 'R_a', '', '2 V'], ['I', 'L_a', '', '2 V'], ['M', 'e', '20 V']]).map(e => e[6] === 'Kaynak' ? ['V', 40, 180, 40, 40, 'v\n24 V (örnek)', 'Kaynak'] : e);
+const BK_FL11 = [{ p: [[40, 40], [160, 40], [280, 40], [280, 180], [40, 180]], v: [24, 22, 20, 0, 0], i: 8 }];
+
+const BK_ZEN = [['V', 40, 180, 40, 40, '30 V'], put(['R', 'R_S', '200 Ω', '25 V'], 40, 40, 165, 40), put(['Z', 'V_Z', '5 V'], 165, 180, 165, 40),
+  ...w(165, 40, 270, 40), put(['R', 'R_L', '100 Ω', '50 mA'], 270, 40, 270, 180), ...w(40, 180, 270, 180), ['N', 165, 40], ['N', 165, 180]];
+const BK_FL13 = [{ p: [[40, 40], [165, 40]], v: [30, 5], i: 125 }, { p: [[165, 40], [165, 180]], v: [5, 0], i: 75 },
+  { p: [[165, 40], [270, 40], [270, 180], [165, 180]], v: [5, 5, 0, 0], i: 50 }, { p: [[165, 180], [40, 180]], v: [0, 0], i: 125 }];
+
+const BK_FLY = [['VB', 360, 222],
+  ['V', 30, 190, 30, 40, 'V_in\n24 V'], ...w(30, 40, 110, 40), ['TR', 110, 40, 150, 120], put(['S', 'S', 'kapalı', '', 'l'], 110, 120, 110, 190), ...w(30, 190, 110, 190),
+  put(['D', 'D'], 150, 40, 230, 40), ...w(150, 120, 150, 190), ['N', 230, 40], put(['C', 'C', '', '', 'l'], 230, 40, 230, 190), ...w(230, 40, 295, 40),
+  put(['R', 'R_L', ''], 295, 40, 295, 190), ...w(150, 190, 295, 190), ['T', 160, 214, 0, 0, 'L_p = ?']];
+const BK_FL15 = [{ p: [[30, 40], [110, 40], [110, 120], [110, 190], [30, 190]], v: [24, 24, 0, 0, 0], i: 5 }];
+
+const BK_CUK = [['VB', 430, 215],
+  ['V', 30, 190, 30, 50, 'V_in\n24 V'], put(['I', 'L1'], 30, 50, 120, 50), ['N', 120, 50], put(['SO', 'S', '', '', 'l'], 120, 50, 120, 190),
+  put(['C', 'C1'], 120, 50, 210, 50), ['N', 210, 50], put(['D', 'D'], 210, 50, 210, 190), put(['I', 'L2'], 210, 50, 300, 50), ['N', 300, 50],
+  put(['C', 'C2', '', '', 'l'], 300, 50, 300, 190), ...w(300, 50, 360, 50), put(['R', 'R_L', '', '−36 V'], 360, 50, 360, 190), ...w(30, 190, 360, 190)];
+
+const BK_BOOST = [['VB', 360, 205],
+  ['V', 30, 180, 30, 50, 'V_in\n150 V'], put(['I', 'L'], 30, 50, 130, 50), ['N', 130, 50], put(['S', 'S', '', '', 'l'], 130, 50, 130, 180),
+  put(['D', 'D'], 130, 50, 220, 50), ['N', 220, 50], put(['C', 'C', '', '', 'l'], 220, 50, 220, 180), ...w(220, 50, 290, 50), put(['R', 'R_L', '', '420 V'], 290, 50, 290, 180), ...w(30, 180, 290, 180), ['N', 220, 180], ['N', 130, 180]];
+const BK_FL19 = [{ p: [[30, 50], [130, 50], [130, 180], [30, 180]], v: [150, 0, 0, 0], i: 2.8 },
+  { p: [[220, 50], [290, 50], [290, 180], [220, 180]], v: [420, 420, 0, 0], i: 1 }];
+
+const BK_RLC = [['V', 30, 230, 30, 40, '100 V', 'Kaynak'], put(['R', '30 Ω'], 30, 40, 130, 40), ['N', 130, 40], ...w(130, 40, 250, 40),
+  put(['R', '40 Ω', '', '', 'l'], 130, 40, 130, 130), ['N', 130, 130], put(['I', 'L', '10 mH', '', 'l'], 130, 130, 130, 230), put(['C', 'C', '2 mF', '', 'b'], 130, 130, 250, 130),
+  put(['R', '10 Ω'], 250, 40, 250, 130), ['N', 250, 130], put(['R', '30 Ω'], 250, 130, 250, 230), ...w(30, 230, 250, 230), ['N', 130, 230]];
+const BK_FL20 = [{ p: [[30, 40], [130, 40]], v: [100, 40], i: 2 }, { p: [[130, 40], [130, 130], [130, 230]], v: [40, 0, 0], i: 1 },
+  { p: [[130, 40], [250, 40], [250, 130], [250, 230], [130, 230]], v: [40, 40, 30, 0, 0], i: 1 }, { p: [[130, 230], [30, 230]], v: [0, 0], i: 2 }];
+
+UNITS.push({ name: 'Baykar Sınav', open: true, lessons: [
+  { name: 'Sorular 1–5: op-amp, EMI, I²C, regülatör, kırpıcı', z: 2, k: [
+    { h: 'İdeal op-amp iki kural', p: 'Bu sınavda her yerde "ideal" deniyor. İdeal op-amp için iki kural yeter: girişlerine akım girmez, negatif geri besleme varsa iki giriş aynı gerilimde kalır. Eviren girişin yanında toprağa bağlı + giriş varsa o noktaya sanal toprak denir. Akım bir dirençten gelip op-amp\'a giremediği için geri besleme direncinden çıkışa akmak zorundadır.',
+      f: ['I_giriş = 0', 'V₊ = V₋', 'Eviren: V_o = −(R_f / R_1) · V_i'] },
+    { h: 'Ferrit boncuk', p: 'Ferrit boncuk frekansla direnci artan bir bobin gibi davranır. Yüksek frekansta empedansının büyük kısmı dirençseldir ve gürültü enerjisini ısıya çevirir. Sinyal hatlarında da, besleme hatlarında da (MCU, ADC, RF beslemesi) kullanılır. Ama DC akım artınca ferrit doyar ve empedansı düşer; DC direnci (DCR) de besleme hattında gerilim düşürür.',
+      f: ['Z(f) = R(f) + jX(f)', 'Seçim: empedans tepesi gürültü bandında, I_DC < doyma akımı'] },
+    { h: 'I²C protokolü', p: 'I²C iki hatlı (SDA ve SCL) bir seri veri yoludur. Hatlar açık savaklı (open-drain) çıkıştır, pull-up dirençleriyle VCC\'ye çekilir. Her slave\'in 7 veya 10 bitlik benzersiz adresi vardır. Saati master üretir, slave saati LOW tutarak yavaşlatabilir (clock stretching). Tek veri hattı olduğu için aynı anda yalnız bir yönde veri gider.',
+      f: ['t_yükselme ≈ 0,8473 · R_p · C_hat', 'Standart 100 kHz, Hızlı 400 kHz, Hızlı+ 1 MHz'] },
+    { h: 'Zener + emetör izleyici regülatör', p: 'Zener bazı sabit bir gerilimde tutar. NPN transistör emetör izleyicidir: çıkış, baz geriliminden bir V_BE düşük olur. Yük akımı emetörden çıkar; bazdan bunun yalnız 1/(β+1) kadarı çekilir. Seri direnç akımı zener ile baz arasında paylaşılır.',
+      f: ['V_o = V_Z − V_BE', 'I_B = I_E / (β + 1)', 'I_R = (V_i − V_Z) / R', 'I_Z = I_R − I_B'] },
+    { h: 'Diyotlu kırpıcı', p: 'Diyot, anodu katodundan daha pozitif olunca (ideal diyotta 0 V eşik) iletime geçer ve kısa devre gibi davranır. Diyot bir pile seri bağlanıp çıkışa paralel konursa, çıkış pil gerilimini aşmaya çalıştığında diyot iletir ve çıkışı o seviyede tutar. Diyot ters yönde kalırken hiç akım geçmez, çıkış girişi aynen izler.',
+      f: ['V_i > V_bat → diyot iletir → V_o = V_bat', 'V_i < V_bat → diyot kesimde → V_o = V_i'] } ], qs: [
+    { t: 'mc', q: 'Soru 1: Devrede I_L akımı kaç mA? (Tüm elemanlar ideal.)', c: BK_OPINV, fl: BK_FL1, fa: true, o: ['6 mA', '4 mA', '1,33 mA', '2 mA', '1 mA'], a: 1,
+      e: 'Sanal toprak: R1\'den gelen akımın tamamı R_L\'den akar.', f: 'I_L = V_1 / R1 = 8 V / 2 kΩ = 4 mA  (B şıkkı)',
+      s: ['İdeal op-amp: girişlerine akım girmez; negatif geri besleme olduğu için V₊ = V₋.',
+        'R_C\'den akım geçmez, uçlarında gerilim düşmez → V₊ = 0 V. O hâlde V₋ = 0 V (sanal toprak).',
+        'R1 uçlarındaki gerilim 8 − 0 = 8 V → I = 8 V / 2 kΩ = 4 mA, kaynaktan op-amp\'a doğru (soldan sağa) akar.',
+        'Bu akım − girişe giremez; tamamı R_L üzerinden çıkışa gider: I_L = 4 mA (şekildeki ok yönünde).',
+        'Kontrol: V_o = 0 − 4 mA × 4 kΩ = −16 V. Akış çiziminde gerilim 8 V (kırmızı) → 0 V → −16 V (mavi) iniyor. Cevap: B) 4 mA.'] },
+    { t: 'mc', q: 'Soru 2: Ferrit boncuklarla ilgili hangi ifade YANLIŞTIR?', o: ['DC akım arttıkça ferrit boncuk manyetik doyuma girer ve empedansı düşer.', 'Ferrit boncuğun tepe empedans frekansı bastırılacak gürültü bandıyla örtüşmelidir.', 'Ferrit boncuklar yüksek empedanslı sinyaller için düşük empedanslı gürültüyü bastırır; bu yüzden yalnız sinyal hatlarında kullanılır, besleme hatlarında kullanılmaz.', 'Ferrit boncuğun dirençsel bileşeni gürültü enerjisini ısıya çevirerek emer.', 'DCR\'si yüksek ferrit boncuk besleme hattında istenmeyen gerilim düşümüne yol açabilir.'], a: 2,
+      e: 'Ferrit boncuklar besleme hatlarında en yaygın filtre elemanlarından biridir.', f: 'Yanlış ifade: C şıkkı',
+      s: ['A doğru: DC bias akımı ferriti doyurur, geçirgenlik ve empedans düşer. Bu yüzden datasheet\'te empedans-DC akım eğrisine bakılır.',
+        'B doğru: Boncuk, empedansının en yüksek olduğu frekans bandında en iyi bastırır.',
+        'D doğru: Yüksek frekansta empedansın baskın kısmı R\'dir; gürültü yansıtılmaz, ısıya çevrilir.',
+        'E doğru: DCR × I kadar gerilim düşer ve I²·DCR kadar ısınır.',
+        'C yanlış: Ferrit boncuk özellikle besleme hatlarında (MCU, ADC, PLL, RF beslemesi) kullanılır. "Yalnız sinyal hattında" ifadesi hatalı. Cevap: C.'] },
+    { t: 'mc', q: 'Soru 3: I²C protokolüyle ilgili hangi ifade YANLIŞTIR?', o: ['I²C yalnız iki hat kullanır, SDA ve SCL; ikisi de açık savaklıdır ve pull-up dirençleriyle VCC\'ye çekilir.', 'Aynı I²C yolundaki her slave cihazın benzersiz bir 7 bit (veya 10 bit) adresi olmalıdır.', 'I²C tam çift yönlü (full-duplex) çalışır; master aynı anda slave\'e veri gönderip slave\'den veri alabilir.', 'SCL hattını master üretir; ancak slave, SCL\'yi LOW tutarak haberleşmeyi geçici olarak yavaşlatabilir (clock stretching).', 'Pull-up direnci çok büyükse yol kapasitesi yüzünden yükselme süresi uzar; bu, yüksek hızlarda haberleşme hatalarına yol açabilir.'], a: 2,
+      e: 'I²C\'de tek veri hattı (SDA) var; aynı anda yalnız bir yönde veri taşır. Full-duplex olan SPI\'dır (MOSI ve MISO).', f: 'Yanlış ifade: C şıkkı (I²C yarı çift yönlüdür)',
+      s: ['A doğru: Open-drain çıkışlar hattı yalnız LOW\'a çekebilir; HIGH seviyesini pull-up verir. Bu sayede çok cihaz aynı hatta çakışmadan bağlanır.',
+        'B doğru: Master, adres baytıyla hangi slave ile konuştuğunu seçer; iki cihaz aynı adreste olamaz.',
+        'D doğru: Clock stretching standardın parçasıdır.',
+        'E doğru: τ = R_p · C_hat; R_p büyüdükçe kenarlar yavaşlar, 400 kHz ve üstünde eşik zamanında aşılamaz.',
+        'C yanlış: SDA tek hat olduğundan iletişim half-duplex\'tir. Cevap: C.'] },
+    { t: 'mc', q: 'Soru 4: Devredeki zener akımı I_Z kaç mA? (V_BE = 0,7 V, β = 40, V_Z = 12,7 V, tüm elemanlar ideal.)', c: BK_REG, fl: BK_FL4, fa: true, o: ['50,0', '50,2', '50,4', '50,6', '50,8'], a: 4,
+      e: 'R\'den gelen 51 mA\'in küçük bir kısmı bazdan gider, kalanı zenerden akar.', f: 'I_Z = (28 − 12,7)/300 − (12/1,5 k)/41 = 51 − 0,195 = 50,8 mA  (E şıkkı)',
+      s: ['Baz zenerle 12,7 V\'ta sabit: V_B = V_Z = 12,7 V.',
+        'Emetör izleyici: V_o = V_B − V_BE = 12,7 − 0,7 = 12 V.',
+        'Yük (emetör) akımı: I_E = V_o / R_L = 12 V / 1,5 kΩ = 8 mA.',
+        'Baz akımı: I_B = I_E / (β + 1) = 8 / 41 = 0,195 mA (I_B = I_C/β ile de 0,195 ≈ 0,2 mA çıkar).',
+        'Seri direnç akımı: I_R = (28 − 12,7) / 300 Ω = 15,3 / 300 = 51 mA.',
+        'Düğümde KCL: I_Z = I_R − I_B = 51 − 0,195 = 50,8 mA. Akış çiziminde 51 mA iki kola ayrılıyor: kalın ok zenerden aşağı (50,8 mA), ince ok baza (0,195 mA). Cevap: E) 50,8.'] },
+    { t: 'mc', q: 'Soru 5: Şekildeki devrenin çıkış dalga biçimi nedir? (Diyot ve pil ideal.)', c: BK_CLIP, fl: BK_FL5, fa: true, o: ['Kırpılmamış tam sinüs', 'İki yarım dalgada da kırpılmış sinüs', 'Sabit bir DC seviye', 'Pozitif tepesi V_bat seviyesinde düz kesilmiş, negatif yarım dalgası tam sinüs'], a: 3,
+      e: 'Diyot yalnız çıkış V_bat\'ı aşmaya çalıştığında iletir; negatif yarıda hep kesimdedir.', f: 'V_i > V_bat → V_o = V_bat ;  V_i < V_bat → V_o = V_i  (D şıkkı)',
+      s: ['Diyotun anodu çıkış düğümüne, katodu pilin + ucuna bağlı. İletmesi için V_o > V_bat olmalı.',
+        'v_i < V_bat iken diyot kesimde: R\'den akım geçmez, R\'de gerilim düşmez → V_o = v_i (çıkış girişi aynen izler). Negatif yarım dalganın tamamı bu bölgededir.',
+        'v_i > V_bat iken diyot iletir ve kısa devre gibi davranır: V_o = V_bat sabit kalır, fazla gerilim (v_i − V_bat) R üzerinde düşer.',
+        'Akış çizimi pozitif tepe anını gösteriyor (örnek V_bat = 5 V, R = 1 kΩ): 10 V → R\'de 5 V düşer → diyot → pile + ucundan girer, I = 5 mA.',
+        'Sonuç: tepesi V_bat\'ta düz kesilmiş, negatif kısmı tam sinüs. Sınavdaki D şeklidir. Cevap: D.'] } ] },
+
+  { name: 'Sorular 6–10: EMI bobini, iki op-amp, push-pull, ikiye tümleyen, BLDC', z: 2, k: [
+    { h: 'Bobinin doyma akımı', p: 'Bobin çekirdeği belli bir akıdan sonra doyar. Doyumda geçirgenlik düşer, endüktans hızla azalır; bobin artık akım dalgalanmasını ve gürültüyü süzemez, akım tepeleri büyür. EMI filtresindeki bobin, en büyük giriş akımında bile doymamalıdır.',
+      f: ['L = N² · μ · A / l', 'Doyumda μ ↓ → L ↓'] },
+    { h: 'Op-amp\'a iki girişten sinyal', p: 'Bir op-amp\'ın iki girişine de sinyal geliyorsa süperpozisyon kullanılır: + girişin etkisi eviremeyen kazançla, − girişin etkisi eviren kazançla hesaplanır, sonra toplanır. Dirençli bölücü + girişe bir gerilim verir. Ardışık katlarda ilk katın çıkışı ikinci katın girişidir; sonucu ±V_sat ile sınırla.',
+      f: ['V_o = V₊ (1 + R_f/R_1) − V_i · R_f/R_1', 'Eviremeyen: V_o = V_i (1 + R_f/R_g)', '|V_o| ≤ V_sat'] },
+    { h: 'Push-pull (B sınıfı) çıkış', p: 'NPN ve PNP transistörün bazları ve emetörleri birleştirilir. Baz pozitifse NPN iletir, PNP kesimde kalır; negatifse tersi. İletimdeki transistör emetör izleyici gibi çalışır. Baz direnci, transistörün içinden bakıldığında yük direncinin (β+1) katı görünür.',
+      f: ['V_o = V_B − V_BE', 'I_E = (β + 1) I_B', 'I_B = (V_s − V_BE) / (R_B + (β+1) R_E)'] },
+    { h: 'İkiye tümleyen (2\'s complement)', p: 'Negatif bir sayıyı n bitte yazmak için: önce mutlak değeri ikili yaz, bütün bitleri ters çevir (1\'e tümleyen), sonra 1 ekle. 8 bitte aralık −128 … +127\'dir. En soldaki bit 1 ise sayı negatiftir.',
+      f: ['−x = (NOT x) + 1', '−x = 2ⁿ − x', '8 bit: −128 … +127'] },
+    { h: '6 adımlı (trapezoidal) BLDC sürüş', p: 'Üç faz yıldız bağlı. Her 60 elektriksel derecelik adımda bir faz + baraya, biri − baraya bağlanır, üçüncüsü boşta (yüzer) kalır. Akım iki sargıdan seri geçer. Boştaki fazın uç geriliminden zıt EMK ölçülerek sensörsüz sürüş yapılabilir.',
+      f: ['6 adım × 60° = 360° elektriksel', 'Komütasyon sırası: AB, AC, BC, BA, CA, CB'] } ], qs: [
+    { t: 'mc', q: 'Soru 6: 28 VDC\'yi 12 VDC\'ye çeviren bir buck dönüştürücünün giriş EMI filtresinde bobinin doyma akımı değeri neden önemlidir?', o: ['Çıkış gerilimini doğrudan 12 V\'ta tutar.', 'Bobin doyunca endüktansı düşer; bu da filtreleme başarımını azaltabilir.', 'Dönüştürücünün anahtarlama frekansını belirler.', 'Doyuma yaklaşınca endüktans artar; bu, gürültü filtrelemeyi iyileştirir ama bobini ısıtır.', 'Bütün anahtarlama gürültüsünün girişe ulaşmasını engeller.'], a: 1,
+      e: 'Doyum, endüktansı düşürür; filtre köşe frekansı yükselir ve gürültü geçer.', f: 'Doyumda L ↓ → f_c = 1/(2π√(LC)) ↑ → süzme ↓  (B şıkkı)',
+      s: ['EMI filtresi L ve C ile alçak geçiren süzgeçtir; köşe frekansı f_c = 1/(2π√(LC)).',
+        'Buck giriş akımı darbelidir; filtre bobininden geçen ortalama ve tepe akım çekirdeği mıknatıslar.',
+        'Akım doyma değerini aşarsa çekirdek doyar, μ ve L düşer → f_c yükselir → anahtarlama gürültüsü süzülmeden kaynağa geçer.',
+        'A ve C yanlış: çıkış gerilimini ve frekansı kontrol katı belirler. D yanlış: doyumda endüktans artmaz, düşer. E yanlış: hiçbir filtre gürültünün tamamını durdurmaz.',
+        'Cevap: B.'] },
+    { t: 'mc', q: 'Soru 7: Op-amplerin doyma gerilimi ±15 V ve giriş V_in = −3,5 V ise devrenin çıkışı V_out kaç V olur? (Tüm elemanlar ideal.)', c: BK_TWO, fl: BK_FL7, fa: true, o: ['11 V', '7,5 V', '15 V', '5,5 V', '9 V'], a: 0,
+      e: 'Birinci kat 5,5 V verir, ikinci kat eviremeyen ×2 kazançla 11 V yapar.', f: 'V₊ = 1 V → V_o1 = 1·2 − (−3,5)·1 = 5,5 V → V_out = 5,5 × 2 = 11 V  (A şıkkı)',
+      s: ['1. op-amp, + giriş: +2 V iki eşit 1 kΩ\'luk bölücüden geçer → V₊ = 2 × 1/(1+1) = 1 V. Bu bölücüden 1 mA akar.',
+        'Negatif geri besleme var → V₋ = V₊ = 1 V.',
+        'R1 akımı: (1 − (−3,5)) / 2 kΩ = 2,25 mA, düğümden V_in\'e doğru (sağdan sola) akar.',
+        'Bu akım op-amp girişine giremez, R2 üzerinden çıkıştan gelir: V_o1 = 1 + 2,25 mA × 2 kΩ = 5,5 V. Formülle: V_o1 = 1·(1 + 2/2) − (−3,5)·(2/2) = 2 + 3,5 = 5,5 V.',
+        '2. op-amp eviremeyen yükselteç: V₊ = 5,5 V, geri besleme 2,2 kΩ / 2,2 kΩ → kazanç 1 + 2,2/2,2 = 2.',
+        'V_out = 5,5 × 2 = 11 V; |11| < 15 V olduğu için doyum yok. R5 ve R6\'dan (11 − 5,5)/2,2 k = 2,5 mA akar. Cevap: A) 11 V.'] },
+    { t: 'mc', q: 'Soru 8: Tüm BJT\'ler ideal. V_out kaç V? (V_BE = 0,7 V, β = 100)', c: BK_PP, fl: BK_FL8, fa: true, o: ['4,12 V', '2,81 V', '3,94 V', '1,42 V', '4,87 V'], a: 2,
+      e: 'Baz +5 V\'tan beslendiği için Q1 (NPN) iletir, Q2 (PNP) kesimdedir; Q1 emetör izleyicidir.', f: 'I_B = 4,3 / (10 k + 101 × 1 k) = 38,7 µA → V_out = 101 × 38,7 µA × 1 kΩ ≈ 3,91 V ≈ 3,94 V  (C şıkkı)',
+      s: ['Bazlar R_B üzerinden +5 V\'a bağlı, çıkış ise toprağa 1 kΩ ile iniyor → baz emetörden yüksek: Q1 (NPN) iletimde, Q2 (PNP) ters kutuplu, kesimde.',
+        'Q1 için baz çevrimi: 5 = I_B · 10 kΩ + 0,7 + I_E · 1 kΩ, I_E = (β+1) I_B.',
+        'I_B = (5 − 0,7) / (10 k + 101 × 1 k) = 4,3 / 111 k = 38,7 µA.',
+        'I_E = 101 × 38,7 µA = 3,91 mA → V_out = 3,91 mA × 1 kΩ ≈ 3,91 V.',
+        'Şıklardaki en yakın değer 3,94 V (anahtar paydada β = 100, payda β + 1 almış: 101 × 4,3 / 110 = 3,95). Kontrol: V_B = 3,91 + 0,7 = 4,61 V, R_B\'de 0,39 V düşer = 38,7 µA × 10 kΩ ✓. Cevap: C.'] },
+    { t: 'mc', q: 'Soru 9: Onluk −32 sayısını 8 bitlik ikiye tümleyen biçime çevir.', o: ['0101 1001', '1101 1111', '0001 1111', '1110 0000', '1100 0011'], a: 3,
+      e: 'Mutlak değerin bitlerini ters çevir, 1 ekle.', f: '32 = 0010 0000 → 1101 1111 → +1 → 1110 0000  (D şıkkı)',
+      s: ['+32\'yi 8 bit ikili yaz: 32 = 2⁵ → 0010 0000.',
+        'Bütün bitleri ters çevir (1\'e tümleyen): 1101 1111. (B şıkkı tuzaktır: 1 eklenmemiş hâli.)',
+        '1 ekle: 1101 1111 + 1 = 1110 0000.',
+        'Kontrol: 2⁸ − 32 = 224 = 1110 0000 ✓. Ya da −128 + 64 + 32 = −32 ✓.',
+        'Cevap: D) 1110 0000.'] },
+    { t: 'mc', q: 'Soru 10: 6 adımlı (trapezoidal) blok komütasyonla sürülen standart 3 fazlı BLDC motorda herhangi bir anda sargıların durumu nedir?', o: ['Yalnız bir faz enerjilidir, diğer ikisi boştadır.', 'Aynı anda iki faz enerjilidir: biri + beslemeye, diğeri − beslemeye bağlıdır. Üçüncü faz boştadır (yüzer).', 'Üç faz da aynı anda eşit olarak enerjilidir.', 'Elektromanyetik frenleme için üç faz kısa devre edilir.', 'İki faz kısa devre edilir, üçüncü faz beslemeden enerjilenir.'], a: 1,
+      e: 'Her 60° adımda üst anahtarlardan biri ve başka bir fazın alt anahtarı iletir.', f: 'Örnek adım AB: A → +V_DC, B → −V_DC, C boşta  (B şıkkı)',
+      s: ['İnverterde 6 anahtar var (her fazda üst ve alt). 6 adımlı sürüşte her an bir üst ve farklı bir fazın bir alt anahtarı iletir.',
+        'Böylece akım + baradan bir faza girer, yıldız noktasından geçip ikinci fazdan − baraya döner: iki sargı seri enerjilidir.',
+        'Üçüncü fazın iki anahtarı da kapalıdır; o faz yüzer. Sensörsüz sürüşte zıt EMK sıfır geçişi bu fazdan okunur.',
+        'Her 60° elektrikselde Hall durumu değişir, iletimdeki çift bir adım kayar: AB → AC → BC → BA → CA → CB.',
+        'A, C, D, E bu sürüşü tanımlamaz (C sinüs/FOC sürüşüne, D aktif kısa devre frenine benzer). Cevap: B.'] } ] },
+
+  { name: 'Sorular 11–15: DC motor, kutup ve hız, zener, Boole, flyback', z: 2, k: [
+    { h: 'DC motor eşdeğer devresi', p: 'Armatür bir direnç (R_a), bir endüktans (L_a) ve dönme hızıyla orantılı zıt EMK (e) kaynağının serisidir. Kirchhoff gerilim yasasıyla uygulanan gerilim bu üç elemanın gerilimlerinin toplamına eşittir. Zıt EMK, akımı sınırlayan yönde (pasif işaretle) durur.',
+      f: ['Bobin gerilimi: v_L = L · di/dt', 'e = K_e · ω'] },
+    { h: 'Elektriksel ve mekanik hız', p: 'P kutuplu bir makinede bir mekanik turda P/2 elektriksel periyot vardır. Bu yüzden mekanik hız, elektriksel hızın P/2\'ye bölünmüşüdür. Asenkron motorda rotor senkron hızdan kayma kadar yavaş döner.',
+      f: ['n_s = 120 · f / P (rpm)', 'ω_m = 2π f / (P/2) (rad/s)', 's = (n_s − n) / n_s'] },
+    { h: 'Zener regülatöründe güç', p: 'Zener iletimdeyse yük ucundaki gerilim V_Z\'de sabittir. Seri dirençteki gerilim kaynak ile V_Z farkıdır; direnç akımı bu gerilimden gelir ve zener ile yük arasında paylaşılır.',
+      f: ['V_Rs = V_in − V_Z', 'P_Rs = V_Rs² / R_s', 'I_Z = I_S − I_L'] },
+    { h: 'Boole sadeleştirme', p: 'Çarpımlar toplamı (POS) ifadelerde iki teorem işe yarar: (X + Y)(X + Y\') = X ve dağılma X + YZ = (X + Y)(X + Z). Ayrıca Y · Y\' = 0 ve X + 0 = X.',
+      f: ['(X + Y)(X + Y\') = X', '(X + Y)(X + Z) = X + YZ', 'Y · Y\' = 0'] },
+    { h: 'DCM flyback', p: 'Flyback\'te anahtar kapalıyken primer bobin kaynağa bağlanır ve akımı sıfırdan doğrusal artar. Süreksiz modda (DCM) her periyot sıfırdan başlar, dolayısıyla tepe akımı yalnız açık kalma süresine bağlıdır. Enerji trafo çekirdeğinde depolanır, anahtar açılınca sekondere aktarılır.',
+      f: ['V_in = L_p · ΔI / t_on', 't_on = D · T = D / f_s', 'E = ½ L_p I_pk²'] } ], qs: [
+    { t: 'mc', q: 'Soru 11: Şekildeki DC motor eşdeğer devresine göre ani armatür gerilimi formülü hangisidir?', c: BK_DCM, fl: BK_FL11, fa: true, o: ['v = R_a·i_a − L_a·di_a/dt − e', 'v = −R_a·i_a − L_a·di_a/dt + e', 'v = R_a·i_a + L_a·di_a/dt + e', 'v = R_a·i_a + L_a·di_a/dt', 'v = R_a·i_a − L_a·di_a/dt'], a: 2,
+      e: 'Çevrim boyunca gerilimler toplanır: kaynak = direnç + bobin + zıt EMK.', f: 'v = R_a·i_a + L_a·di_a/dt + e  (C şıkkı)',
+      s: ['Akım i_a kaynağın + ucundan çıkar, R_a, L_a ve motordan geçip − ucuna döner (şekildeki ok).',
+        'Her eleman akım yönünde gerilim düşürür: R_a\'da R_a·i_a, L_a\'da L_a·di_a/dt, motorda zıt EMK e (+ ucu akımın girdiği yanda).',
+        'KVL: v − R_a·i_a − L_a·di_a/dt − e = 0 → v = R_a·i_a + L_a·di_a/dt + e.',
+        'Örnek sayılar (akış çizimi): v = 24 V, R_a\'da 2 V, akım artarken L_a\'da 2 V, e = 20 V → 2 + 2 + 20 = 24 ✓. Kalıcı durumda di/dt = 0 olur ve D şıkkına değil v = R_a·i_a + e\'ye iner.',
+        'D ve E zıt EMK\'yı unutur, A ve B işaretleri yanlış kurar. Cevap: C.'] },
+    { t: 'mc', q: 'Soru 12: 4 kutuplu bir motor 200 Hz elektriksel frekansta çalışıyor. Mekanik açısal hızı kaç rad/s?', o: ['314,2', '471,2', '628,3', '1256,6', '6000,0'], a: 2,
+      e: 'Elektriksel açısal hız 2πf\'dir; kutup çifti sayısına bölünür.', f: 'ω_m = 2π · 200 / 2 = 628,3 rad/s  (C şıkkı)',
+      s: ['4 kutup = 2 kutup çifti (P/2 = 2).',
+        'Elektriksel açısal hız: ω_e = 2π f = 2π × 200 = 1256,6 rad/s (D şıkkı tuzak: bölmeyi unutmak).',
+        'Mekanik: ω_m = ω_e / (P/2) = 1256,6 / 2 = 628,3 rad/s.',
+        'rpm ile kontrol: n = 120 f / P = 120 × 200 / 4 = 6000 rpm (E şıkkı tuzak: birim rpm) → 6000 × 2π / 60 = 628,3 rad/s ✓.',
+        'Cevap: C) 628,3.'] },
+    { t: 'mc', q: 'Soru 13: Devredeki zener 5 VDC\'de kırılıyor. R_s direncinde harcanan güç kaç W? (Tüm elemanlar ideal.)', c: BK_ZEN, fl: BK_FL13, fa: true, o: ['0,5 W', '1 W', '3,125 W', '3 W', '4,25 W'], a: 2,
+      e: 'R_s uçlarında 30 − 5 = 25 V vardır.', f: 'P = 25² / 200 = 625 / 200 = 3,125 W  (C şıkkı)',
+      s: ['Zener iletimde: yük düğümü 5 V\'ta sabit.',
+        'R_s uçlarındaki gerilim: 30 − 5 = 25 V.',
+        'R_s akımı: I_S = 25 V / 200 Ω = 125 mA (kaynaktan düğüme doğru).',
+        'Bu akım ikiye ayrılır: yüke I_L = 50 mA, zenere I_Z = 125 − 50 = 75 mA (katottan anoda). I_Z > 0, zener gerçekten iletimde ✓.',
+        'Güç: P = V·I = 25 × 0,125 = 3,125 W (= 25² / 200). Yük akımı R_s gücünü değiştirmez. Cevap: C) 3,125 W.'] },
+    { t: 'mc', q: 'Soru 14: F = (A+B+C)·(A+B+C\')·(A+B\'+C) ifadesini Boole teoremleriyle sadeleştir.', o: ['A + B', 'A + BC', 'A + C', 'A', 'AB + C'], a: 1,
+      e: 'İlk iki terim A + B\'ye iner, sonra dağılma teoremi uygulanır.', f: 'F = (A+B)(A+B\'+C) = A + B(B\'+C) = A + BC  (B şıkkı)',
+      s: ['İlk iki çarpan: X = A + B dersek (X + C)(X + C\') = X + C·C\' = X = A + B.',
+        'F = (A + B)(A + B\' + C). Dağılma: (A + Y)(A + Z) = A + YZ, Y = B, Z = B\' + C.',
+        'F = A + B·(B\' + C) = A + B·B\' + B·C = A + 0 + BC = A + BC.',
+        'Doğruluk tablosuyla kontrol: F yalnız A = 0, B = 0 (ilk terim 0) ve A = 0, B = 1, C = 0 (üçüncü terim 0) durumlarında 0. A + BC de tam bu üç durumda (000, 001, 010) 0 ✓.',
+        'Cevap: B) A + BC.'] },
+    { t: 'mc', q: 'Soru 15: DCM flyback: V_in = 24 V, f_s = 100 kHz, D = 0,4, primer tepe akımı 5 A. Gerekli primer endüktansı L_p nedir?', c: BK_FLY, fl: BK_FL15, fa: true, o: ['15,4 µH', '17,6 µH', '19,2 µH', '21,6 µH', '23,8 µH'], a: 2,
+      e: 'DCM\'de akım her periyot sıfırdan başlar; t_on boyunca 0\'dan I_pk\'ya çıkar.', f: 'L_p = V_in · D / (f_s · I_pk) = 24 × 0,4 / (100 k × 5) = 19,2 µH  (C şıkkı)',
+      s: ['Periyot: T = 1 / 100 kHz = 10 µs. Açık kalma süresi: t_on = D · T = 0,4 × 10 = 4 µs.',
+        'Anahtar kapalıyken primer doğrudan V_in\'e bağlı (akış çizimi: 24 V primerin tamamında düşer, diyot ters kutuplu, sekonderden akım geçmez).',
+        'DCM: akım 0\'dan başlar → V_in = L_p · I_pk / t_on.',
+        'L_p = V_in · t_on / I_pk = 24 × 4 µs / 5 = 19,2 µH.',
+        'Kontrol: depolanan enerji ½ × 19,2 µH × 5² = 240 µJ, × 100 kHz = 24 W aktarılan güç (ideal). Cevap: C) 19,2 µH.'] } ] },
+
+  { name: 'Sorular 16–20: Cuk, motorlar, asenkron, boost, RLC', z: 3, k: [
+    { h: 'Cuk dönüştürücü', p: 'Cuk, girişte ve çıkışta birer bobin taşır; enerjiyi aradaki C1 kondansatörü aktarır. Çıkış gerilimi girişle ters işaretlidir ve buck-boost ile aynı oranı verir. Anahtar kapalıyken iki bobinin de uçlarında V_in kadar gerilim vardır (kalıcı durumda C1 gerilimi V_in + V_o).',
+      f: ['V_o / V_in = D / (1 − D)', 'ΔI_L = V_in · D / (L · f_s)', 'L = V_in · D / (ΔI · f_s)'] },
+    { h: 'Motor tipleri ve uyarma', p: 'Şönt DC motorda alan sargısı armatüre paraleldir. Hız, gerilimin akıya oranıyla orantılıdır: n ∝ (V − I_a R_a) / Φ. Akı azaldıkça hız artar. Seri motorda alan armatürle seridir; senkron motorlar ise şebeke frekansındaki senkron hızda döner.',
+      f: ['E = K · Φ · ω', 'ω = (V − I_a R_a) / (K Φ)'] },
+    { h: 'Asenkron motorda kutup ve kayma', p: 'Senkron hız frekans ve kutup sayısıyla belirlenir; rotor bundan kayma kadar yavaş döner. Ölçülen hız ve kaymadan senkron hıza, oradan kutup sayısına gidilir. Kutup sayısı her zaman çift tam sayıdır.',
+      f: ['n = n_s (1 − s)', 'n_s = 120 f / P', '60 Hz: 3600, 1800, 1200, 900 rpm'] },
+    { h: 'Boost dönüştürücü', p: 'Boost\'ta anahtar kapalıyken bobin girişten enerji alır, açılınca bu enerji giriş gerilimine eklenerek çıkışa aktarılır. Sürekli iletim modunda (CCM) çıkış yalnız görev oranına bağlıdır.',
+      f: ['V_o = V_in / (1 − D)', 'D = 1 − V_in / V_o'] },
+    { h: 'DC kalıcı durumda L ve C', p: 'DC kaynak uzun süre bağlıysa her şey sabitlenir: türevler sıfırdır. Kondansatörde i = C dv/dt = 0, yani açık devre; bobinde v = L di/dt = 0, yani kısa devre. Devreyi bu kurallarla yeniden çizip yalnız dirençlerle çözersin.',
+      f: ['C → açık devre (i_C = 0)', 'L → kısa devre (v_L = 0)'] } ], qs: [
+    { t: 'mc', q: 'Soru 16: Cuk dönüştürücü: V_in = 24 V, V_o = 36 V, P_o = 90 W, f_s = 50 kHz, D = 0,6. Ortalama giriş bobini akımı 3,75 A, çıkış bobini akımı 2,5 A. Her bobindeki dalgalanma ortalamanın %10\'unu geçmemeli. L1 ve L2 en az kaç olmalı?', c: BK_CUK, fl: null, o: ['L1 = 384 µH, L2 = 576 µH', 'L1 = 768 µH, L2 = 1152 µH', 'L1 = 768 µH, L2 = 576 µH', 'L1 = 1536 µH, L2 = 2304 µH', 'L1 = 1440 µH, L2 = 2880 µH'], a: 1,
+      e: 'Anahtar kapalıyken iki bobinde de V_in = 24 V vardır; ΔI = %10 × ortalama.', f: 'L1 = 24·0,6 / (0,375·50k) = 768 µH ; L2 = 24·0,6 / (0,25·50k) = 1152 µH  (B şıkkı)',
+      s: ['Kontrol: V_o = V_in · D/(1−D) = 24 × 0,6/0,4 = 36 V ✓; I_in = 90/24 = 3,75 A, I_o = 90/36 = 2,5 A ✓.',
+        'İzin verilen dalgalanma: ΔI_L1 = 0,1 × 3,75 = 0,375 A, ΔI_L2 = 0,1 × 2,5 = 0,25 A.',
+        'Anahtar kapalı (t_on = D/f_s = 0,6/50 k = 12 µs): L1 doğrudan V_in\'e bağlı → v_L1 = 24 V. L2\'nin uçlarında V_C1 − V_o = (24 + 36) − 36 = 24 V.',
+        'L1 = V_in · t_on / ΔI_L1 = 24 × 12 µs / 0,375 = 768 µH.',
+        'L2 = 24 × 12 µs / 0,25 = 1152 µH. (A şıkkı yarım dalgalanma, C şıkkı L2\'de yanlış akım kullanır.) Cevap: B.'] },
+    { t: 'mc', q: 'Soru 17: Hangi motorun alan sargısı bağlantısı koparsa, teorik olarak hızı sonsuza gitmeye çalışır?', o: ['Seri uyarmalı DC motor', 'Silindirik rotorlu senkron motor', 'Çıkık kutuplu senkron motor', 'Sabit mıknatıslı senkron motor', 'Şönt uyarmalı DC motor'], a: 4,
+      e: 'Şönt motorda alan kopunca akı (artık mıknatısıyete) düşer ama armatür hâlâ beslenir; ω ∝ 1/Φ.', f: 'ω = (V − I_a R_a) / (K Φ), Φ → 0 ⇒ ω → ∞  (E şıkkı)',
+      s: ['Şönt motorda alan sargısı armatüre paraleldir; alan kopsa da armatür kaynaktan beslenmeye devam eder.',
+        'Akı yalnız artık mıknatısıyete iner, Φ çok küçülür. Zıt EMK E = KΦω kaynağı dengeleyebilmek için ω çok büyümek zorundadır.',
+        'ω = (V − I_a R_a) / (KΦ): Φ → 0 iken ω → ∞; motor kaçar (runaway). Bu yüzden şönt motorlarda alan kaybı koruması bulunur.',
+        'Seri motorda alan armatürle seri olduğu için alan kopunca armatür devresi de açılır, motor durur. (Seri motorun kaçması yüksüz çalışmada olur, soru alan kopmasını soruyor.) Senkron ve PMSM motorlar senkron hızın üstüne çıkmaz.',
+        'Cevap: E) Şönt uyarmalı DC motor.'] },
+    { t: 'mc', q: 'Soru 18: 60 Hz şebekeden beslenen sincap kafesli asenkron motor tam yükte 1140 rpm dönüyor, kayma 0,05. (1) Motorun kaç kutbu var? (2) Kayma iki katına çıkarsa hız kaç rpm olur?', o: ['4 kutup – 1440 rpm', '6 kutup – 1080 rpm', '6 kutup – 1140 rpm', '8 kutup – 840 rpm', '12 kutup – 540 rpm'], a: 1,
+      e: 'Önce senkron hızı bul: n_s = n / (1 − s).', f: 'n_s = 1140 / 0,95 = 1200 rpm → P = 120·60/1200 = 6 ; n = 1200 × (1 − 0,1) = 1080 rpm  (B şıkkı)',
+      s: ['n = n_s (1 − s) → n_s = 1140 / (1 − 0,05) = 1200 rpm.',
+        'n_s = 120 f / P → P = 120 × 60 / 1200 = 6 kutup.',
+        'Kayma iki katı: s = 0,10.',
+        'n = 1200 × (1 − 0,10) = 1080 rpm.',
+        'Kontrol: 60 Hz\'te mümkün senkron hızlar 3600/1800/1200/900; 1140 rpm\'in hemen üstü 1200 → 6 kutup ✓. Cevap: B.'] },
+    { t: 'mc', q: 'Soru 19: İdeal boost DC-DC dönüştürücüde giriş 150 V, çıkış 420 V\'a regüle ediliyor. CCM\'de anahtarın görev oranı yaklaşık yüzde kaçtır?', c: BK_BOOST, fl: BK_FL19, fa: true, o: ['%54,3', '%64,3', '%72,5', '%35,7', '%48,8'], a: 1,
+      e: 'Boost oranı 1/(1 − D).', f: 'D = 1 − 150/420 = 0,643 → %64,3  (B şıkkı)',
+      s: ['CCM ideal boost: V_o = V_in / (1 − D).',
+        '1 − D = V_in / V_o = 150 / 420 = 0,357 (D şıkkı tuzak: 1 − D değeri).',
+        'D = 1 − 0,357 = 0,643 → %64,3.',
+        'Akış çizimi anahtar kapalı anı: bobin 150 V\'a bağlı, akımı artıyor (L\'de 150 V düşer). Diyot ters kutuplu (anot 0 V, katot 420 V); yükü bu sırada C besliyor. Akım oranı I_in / I_o = 420/150 = 2,8.',
+        'Volt-saniye dengesi kontrolü: 150 × 0,643 = (420 − 150) × 0,357 → 96,4 ≈ 96,4 ✓. Cevap: B.'] },
+    { t: 'mc', q: 'Soru 20: Devredeki kaynak 100 VDC veriyor. i akımını bul. (Tüm elemanlar ideal, devre kalıcı durumda.)', c: BK_RLC, fl: BK_FL20, fa: true, o: ['1 A', '1,5 A', '1,7 A', '2 A', '2,5 A'], a: 0,
+      e: 'DC kalıcıda kondansatör açık, bobin kısa devre olur; iki 40 Ω\'luk kol paraleldir.', f: 'R = 30 + (40 ∥ 40) = 50 Ω → I = 2 A → i = 1 A  (A şıkkı)',
+      s: ['DC kalıcı durum: 2 mF kondansatör açık devre (akım geçmez), 10 mH bobin kısa devre.',
+        'Sol kol: 40 Ω + bobin (kısa) = 40 Ω. Sağ kol: 10 Ω + 30 Ω = 40 Ω. İkisi de üst düğümden alt düğüme bağlı → paralel: 40 ∥ 40 = 20 Ω.',
+        'Toplam: 30 + 20 = 50 Ω → kaynak akımı I = 100 / 50 = 2 A (D şıkkı tuzak: toplam akım).',
+        'Üst düğüm gerilimi: 100 − 2 × 30 = 40 V. Kollar eşit olduğu için akım ikiye bölünür: i = 40 / 40 = 1 A (bobinden aşağı).',
+        'Kontrol: sağ kolda 1 A → 10 Ω\'da 10 V, orta düğüm 30 V; sol orta düğüm 0 V (bobin kısa). Kondansatör 30 V\'a dolmuş ama akım taşımaz. KCL: 1 + 1 = 2 A ✓. Cevap: A) 1 A.'] } ] } ] });
+
+const LESSONS = UNITS.flatMap((u, i) => u.lessons.map((l, j) => ({ id: `${i + 1}-${j + 1}`, unit: i, name: l.name, z: l.z, qs: l.qs, k: l.k, op: u.open })));
 const QUESTIONS = Object.fromEntries(LESSONS.flatMap(l => l.qs.map((q, k) => [`${l.id}-${k + 1}`, { ...q, z: l.z }])));
 const ZN = ['', 'Kolay', 'Orta', 'Zor'];
 
@@ -1427,7 +1697,8 @@ const SYM = {
   SO: '<path class="ln" d="M-22 0h6M16 0h6M-16 0L13-15"/><circle class="fl" cx="-16" r="3.500"/><circle class="fl" cx="16" r="3.500"/>',
   I: '<path class="ln" d="M-22 0a5.500 5.500 0 0 1 11 0a5.500 5.500 0 0 1 11 0a5.500 5.500 0 0 1 11 0a5.500 5.500 0 0 1 11 0"/>',
   F: '<path class="ln" d="M-22 0h44M-16-7h32v14h-32z"/>',
-  M: '<path class="ln" d="M-22 0h5M17 0h5"/><circle class="ln" r="17"/>'
+  M: '<path class="ln" d="M-22 0h5M17 0h5"/><circle class="ln" r="17"/>',
+  AC: '<path class="ln" d="M-22 0h5M17 0h5M0-9q-10 4.5 0 9t0 9"/><circle class="ln" r="17"/>'
 };
 // Bloklar: [tip, x, y, seçenek, 0, etiket, kimlik]. Q/QP: baz (x,y), kollektör/emetör (x+40, y±28).
 // NM: gate (x,y), drain (x+34,y-30), source (x+34,y+30); seçenek 1 aynalar. O: girişler (x,y±16), çıkış (x+56,y); seçenek 1 → üst giriş "+".
@@ -1717,7 +1988,7 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 const navBar = cur => `<nav aria-label="Ana gezinme">${[['ana', 'Dersler', ICON.path], ['tekrar', 'Tekrar', ICON.rep], ['profil', 'Profil', ICON.me]].map(([h, n, i]) =>
   `<button data-go="${h}" ${cur === h ? 'aria-current="page"' : ''}>${i}${n}${h === 'tekrar' && S.wrong.length ? `<b aria-label="${S.wrong.length} soru">${S.wrong.length}</b>` : ''}</button>`).join('')}</nav>`;
 // Üniteler açık; ünite içinde dersler sırayla açılır.
-const unlocked = l => { const j = +l.id.split('-')[1]; return j === 1 || `${l.unit + 1}-${j - 1}` in S.done; };
+const unlocked = l => { if (l.op) return true; const j = +l.id.split('-')[1]; return j === 1 || `${l.unit + 1}-${j - 1}` in S.done; };
 
 // Pedler sırayla x = 32 ve 88'e, 96 px arayla dizilir.
 const roadPath = n => { let d = 'M32 48'; for (let k = 1; k < n; k++) d += `V${96 * k - 24}L${k % 2 ? 88 : 32} ${96 * k + 32}V${96 * k + 48}`; return d; };
@@ -1954,6 +2225,7 @@ function check() {
   const foot = $('.foot'), hint = !ok && (q.t === 'num' || q.t === 'oku') ? clue(C.ans, q.a) : '';
   foot.className = 'foot ' + (ok ? 'good' : 'bad');
   foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_Z[q.z]} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  if (q.s) { $('main').insertAdjacentHTML('beforeend', `<section class="kart sol"><h2>Çözüm</h2><ol>${q.s.map(x => `<li>${tx(x)}</li>`).join('')}</ol></section>`); }
   if (q.t === 'sim' && C.miss) $('.fb h2').insertAdjacentHTML('afterend', `<p>${tx(C.miss)}</p>`);
   $('#nx').onclick = () => C.queue.length ? question() : finish();
   $('#nx').focus({ preventScroll: true });
