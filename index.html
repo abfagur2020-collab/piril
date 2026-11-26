@@ -164,6 +164,16 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .akb{align-self:flex-start;min-height:44px;padding:0 16px;border:2px solid var(--line);border-radius:10px;background:var(--card);font-weight:700}
 .akb[aria-pressed=true]{border-color:var(--copper);background:var(--sel)}
+.ipc{display:grid;gap:6px;margin-top:8px}
+.ipb{justify-self:start;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 10px;border:2px solid var(--line);border-radius:22px;background:var(--card);font-weight:700;font-size:15px}
+.ipb svg{width:20px;height:20px;flex:none}
+.ipb small{font:600 13px var(--mono);color:var(--soft)}
+.ipb[aria-expanded=true]{border-color:var(--copper)}
+#ipt{padding:8px 12px;border-left:4px solid var(--led);border-radius:8px;background:var(--hi1);font-size:15px;line-height:1.45}
+#ipt:empty,#ipt[hidden]{display:none}
+#ipt p{margin:0}
+#ipt p+p{margin-top:6px}
+#ipt code{font:14px var(--mono);overflow-wrap:anywhere}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .prb{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .prb button{padding:0 16px}
@@ -1669,13 +1679,13 @@ function addXp(s, n, today) {
   s.dayXp += n; s.xp += n;
 }
 
-function record(s, id, type, right, today, z = 1) {
+function record(s, id, type, right, today, z = 1, xp = XP_Z[z]) { // xp: ipucu alınınca düşük
   const i = s.wrong.indexOf(id);
   if (!right) { if (i < 0) s.wrong.push(id); return; }
   s.ok[type] = (s.ok[type] || 0) + 1;
   s.ok['z' + z] = (s.ok['z' + z] || 0) + 1;
   if (i >= 0) { s.wrong.splice(i, 1); s.fixed++; }
-  addXp(s, XP_Z[z], today);
+  addXp(s, xp, today);
 }
 
 function finishLesson(s, lid, right, total, today) {
@@ -1719,6 +1729,45 @@ function clue(ans, a) {
     }
   }
   return '';
+}
+
+// Pırıl'dan ipucu: cevabı vermeden en çok iki adım, yöntem (q.e) ve sonucu kesilmiş formül (q.f). Cevabı ele veren adım genel ipucuna döner ya da atlanır.
+const XP_HINT = (z, k) => k ? Math.max(1, Math.ceil(XP_Z[z] / 2 ** k)) : XP_Z[z];
+const HINT0 = { mc: 'Kesin yanlış olan seçenekleri ele, kalanları sorudaki değerlerle tek tek dene.', num: 'Verilenleri önce temel birime (V, A, Ω, s) çevir, sonra formülü yaz.', kur: 'İlk iki bant rakamdır, üçüncü bant arkaya eklenecek sıfır sayısıdır.', sim: 'Bir kaydırıcıyı sabit tut, ötekini oynat ve çıkışın nasıl değiştiğine bak.',
+  ariza: 'Ölçtüklerini sağlam devrede beklenenle karşılaştır: açık devre eleman akımı keser ve uçlarında büyük gerilim görünür, kısa devre elemanda 0 V düşer.' };
+const nums = s => (String(s).replace(/(\d)[\s .](?=\d{3}(?!\d))/g, '$1').match(/(?<![\p{L}_\d])\d+(?:,\d+)?/gu) || []).map(x => +x.replace(',', '.'));
+const stems = s => (s.toLocaleLowerCase('tr').match(/\p{L}{4,}/gu) || []).map(w => w.slice(0, 3));
+function leaks(q, s) {
+  const low = s.toLocaleLowerCase('tr'), inQ = nums(q.q), tail = nums(s.split('=').pop());
+  // Cevap sayısı (önekle ya da % ile kaydırılmışı da) ipucunda geçmesin; soruda verilen sayı serbest, ama en sondaki "= sonuç" asla.
+  const same = (x, a) => [1, 1e2, 1e3, 1e6, 1e-2, 1e-3, 1e-6].some(k => q.t === 'mc' ? Math.abs(x - a * k) <= 1e-9 * Math.abs(a * k) : within(x, a * k));
+  const hit = a => nums(s).some(x => !inQ.includes(x) && same(x, a)) || tail.some(x => same(x, a));
+  if (low.includes('şık')) return true;
+  switch (q.t) {
+    case 'num': case 'oku': return hit(q.a);
+    case 'kur': return q.a.some(c => low.includes(c));
+    case 'sira': return /[→:]/.test(s); // ok zinciri ya da sıralı liste sırayı verir
+    case 'ariza': { const a = q.a.toLocaleLowerCase('tr'); return low.split(/[^\p{L}\d_]+/u).some(w => w === a || (a.length > 3 && w.startsWith(a))); }
+    case 'mc': { // "hangisi YANLIŞTIR" sorusunda açıklama doğrudan yanlış ifadeyi çürütür
+      const o = q.o[q.a], wr = q.o.filter((_, i) => i !== q.a), other = new Set([...wr.flatMap(stems), ...stems(q.q)]), mine = stems(s);
+      return /yanlış/i.test(q.q) || [o, ...wr].some(x => x.length > 3 && low.includes(x.toLocaleLowerCase('tr'))) || low.includes(o.toLocaleLowerCase('tr'))
+        || nums(o).some(hit) || stems(o).some(w => !other.has(w) && mine.includes(w)); }
+    default: return false;
+  }
+}
+function hints(q) {
+  const e = q.t !== 'ariza' && q.e && !leaks(q, q.e) ? q.e : q.t === 'sira' ? (/^\d/.test(q.o[0]) ? 'Önce hepsini aynı birime çevir, sonra karşılaştır.' : 'Hangi adım olmadan ötekiler yapılamaz? Oradan başla.') : q.t === 'mc' && /yanlış/i.test(q.q) ? 'İfadeleri tek tek sına: tek bir sözcük (yalnız, her zaman, tam) bir ifadeyi yanlış yapabilir.' : HINT0[q.t === 'oku' ? 'kur' : q.t];
+  let f = (q.f || '').replace(/\s*\([A-E] şıkkı[^)]*\)\s*$/, ''), out = '';
+  if (q.t === 'sim') f = f.split(', örneğin')[0];
+  if ((q.t === 'ariza' && !/^Beklenen/.test(f)) || (q.t === 'mc' && !/\d/.test(f))) f = '';
+  // Sondaki "= sonuç" kısımlarını sağdan kes; kalan son parçada yerine koyma ya da işlem yoksa atla.
+  const p = f.split('=');
+  for (let n = p.length; f && n >= 1 && !out; n--) {
+    const s = n === p.length ? f : p.slice(0, n).join('=').trimEnd() + ' = …';
+    if (n < p.length && !/[\d/×·+−√∥(]/.test(p[n - 1])) break;
+    if (!leaks(q, s)) out = s;
+  }
+  return out && out !== e ? [e, out] : [e];
 }
 
 const BADGES = [
@@ -2513,22 +2562,37 @@ function intro(l) {
   focusTop();
 }
 
+// İpucu düğmesi: her basış bir adım açar ve XP'den düşer; adımlar bitince yalnız gizler/gösterir.
+const BULB = line24('<path d="M9 18h6M10 21h4"/><path fill="var(--led)" d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.3 1 2.1h5c0-.8.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>');
+const hintBox = q => (C.hints = hints(q)).length ? `<div class="ipc"><button class="ipb" id="ipb" aria-expanded="false" aria-controls="ipt">${BULB}<span></span></button><div id="ipt" aria-live="polite"></div></div>` : '';
+function hintLabel() {
+  const b = $('#ipb'), k = C.hint, z = C.q.z, more = k < C.hints.length;
+  $('span', b).innerHTML = more ? `${k ? 'Formül ipucu' : 'İpucu'} <small>−${XP_HINT(z, k) - XP_HINT(z, k + 1)} XP</small>` : $('#ipt').hidden ? 'İpucunu göster' : 'İpucunu gizle';
+}
+function hintStep() {
+  const t = $('#ipt');
+  if (C.hint < C.hints.length) { const i = C.hint++, x = C.hints[i]; t.hidden = false; t.insertAdjacentHTML('beforeend', `<p><b>${i ? 'Formül' : 'Yöntem'}:</b> ${i ? `<code>${tx(x)}</code>` : tx(x)}</p>`); }
+  else t.hidden = !t.hidden;
+  $('#ipb').setAttribute('aria-expanded', !t.hidden); hintLabel();
+}
+
 function question() {
-  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; if (!C.fl?.length) C.fl = null; // fl: null akışı kapatır
+  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false; C.hint = 0; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; if (!C.fl?.length) C.fl = null; // fl: null akışı kapatır
   app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
-  <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1></div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
+  <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1>${hintBox(q)}</div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
   $('#ok').onclick = check;
   if ($('#akb')) $('#akb').onclick = flowToggle;
+  if ($('#ipb')) { $('#ipb').onclick = hintStep; hintLabel(); }
   focusTop();
 }
 
 function check() {
   if (C.checked) return;
-  const q = C.q, id = C.queue[0], ok = grade(q, C.ans, SIMS);
+  const q = C.q, id = C.queue[0], ok = grade(q, C.ans, SIMS), xp = XP_HINT(q.z, C.hint);
   if (ok === null) { const e = $('#nerr'); e.textContent = 'Bunu sayı olarak okuyamadım. Yalnızca rakam yaz, örneğin 2,5.'; e.className = 'note err'; $('#n').focus(); return; }
   C.checked = true; C.queue.shift();
-  record(S, id, q.t, ok, dayNum(), q.z);
+  record(S, id, q.t, ok, dayNum(), q.z, xp);
   if (ok) C.right++;
   C.combo = ok ? (C.combo || 0) + 1 : 0;
   if (ok) { if (C.combo % 3 === 0) party(C.combo); else cheer(); }
@@ -2546,7 +2610,7 @@ function check() {
   const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
   const foot = $('.foot'), hint = !ok && (q.t === 'num' || q.t === 'oku') ? clue(C.ans, q.a) : '';
   foot.className = 'foot ' + (ok ? 'good' : 'bad'); buzz(ok ? 12 : [20, 40, 20]);
-  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${XP_Z[q.z]} XP` : 'Yanlış'}</h2>${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${xp} XP` : 'Yanlış'}</h2>${ok && C.hint ? `<p class="note">İpucu: −${XP_Z[q.z] - xp} XP</p>` : ''}${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${tx(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
   if (q.s) { $('main').insertAdjacentHTML('beforeend', `<section class="kart sol"><h2>Çözüm</h2><ol>${q.s.map(x => `<li>${tx(x)}</li>`).join('')}</ol></section>`); }
   if (q.t === 'sim' && C.miss) $('.fb h2').insertAdjacentHTML('afterend', `<p>${tx(C.miss)}</p>`);
   $('#nx').onclick = () => C.queue.length ? question() : finish();
