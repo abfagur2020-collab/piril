@@ -16,13 +16,16 @@ export function trNow(now = new Date()) {
   return { today: Date.UTC(+p.year, +p.month - 1, +p.day) / 864e5, hour: +p.hour };
 }
 
+// Bugün vadesi gelen tekrar sorusu (box[id] = [seviye, gün]); kutusu olmayan eski kayıtta wrong listesi.
+const due = (st, today) => st.box && typeof st.box === 'object' ? Object.values(st.box).filter(v => Array.isArray(v) && v[1] <= today).length : Array.isArray(st.wrong) ? st.wrong.length : 0;
+
 // docs: [{ id, s, p, ps }]; send(sub, payload) atar ya da { statusCode } ile hata fırlatır; update(id, alanlar).
 export async function run({ docs, send, update, now = new Date(), rnd = Math.random }) {
   const { today, hour } = trNow(now), out = { sent: 0, skip: 0, gone: 0, fail: 0 };
   for (const d of docs) {
     if (!d.p) { out.skip++; continue; }
     let st, sub; try { st = JSON.parse(d.s); sub = JSON.parse(d.p); } catch { out.skip++; continue; }
-    const sum = { rem: st.rem, day: st.day, dayXp: st.dayXp, goal: GOAL, last: st.last, streak: st.streak, freeze: st.freeze, wrong: (st.wrong || []).length };
+    const sum = { rem: st.rem, day: st.day, dayXp: st.dayXp, goal: GOAL, last: st.last, streak: st.streak, freeze: st.freeze, wrong: due(st, today) };
     const body = reminderText(sum, today, hour, typeof d.ps === 'number' ? d.ps : null, rnd());
     if (!body) { out.skip++; continue; }
     try { await send(sub, JSON.stringify({ title: 'Akımlı', body })); await update(d.id, { ps: today }); out.sent++; }

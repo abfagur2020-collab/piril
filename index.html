@@ -1639,15 +1639,20 @@ const XP_Z = [0, 4, 6, 8], XP_RIGHT = 4, XP_FINISH = 10, XP_PERFECT = 6, GOAL = 
 // Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
 const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
 
-const fresh = () => ({ xp: 0, done: {}, wrong: [], ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0] });
+const fresh = () => ({ xp: 0, done: {}, box: {}, ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0] });
 
-function parseState(raw, validIds) {
+// Akıllı tekrar kutusu: box[id] = [seviye 0-3, vade günü]. Doğru cevap bir üst seviyeye çıkarır ve GAPS gün sonraya atar; 3'te doğru kutudan çıkarır.
+const GAPS = [0, 1, 3, 7], dueIds = (s, t) => Object.keys(s.box).filter(id => s.box[id][1] <= t);
+
+function parseState(raw, validIds, today = dayNum()) {
   const s = fresh();
   let p;
   try { p = JSON.parse(raw); } catch { return s; }
   if (!p || typeof p !== 'object') return s;
   for (const k in s) if (typeof p[k] === typeof s[k] && Array.isArray(p[k]) === Array.isArray(s[k]) && p[k] !== null && (typeof p[k] !== 'number' || Number.isFinite(p[k]))) s[k] = p[k];
-  s.wrong = s.wrong.filter(id => validIds.includes(id));
+  // box dışarıdan gelir (yedek, bulut): yalnız bilinen sorular, tam sayı seviye 0-3 ve tam sayı gün kalır.
+  s.box = Object.fromEntries(Object.entries(s.box).filter(([id, v]) => validIds.includes(id) && Array.isArray(v) && Number.isInteger(v[0]) && v[0] >= 0 && v[0] <= 3 && Number.isInteger(v[1])).map(([id, v]) => [id, [v[0], v[1]]]));
+  if (Array.isArray(p.wrong)) for (const id of p.wrong) if (validIds.includes(id) && !(id in s.box)) s.box[id] = [0, today]; // eski kayıt: yanlışlar bugün tekrar
   // Yedek dosyası dışarıdan gelir ve done değerleri ekrana yazılır: yalnız bilinen dersler ve sayaç değerleri kalır.
   const lessons = new Set(validIds.map(id => id.replace(/-[^-]+$/, ''))), count = v => Number.isInteger(v) && v >= 0;
   s.done = Object.fromEntries(Object.entries(s.done).filter(([k, v]) => lessons.has(k) && count(v)));
@@ -1680,11 +1685,12 @@ function addXp(s, n, today) {
 }
 
 function record(s, id, type, right, today, z = 1, xp = XP_Z[z]) { // xp: ipucu alınınca düşük
-  const i = s.wrong.indexOf(id);
-  if (!right) { if (i < 0) s.wrong.push(id); return; }
+  const b = s.box[id];
+  if (!right) { s.box[id] = [0, today]; return; }
   s.ok[type] = (s.ok[type] || 0) + 1;
   s.ok['z' + z] = (s.ok['z' + z] || 0) + 1;
-  if (i >= 0) { s.wrong.splice(i, 1); s.fixed++; }
+  // Ders içinde de Tekrar'daki gibi sayılır, ama yalnız vadesi geldiyse; vadesi gelmemiş soru olduğu gibi kalır.
+  if (b && b[1] <= today) { if (b[0] >= 3) { delete s.box[id]; s.fixed++; } else s.box[id] = [b[0] + 1, today + GAPS[b[0] + 1]]; }
   addXp(s, xp, today);
 }
 
@@ -2154,7 +2160,7 @@ try { S = parseState(localStorage.getItem(KEY), Object.keys(QUESTIONS)); } catch
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); saveOk = true; } catch { saveOk = false; } shareState(); cloudQueue(); };
 // Hizmet çalışanı localStorage okuyamaz; hatırlatıcının ihtiyacı olan özeti önbelleğe yazarız.
 function shareState() {
-  const d = { rem: S.rem, day: S.day, dayXp: S.dayXp, goal: GOAL, last: S.last, streak: S.streak, freeze: S.freeze, wrong: S.wrong.length };
+  const d = { rem: S.rem, day: S.day, dayXp: S.dayXp, goal: GOAL, last: S.last, streak: S.streak, freeze: S.freeze, wrong: dueIds(S, dayNum()).length }; // wrong: bugün vadesi gelen soru sayısı
   try { caches.open('akimli-durum').then(c => c.put('durum', new Response(JSON.stringify(d)))).catch(() => {}); } catch {}
 }
 /* ---------- Bulut yedeği: Google ile giriş (Firebase). FB null iken bölüm görünmez, uygulama eskisi gibi yalnız cihazda çalışır. ---------- */
@@ -2172,6 +2178,7 @@ function mergeState(a, b) {
   m.bestStreak = Math.max(hi.bestStreak, lo.bestStreak);
   m.coins = Math.max(a.coins, b.coins); // görevler: aynı günse her görevde büyük ilerleme, değilse yeni günün kaydı
   if (a.qd === b.qd) m.qp = a.qp.map((p, i) => Math.max(p, b.qp[i])); else [m.qd, m.qp] = a.qd > b.qd ? [a.qd, [...a.qp]] : [b.qd, [...b.qp]];
+  for (const [k, v] of Object.entries(lo.box)) { const o = m.box[k]; if (!o || v[0] < o[0] || (v[0] === o[0] && v[1] < o[1])) m.box[k] = v; } // kutu birleşir: daha zayıf olan kalır
   return m;
 }
 
@@ -2343,8 +2350,8 @@ const scrollMem = {}; let shown = null;
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 /* ---------- Ekranlar ---------- */
-const navBar = cur => `<nav aria-label="Ana gezinme">${[['ana', 'Dersler', ICON.path], ['tekrar', 'Tekrar', ICON.rep], ['profil', 'Profil', ICON.me]].map(([h, n, i]) =>
-  `<button data-go="${h}" ${cur === h ? 'aria-current="page"' : ''}>${i}${n}${h === 'tekrar' && S.wrong.length ? `<b aria-label="${S.wrong.length} soru">${S.wrong.length}</b>` : ''}</button>`).join('')}</nav>`;
+const navBar = (cur, due = dueIds(S, dayNum()).length) => `<nav aria-label="Ana gezinme">${[['ana', 'Dersler', ICON.path], ['tekrar', 'Tekrar', ICON.rep], ['profil', 'Profil', ICON.me]].map(([h, n, i]) =>
+  `<button data-go="${h}" ${cur === h ? 'aria-current="page"' : ''}>${i}${n}${h === 'tekrar' && due ? `<b aria-label="${due} soru">${due}</b>` : ''}</button>`).join('')}</nav>`;
 // Üniteler açık; ünite içinde dersler sırayla açılır.
 const unlocked = l => { if (l.op) return true; const j = +l.id.split('-')[1]; return j === 1 || `${l.unit + 1}-${j - 1}` in S.done; };
 
@@ -2385,10 +2392,12 @@ function questCard(t) {
 
 const byZ = z => Object.keys(QUESTIONS).filter(id => QUESTIONS[id].z === z);
 function review() {
-  const n = S.wrong.length;
-  return `<main class="scr"><h1 tabindex="-1">Tekrar</h1><h2>Zorluğa göre çalış</h2><p class="note">Seçtiğin düzeyden karışık 8 soru gelir.</p><div class="lvl">${[1, 2, 3].map(z => `<button class="z${z}" data-go="pratik-${z}">${zTag(z)}<small>${byZ(z).length} soru</small></button>`).join('')}</div><h2>Yanlışların</h2>${n ? `<p>${n} soru seni bekliyor. Doğru cevaplayana kadar burada kalırlar.</p><button class="btn" data-go="tekrar-coz">Tekrara başla</button>
-  <ul class="list">${S.wrong.map(id => `<li>${tx(QUESTIONS[id].q)}<small>${LESSONS.find(l => id.startsWith(l.id + '-')).name}</small></li>`).join('')}</ul>`
-    : `<div class="end">${mascot('iyi')}<h2>Bekleyen soru yok</h2><p>Derslerde yanlış yaptığın sorular burada birikir.</p></div>`}</main>${navBar('tekrar')}`;
+  const t = dayNum(), due = dueIds(S, t), n = due.length, wait = {};
+  for (const [, d] of Object.values(S.box)) if (d > t) wait[d - t] = (wait[d - t] || 0) + 1;
+  const later = Object.keys(wait).sort((a, b) => a - b).map(d => `${+d === 1 ? 'yarın' : `${d} gün sonra`} ${wait[d]}`).join(', ');
+  return `<main class="scr"><h1 tabindex="-1">Tekrar</h1><h2>Zorluğa göre çalış</h2><p class="note">Seçtiğin düzeyden karışık 8 soru gelir.</p><div class="lvl">${[1, 2, 3].map(z => `<button class="z${z}" data-go="pratik-${z}">${zTag(z)}<small>${byZ(z).length} soru</small></button>`).join('')}</div><h2>Akıllı tekrar</h2>${n ? `<p><b>Bugün tekrar: ${n}</b></p><button class="btn" data-go="tekrar-coz">Tekrara başla</button>
+  <ul class="list">${due.map(id => `<li>${tx(QUESTIONS[id].q)}<small>${LESSONS.find(l => id.startsWith(l.id + '-')).name}</small></li>`).join('')}</ul>`
+    : `<div class="end">${mascot('iyi')}<h2>Bugün tekrar yok</h2><p>${later ? 'Sıradaki sorular günü gelince burada olur.' : 'Derslerde yanlış yaptığın sorular burada birikir.'}</p></div>`}${later ? `<p class="note" id="bekle">Bekleyen: ${later}</p>` : ''}<p class="note">Doğru bildiğin soru 1, 3 ve 7 gün sonra yine gelir; dördüncü doğruda kutudan çıkar. Yanlışta başa döner.</p></main>${navBar('tekrar')}`;
 }
 
 const badgeSvg = on => `<svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--${on ? 'ink' : 'soft'})" stroke-width="2"><path d="M10 4h20v16a10 10 0 0 1-20 0z" ${on ? 'fill="var(--led)"' : 'stroke-dasharray="3 3"'}/><path d="M6 31h28M15 31v7M25 31v7"/></svg>`;
@@ -2633,7 +2642,8 @@ function route() {
   if (!h && needHos()) return welcome();
   // konu-: önce konu anlatımı; düğmesi ders-'e gider, geri tuşu anlatıma döner.
   if (l && unlocked(l)) return d[1] === 'konu' && l.k ? intro(l) : start(l.qs.map((_, i) => `${l.id}-${i + 1}`), l.id);
-  if (h === 'tekrar-coz' && S.wrong.length) return start(S.wrong, null);
+  const due = dueIds(S, dayNum());
+  if (h === 'tekrar-coz' && due.length) return start(due, null);
   const pz = /^pratik-([123])$/.exec(h);
   if (pz) { const ids = byZ(+pz[1]), p = shuffle(ids.length).slice(0, 8); return start(p.map(i => ids[i]), null, true); }
   C = null;
