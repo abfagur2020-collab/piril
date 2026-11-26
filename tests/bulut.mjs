@@ -16,7 +16,7 @@ const MOCK = {
     export const getAuth = () => ({ get currentUser() { return st.user; } });
     export function onAuthStateChanged(a, cb) { st.cbs.push(cb); setTimeout(() => cb(st.user)); }
     export class GoogleAuthProvider { setCustomParameters() {} }
-    export async function signInWithPopup() { if (window.__popup === 'closed') { const e = new Error('x'); e.code = 'auth/popup-closed-by-user'; throw e; } st.user = { uid: 'u1', email: 'test@ornek.com' }; fire(); }
+    export async function signInWithPopup() { if (window.__popup) { const e = new Error('x'); e.code = window.__popup === 'closed' ? 'auth/popup-closed-by-user' : 'auth/popup-blocked'; throw e; } st.user = { uid: 'u1', email: 'test@ornek.com' }; fire(); }
     export async function signInWithRedirect() {}
     export async function signOut() { st.user = null; fire(); }
     export async function deleteUser() { window.__deleted = true; st.user = null; fire(); }
@@ -58,6 +58,9 @@ ok(/Google ile giriş yap/.test(await hesap()), 'giriş düğmesi görünür');
 await page.evaluate(() => window.__popup = 'closed'); await page.click('#cin');
 await page.waitForFunction(() => /iptal/.test(document.getElementById('hesap').textContent));
 ok(true, 'pencere kapatılınca "Giriş iptal edildi"');
+await page.evaluate(() => window.__popup = 'blocked'); await page.click('#cin');
+await page.waitForFunction(() => /Chrome veya Safari/.test(document.getElementById('hesap').textContent));
+ok(true, 'açılır pencere engellenince yol gösteren mesaj');
 await page.evaluate(() => window.__popup = ''); await page.click('#cin');
 await page.waitForFunction(() => /Son yedek/.test(document.getElementById('hesap')?.textContent || ''));
 const m = await page.evaluate(() => ({ xp: S.xp, done: S.done, best: S.bestStreak, meta: JSON.parse(localStorage.getItem('piril-bulut')), cloud: JSON.parse(JSON.parse(localStorage.__fbdb)['users/u1'].s) }));

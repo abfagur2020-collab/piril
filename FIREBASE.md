@@ -24,6 +24,7 @@ Bu değerler gizli bilgi değildir (her Firebase web uygulamasında sayfanın i�
 
 ## Nasıl çalışır
 - Giriş isteğe bağlıdır. Girişsiz kullanım tam çalışır (App Store 5.1.1(v)).
+- Giriş yalnız açılır pencereyle yapılır: uygulama github.io'da, Firebase alanı firebaseapp.com'da olduğu için yönlendirmeli giriş güncel tarayıcılarda dönüşte tamamlanmaz. Pencere açılamazsa kullanıcıya Chrome veya Safari'de açması söylenir.
 - Her kullanıcının tek belgesi vardır: `users/{uid}`. Cevaplardan 3 sn sonra yazılır; uygulama arka plana geçince hemen yazılır.
 - Her yazmadan önce bulut okunur. Başka cihaz daha yeni bir kayıt bıraktıysa birleştirilir: XP'si yüksek olan temel, biten derslerin en iyi puanı ve en uzun seri ikisinden alınır.
 - Hesabı sil: bulut belgesi ve Firebase kullanıcısı silinir, bu cihazdaki ilerleme kalır (App Store ve Google Play hesap silme şartı).

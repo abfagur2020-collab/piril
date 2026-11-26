@@ -1960,7 +1960,7 @@ function shareState() {
 /* ---------- Bulut yedeği: Google ile giriş (Firebase). FB null iken bölüm görünmez, uygulama eskisi gibi yalnız cihazda çalışır. ---------- */
 // Firebase web yapılandırması gizli bilgi değildir; veriye erişimi Firestore kuralları sınırlar (bkz. FIREBASE.md).
 const FB = { apiKey: 'AIzaSyAurR_YyeBkbi9ua7C6xb_r0UP_g3113Q0', authDomain: 'piril-be8a2.firebaseapp.com', projectId: 'piril-be8a2', appId: '1:602752745524:web:ffbea0f011563e27444a61' };
-const FBV = '13.4.0', SYNC = 'piril-bulut'; // SYNC: { uid, t: son eşitlenen bulut zamanı, pending: yönlendirmeli giriş sürüyor }
+const FBV = '13.4.0', SYNC = 'piril-bulut'; // SYNC: { uid, t: son eşitlenen bulut zamanı }
 var cloud = null, cloudUser = null, cloudMsg = '', cloudTimer = 0, cloudBusy = false;
 const syncMeta = () => { try { return JSON.parse(localStorage.getItem(SYNC)) || {}; } catch { return {}; } };
 const setMeta = m => { try { localStorage.setItem(SYNC, JSON.stringify(m)); } catch {} };
@@ -1982,7 +1982,6 @@ async function cloudLoad() {
   await new Promise(res => au.onAuthStateChanged(auth, u => {
     const was = cloudUser?.uid; cloudUser = u; res();
     if (u && u.uid !== was) cloudPull();
-    if (!u && syncMeta().pending) setMeta({});
     cloudUI();
   }));
   return cloud;
@@ -2022,13 +2021,17 @@ function cloudQueue() {
 addEventListener('visibilitychange', () => { if (document.hidden && cloudTimer && cloudUser) { clearTimeout(cloudTimer); cloudTimer = 0; cloudPush().catch(() => {}); } });
 addEventListener('online', () => cloudUser && cloudPull());
 
+// Yalnız açılır pencere: uygulama github.io'da, Firebase alanı firebaseapp.com'da olduğu için sayfa yönlendirmeli giriş
+// üçüncü taraf depolamayı engelleyen tarayıcılarda (güncel Chrome, Safari) dönüşte tamamlanmaz.
 async function cloudSignIn() {
   const { au, auth } = await cloudLoad(), p = new au.GoogleAuthProvider();
   p.setCustomParameters({ prompt: 'select_account' });
   try { await au.signInWithPopup(auth, p); }
   catch (e) {
-    if (e.code !== 'auth/popup-blocked' && e.code !== 'auth/operation-not-supported-in-this-environment') throw e;
-    setMeta({ ...syncMeta(), pending: 1 }); await au.signInWithRedirect(auth, p); // açılır pencere yoksa sayfa Google'a gidip döner
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+      const x = new Error('popup'); x.code = 'akimli/popup'; throw x;
+    }
+    throw e;
   }
 }
 async function cloudSignOut() { await cloudPush().catch(() => {}); await cloud.au.signOut(cloud.auth); setMeta({}); cloudMsg = ''; }
@@ -2053,7 +2056,7 @@ function cloudUI() {
       <button class="btn alt" id="csync" ${cloudBusy ? 'disabled' : ''}>Şimdi eşitle</button><button class="btn alt" id="cout">Çıkış yap</button><button class="btn alt" id="cdel">Hesabı sil</button>`
     : `<p class="note">İstersen Google hesabınla gir: ilerlemen buluta yedeklenir, telefon değiştirsen de kaybolmaz. Girmeden de uygulamayı tam kullanabilirsin.</p>
       <button class="btn" id="cin" ${off ? 'disabled' : ''}>Google ile giriş yap</button><p class="note" aria-live="polite">${esc(off ? 'Giriş için internet gerekir.' : cloudMsg)}</p>`;
-  const act = (id, f, done) => { const b = document.getElementById(id); if (b) b.onclick = async () => { b.disabled = true; try { await f(); if (done) cloudMsg = done; } catch (e) { cloudMsg = e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request' ? 'Giriş iptal edildi.' : 'Olmadı, bir daha dene.'; } cloudUI(); }; };
+  const act = (id, f, done) => { const b = document.getElementById(id); if (b) b.onclick = async () => { b.disabled = true; try { await f(); if (done) cloudMsg = done; } catch (e) { cloudMsg = e?.code === 'akimli/popup' ? 'Bu tarayıcı Google giriş penceresini açamadı. Açılır pencerelere izin ver ya da uygulamayı Chrome veya Safari’de aç.' : e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request' ? 'Giriş iptal edildi.' : 'Olmadı, bir daha dene.'; } cloudUI(); }; };
   act('cin', () => { cloudMsg = 'Google açılıyor…'; return cloudSignIn(); });
   act('csync', cloudPull);
   act('cout', cloudSignOut, 'Çıkış yaptın. İlerlemen bu cihazda duruyor.');
@@ -2061,7 +2064,7 @@ function cloudUI() {
   if (del) del.onclick = () => { if (confirm('Hesabın ve buluttaki yedeğin kalıcı olarak silinsin mi? Bu geri alınamaz. Bu cihazdaki ilerlemen silinmez.')) { del.disabled = true; cloudDelete().catch(() => { cloudMsg = 'Silinemedi, bir daha dene.'; }).then(cloudUI); } };
 }
 // Daha önce giriş yapıldıysa açılışta arka planda bağlan; internet yoksa sessizce geç.
-if (FB && (syncMeta().uid || syncMeta().pending)) cloudLoad().catch(() => { cloudMsg = 'Buluta bağlanılamadı.'; });
+if (FB && syncMeta().uid) cloudLoad().catch(() => { cloudMsg = 'Buluta bağlanılamadı.'; });
 
 const swReg = () => 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration() : Promise.resolve(null);
 // Durum: 'yok' (tarayıcı desteklemiyor), 'izin' (bildirim izni yok), 'arka' (arka plan kontrolü yok), 'tamam'.
