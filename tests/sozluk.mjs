@@ -76,7 +76,13 @@ ok(cov.q / cov.qn > 0.6 && cov.k / cov.kn > 0.9, 'kapsam: soruların %60\'ından
 // (c) arayüz: ilk sorusu çoktan seçmeli ve başlığında terim olan ders
 const L = await page.evaluate(() => LESSONS.find(l => l.qs[0].t === 'mc' && l.op !== false && /class="term"/.test(txg(l.qs[0].q)) && unlocked(l)).id);
 await page.evaluate(L => location.hash = 'ders-' + L, L);
-ok(await at(page, 'ders-' + L, 'h1.q .term'), `soru başlığında terim düğmesi var (ders ${L})`);
+await page.waitForFunction(() => C && C.q && !C.checked);
+ok(await page.evaluate(() => !document.querySelector('h1.q .term')), `cevaptan önce soru başlığında terim yok: tanım cevabı söyleyebilir (ders ${L})`);
+// Cevap verilince başlıktaki terimler açılır; yanlış cevabın açıklamasında da terim var.
+await page.evaluate(() => { const o = [...document.querySelectorAll('.opt')]; o.find(b => +b.dataset.i !== C.q.a)?.click(); });
+await page.click('#ok');
+ok(await at(page, 'ders-' + L, 'h1.q .term'), 'cevaptan sonra soru başlığında terim düğmesi var');
+ok(await page.evaluate(() => !document.querySelector('h1.q .term').disabled), 'cevaptan sonra başlıktaki terim kilitlenmez');
 const t0 = await page.$eval('h1.q .term', b => ({ t: b.textContent, n: TERMS[b.dataset.t][0], d: TERMS[b.dataset.t][2] }));
 await page.click('h1.q .term');
 const pop = await page.evaluate(() => { const p = document.getElementById('tpop'); return { vis: !p.hidden, txt: p.textContent, foc: document.activeElement === p, exp: document.querySelector('h1.q .term').getAttribute('aria-expanded'), hash: location.hash }; });
@@ -86,22 +92,17 @@ if (shots) { await page.waitForTimeout(400); await page.screenshot({ path: `${sh
 await page.keyboard.press('Escape');
 const closed = await page.evaluate(() => ({ h: document.getElementById('tpop').hidden, foc: document.activeElement?.classList.contains('term'), exp: document.querySelector('h1.q .term').getAttribute('aria-expanded') }));
 ok(closed.h && closed.foc && closed.exp === 'false', 'Esc kapatır, odak terime döner');
-// Dışarı dokununca kapanır; seçenek tıklaması yine çalışır.
+// Dışarı dokununca kapanır.
 await page.click('h1.q .term');
-await page.click('.opt');
-const out = await page.evaluate(() => ({ h: document.getElementById('tpop').hidden, sel: !!document.querySelector('.opt[aria-pressed=true]') }));
-ok(out.h && out.sel, 'dışarı dokunmak kartı kapatır, seçenek seçilir');
+await page.click('.kind');
+ok(await page.evaluate(() => document.getElementById('tpop').hidden), 'dışarı dokunmak kartı kapatır');
 // "Sözlükte aç": ders bozulmadan üstte açılır.
 await page.click('h1.q .term');
 await page.click('#tpgo');
 const ov = await page.evaluate(() => ({ o: !!document.getElementById('szo'), on: document.querySelector('#szo .sze.on dt')?.textContent, hash: location.hash }));
 ok(ov.o && ov.on && ov.hash === '#ders-' + L, `Sözlükte aç: sözlük üstte, terim işaretli (${ov.on})`);
 await page.click('#szx');
-ok(await page.evaluate(() => !document.getElementById('szo') && !!document.querySelector('.opt[aria-pressed=true]')), 'X sözlüğü kapatır, soru olduğu gibi durur');
-// Cevaptan sonra başlıktaki terim hâlâ açılır; yanlış açıklamada terim var.
-await page.evaluate(() => { const o = [...document.querySelectorAll('.opt')]; o.find(b => +b.dataset.i !== C.q.a)?.click(); });
-await page.click('#ok').catch(() => {});
-ok(await page.evaluate(() => !document.querySelector('h1.q .term').disabled), 'cevaptan sonra başlıktaki terim kilitlenmez');
+ok(await page.evaluate(() => !document.getElementById('szo') && C && C.checked), 'X sözlüğü kapatır, soru olduğu gibi durur');
 
 // Konu anlatımı kartlarında terim
 await page.evaluate(() => location.hash = 'konu-3-1');
@@ -129,7 +130,7 @@ ok(await at(page, 'profil', '[data-go="sozluk"]'), 'X Profil\'e döner');
 
 if (shots) {
   const dk = await open('dark');
-  await dk.evaluate(L => location.hash = 'ders-' + L, L); await at(dk, 'ders-' + L, 'h1.q .term');
+  await dk.evaluate(L => location.hash = 'ders-' + L, L); await dk.waitForFunction(() => C && C.q); await dk.evaluate(() => { const o = [...document.querySelectorAll('.opt')]; o.find(b => +b.dataset.i !== C.q.a)?.click(); }); await dk.click('#ok'); await at(dk, 'ders-' + L, 'h1.q .term');
   await dk.click('h1.q .term'); await dk.waitForTimeout(400); await dk.screenshot({ path: `${shots}/sozluk-terim-acik-koyu.png` });
   await dk.evaluate(() => location.hash = 'sozluk'); await at(dk, 'sozluk', '#szq'); await dk.waitForTimeout(400);
   await dk.screenshot({ path: `${shots}/sozluk-liste-koyu.png` });

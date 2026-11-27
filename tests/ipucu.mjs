@@ -91,6 +91,10 @@ try {
     await page.click('#ipb'); assert.equal(await page.locator('#ipt p').count(), 1, id);
   }
   assert.deepEqual(errors, []);
+  // İnceleme regresyonu: bu sorularda ipucu cevabı başka sözcüklerle söylüyordu; yalnız genel ipucu kalmalı.
+  const GEN = await page.evaluate(() => ['1-2-5','1-3-2','4-1-3','6-1-1','7-1-2','7-1-5','7-2-6','8-2-1','9-1-2','9-2-5','10-3-5','11-3-6','12-3-1','1-4-3','2-1-6','8-2-2','11-1-5','7-3-4','12-1-2']
+    .filter(id => QUESTIONS[id]).map(id => [id, hints(QUESTIONS[id])]).filter(([, h]) => h.length > 1 || !/ele\.|ele,|Her seçeneği|İfadeleri tek tek/.test(h[0])));
+  assert.deepEqual(GEN, [], 'cevabı söyleyen ipucu kaldı: ' + JSON.stringify(GEN));
   console.log('Hepsi geçti');
 } catch (e) { console.error('BAŞARISIZ:', e.message, errors); process.exitCode = 1; }
 finally { await browser.close(); }
