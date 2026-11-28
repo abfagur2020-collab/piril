@@ -19,8 +19,8 @@ try {
   await page.waitForSelector('.hos');
   assert.match(await page.textContent('h1'), /Pırıl/);
   assert.equal(await page.locator('[data-h]').count(), 2);
-  // 2. Yeni yol: Google düğmesi (GIS, sahte) + hesapsız başla
-  await page.click('[data-h="1"]');
+  // 2. Yeni yol: önce günlük hedef ve söz (ayrıntısı tests/hedef.mjs), sonra Google düğmesi (GIS, sahte) + hesapsız başla
+  await page.click('[data-h="3"]'); await page.click('[data-g="30"]'); await page.click('[data-h="1"]');
   assert.match(await page.textContent('h1'), /kaydol/i);
   await page.waitForSelector('#gmock');
   assert.equal(await page.evaluate(() => window.__gisopt.text), 'signup_with');

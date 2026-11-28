@@ -8,6 +8,7 @@ const sw = fs.readFileSync(new URL('sw.js', root), 'utf8'), html = fs.readFileSy
 const src = /function reminderText[\s\S]*?\n}\n/.exec(sw)[0];
 export const reminderText = new Function(src + 'return reminderText;')();
 export const GOAL = +/GOAL = (\d+)/.exec(html)[1];
+export const GOALS = [.../GOALS = (\[.*\]),/.exec(html)[1].matchAll(/\[\d+, (\d+)/g)].map(m => +m[1]); // seçilebilir hedefler (XP)
 export const VAPID_PUBLIC = /const VAPID = '([^']+)'/.exec(html)[1];
 
 // Türkiye saatiyle bugünün gün numarası (uygulamadaki dayNum ile aynı ölçek) ve saat.
@@ -25,7 +26,7 @@ export async function run({ docs, send, update, now = new Date(), rnd = Math.ran
   for (const d of docs) {
     if (!d.p) { out.skip++; continue; }
     let st, sub; try { st = JSON.parse(d.s); sub = JSON.parse(d.p); } catch { out.skip++; continue; }
-    const sum = { rem: st.rem, day: st.day, dayXp: st.dayXp, goal: GOAL, last: st.last, streak: st.streak, freeze: st.freeze, wrong: due(st, today) };
+    const sum = { rem: st.rem, day: st.day, dayXp: st.dayXp, goal: GOALS.includes(st.goal) ? st.goal : GOAL, last: st.last, streak: st.streak, freeze: st.freeze, wrong: due(st, today) };
     const body = reminderText(sum, today, hour, typeof d.ps === 'number' ? d.ps : null, rnd());
     if (!body) { out.skip++; continue; }
     try { await send(sub, JSON.stringify({ title: 'Akımlı', body })); await update(d.id, { ps: today }); out.sent++; }

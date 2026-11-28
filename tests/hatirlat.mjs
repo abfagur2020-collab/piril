@@ -30,4 +30,9 @@ assert.equal((await run({ docs: [docs[0]], now: new Date('2026-11-26T20:30:00Z')
 const one = async s => { let b; await run({ docs: [{ id: 'k', s, p: sub }], now, rnd: () => 0, send: async (x, pl) => { b = JSON.parse(pl).body; }, update: async () => {} }); return b; };
 assert.match(await one(st({ day: today - 1, last: today, box: { '1-1-1': [0, today], '1-1-2': [1, today - 2], '1-1-3': [2, today + 3] } })), /Tekrar kutunda 2 soru/);
 assert.match(await one(JSON.stringify({ rem: 1, day: today - 1, last: today, streak: 5, wrong: ['1-1-1'] })), /Tekrar kutunda 1 soru/);
+// Kişisel günlük hedef: kayıttaki goal geçerliyse o, değilse varsayılan GOAL
+assert.match(await one(st({ dayXp: 40, last: today, goal: 60 })), /Hedefe 20 XP kaldı/);
+assert.equal(await one(st({ dayXp: 25, last: today, goal: 20 })), undefined, '20 XP hedefi tamam: gönderme');
+assert.match(await one(st({ dayXp: 12, last: today, goal: 7 })), new RegExp(`Hedefe ${GOAL - 12} XP kaldı`));
+assert.match(await one(st({ dayXp: 12, last: today, goal: '60' })), new RegExp(`Hedefe ${GOAL - 12} XP kaldı`));
 console.log('Hepsi geçti');
