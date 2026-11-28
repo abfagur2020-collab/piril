@@ -102,6 +102,52 @@ await page.click('#cin'); await page.waitForSelector('#gmock'); await page.click
 await page.waitForFunction(() => window.__deleted && /silindi/.test(document.getElementById('hesap').textContent));
 ok(await page.evaluate(() => !JSON.parse(localStorage.__fbdb)['users/u1'] && S.xp >= 900), 'hesap silinince bulut kaydı gider, cihazdaki ilerleme kalır');
 ok(!(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)), 'profilde yatay taşma yok');
+
+// 7. Seri birleşmesi: bitişik seriler zincirlenir, gerçekten kopan seri birleşmez; onarma ve söz birleşen seriyle tutarlı
+const sk = await page.evaluate(() => { const t = dayNum(), f = o => ({ ...fresh(), ...o }), k = m => [m.last, m.streak, m.bestStreak, m.freeze, m.refill];
+  // Yeni telefon, "Hesapsız başla", bugün 1 ders; bulutta dün biten 50 günlük seri ve 4 gün tutulmuş söz.
+  const ph = f({ xp: 16, last: t, streak: 1, bestStreak: 1, day: t, dayXp: 16 }), cl = f({ xp: 900, last: t - 1, streak: 50, bestStreak: 50, freeze: false, refill: 3, pledge: [t - 4, 4, t - 1, 0] });
+  const np = mergeState(ph, cl), np2 = mergeState(cl, ph); pledgeTick(np, t);
+  // İki cihaz ardışık günlerde: A dün (5 gün), B bugün yeni (1 gün)
+  const ab = mergeState(f({ last: t - 1, streak: 5, bestStreak: 5 }), f({ last: t, streak: 1, bestStreak: 1 }));
+  // Ara gün eskinin kaçırma hakkıyla kapanır; hakkı yoksa birleşmez
+  const fz = mergeState(f({ last: t - 2, streak: 8, bestStreak: 8, freeze: true }), f({ last: t, streak: 1, bestStreak: 1 }));
+  const nofz = mergeState(f({ last: t - 2, streak: 8, bestStreak: 8, freeze: false, refill: 4 }), f({ last: t, streak: 1, bestStreak: 1 }));
+  // Gerçekten kopmuş: 3 gün boşluk → yalnız yeni seri, en uzun seri korunur
+  const gap = mergeState(f({ xp: 900, last: t - 4, streak: 50, bestStreak: 50, freeze: true }), f({ xp: 5, last: t, streak: 1, bestStreak: 1 }));
+  // Aynı gün: uzun olan
+  const same = mergeState(f({ last: t, streak: 3, bestStreak: 3 }), f({ last: t, streak: 9, bestStreak: 9, freeze: false, refill: 2 }));
+  // Bir cihaz seriyi kopmuş sanıp onarma önermişken öteki cihaz o günleri çalışmış: öneri kalkar, söz bozulmaz
+  const rpA = f({ last: t, streak: 1, rpFor: t - 3, rpDay: t, rpLost: 12, rpN: 1 }), rpB = f({ last: t - 1, streak: 14, bestStreak: 14 }), rp = mergeState(rpA, rpB);
+  const rpGap = mergeState(rpA, f({ last: t - 3, streak: 12, bestStreak: 12, freeze: false, rpFor: -1 }));
+  return { np: [...k(np), np.pledge], np2: k(np2), ab: k(ab), fz: k(fz), nofz: k(nofz), gap: k(gap), same: k(same), rp: [rp.streak, rp.rpLost, liveStreak(rp, t)], rpGap: [rpGap.streak, rpGap.rpLost], t }; });
+ok(JSON.stringify(sk.np) === JSON.stringify([sk.t, 51, 51, false, 2, [sk.t - 4, 5, sk.t, 0]]), `yeni telefon + bulut: seri 51, hak eski seriden (2 gün kaldı), söz sürer (5/7) ${JSON.stringify(sk.np)}`);
+ok(JSON.stringify(sk.np2) === JSON.stringify(sk.np.slice(0, 5)), 'birleşme sıradan bağımsız');
+ok(sk.ab[1] === 6 && sk.ab[0] === sk.t, `ardışık günlerde iki cihaz: 5 + 1 = 6 (${sk.ab})`);
+ok(sk.fz[1] === 9 && sk.fz[3] === false && sk.fz[4] === 7, `ara gün kaçırma hakkıyla: 8 + 1 = 9, hak harcandı (${sk.fz})`);
+ok(sk.nofz[1] === 1, `hakkı yoksa ara gün seriyi koparır (${sk.nofz})`);
+ok(sk.gap[1] === 1 && sk.gap[2] === 50 && sk.gap[0] === sk.t, `gerçekten kopmuş seri: yalnız yeni seri, en uzun seri 50 kalır (${sk.gap})`);
+ok(sk.same[1] === 9 && sk.same[3] === false && sk.same[4] === 2, `aynı gün: uzun olan (${sk.same})`);
+ok(sk.rp[0] === 15 && sk.rp[1] === 0 && sk.rp[2] === 15, `öteki cihaz arayı kapattıysa onarma önerisi kalkar (${sk.rp})`);
+ok(sk.rpGap[0] === 1 && sk.rpGap[1] === 12, `gerçekten kopmuşsa onarma önerisi kalır (${sk.rpGap})`);
+
+// 8. Ayarlar: hedef, ses ve hatırlatıcı her biri en son değiştirildiği cihazdan gelir (XP'den bağımsız)
+const st = await page.evaluate(() => { const f = o => ({ ...fresh(), ...o }), now = Date.now(), g = m => [m.goal, m.snd, m.rem];
+  const A = f({ xp: 900, goal: 30, snd: true, rem: 1, setAt: [now - 5e3, now - 1e3, now - 9e3] }), B = f({ xp: 10, goal: 60, snd: false, rem: 0, setAt: [now - 1e3, now - 5e3, now - 2e3] });
+  const ids = Object.keys(QUESTIONS), P = v => parseState(JSON.stringify({ setAt: v }), ids).setAt;
+  // Gerçek akış: Profil'den değişen ayar zamanlanır
+  S.setAt = [0, 0, 0]; location.hash = 'profil';
+  return { ab: g(mergeState(A, B)), ba: g(mergeState(B, A)), at: mergeState(A, B).setAt, tie: g(mergeState(f({ xp: 9, goal: 60 }), f({ xp: 1, goal: 20, snd: false }))), now,
+    ps: [P([now - 1, 5, 0]), P([now + 36e5, -1, 'x']), P([NaN, null, 1]), P('x'), P([1, 2])] }; });
+ok(JSON.stringify(st.ab) === '[60,true,0]' && JSON.stringify(st.ba) === '[60,true,0]', `her ayar en yeni cihazdan (${st.ab} / ${st.ba})`);
+ok(st.at.join() === [st.now - 1e3, st.now - 1e3, st.now - 2e3].join(), 'ayar zamanları da birleşir');
+ok(JSON.stringify(st.tie) === '[60,true,0]', 'zaman yoksa XP\'si yüksek olan (eski davranış)');
+ok(JSON.stringify(st.ps) === JSON.stringify([[st.now - 1, 5, 0], [0, 0, 0], [0, 0, 1], [0, 0, 0], [1, 2, 0]]), `parseState: geçersiz/gelecekteki ayar zamanları 0 (${JSON.stringify(st.ps)})`);
+await page.waitForSelector('#hedef'); const t0 = Date.now();
+await page.selectOption('#hedef', '60'); await page.selectOption('#rem', '0'); await page.click('#snd');
+const sa = await page.evaluate(() => [S.goal, S.snd, S.rem, ...S.setAt]);
+await page.waitForTimeout(300); errs.splice(0, errs.length, ...errs.filter(e => !/ServiceWorkerRegistration.*protocol/.test(e))); // file:// ortamı: hatırlatıcı kapatılınca SW kaydı bulunamaz
+ok(sa[0] === 60 && sa.slice(3).every(v => v >= t0 - 1000 && v <= Date.now() + 1000), `Profil'de değişen hedef, ses ve hatırlatıcı zamanlanır (${sa})`);
 ok(!errs.length, 'konsol hatası yok ' + errs.join(' | '));
 await browser.close();
 console.log(fail ? `${fail} hata` : 'Hepsi geçti'); process.exit(fail ? 1 : 0);

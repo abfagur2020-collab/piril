@@ -266,7 +266,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .party .pr2 .w{transform-box:fill-box;transform-origin:center;animation:flap .12s ease-in-out infinite alternate}
 .party .ring{position:absolute;left:50%;top:62%;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:4px solid var(--led);animation:ring 1.2s ease-out infinite}
 .party .ring+.ring{animation-delay:.4s}.party .ring+.ring+.ring{animation-delay:.8s}
-.party h2{font:900 44px/1.05 var(--disp);color:var(--led);-webkit-text-stroke:2px var(--ledink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ledink),0 0 30px color-mix(in oklch,var(--led) 70%,transparent);
+.party h2{font:900 clamp(28px,9.6vw,44px)/1.05 var(--disp);max-width:calc(100vw - 32px);overflow-wrap:break-word;color:var(--led);-webkit-text-stroke:2px var(--ledink);paint-order:stroke fill;text-shadow:0 4px 0 var(--ledink),0 0 30px color-mix(in oklch,var(--led) 70%,transparent);
   animation:ptitle .7s cubic-bezier(.2,1.6,.4,1) .25s both}
 .party p{font:800 20px var(--disp);color:var(--ink);background:var(--card);border:2px solid var(--led);border-radius:999px;padding:6px 16px;animation:ptitle .6s cubic-bezier(.2,1.6,.4,1) .5s both}
 .party i{position:absolute;left:50%;top:44%;width:var(--s);height:var(--s);background:var(--c);clip-path:var(--k);animation:burst var(--t) cubic-bezier(.1,.7,.3,1) var(--d) both}
@@ -279,6 +279,7 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .qtoast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));z-index:45;pointer-events:none;width:min(358px,calc(100% - 32px));display:flex;align-items:center;gap:10px;
   padding:10px 14px;border-radius:14px;background:var(--card);color:var(--ink);border:2px solid var(--copper);box-shadow:0 8px 24px rgba(0,0,0,.22);animation:qtoast 2.4s cubic-bezier(.2,.9,.3,1.2) forwards}
 .qtoast .coin{width:34px;height:34px;animation:qspin .8s ease-out}
+.qtoast .fire{width:28px;height:34px;flex:none}
 .qtoast div{flex:1;min-width:0;display:grid;line-height:1.3}
 .qtoast b{font:800 18px var(--disp)}
 .qtoast small{font-size:14px;color:var(--soft);overflow-wrap:anywhere}
@@ -306,12 +307,12 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 /* Ders sonu: XP sayacı, hedef çubuğu, seri alevi, sandık ve çift XP. */
 .fin{gap:12px;justify-content:flex-start}
 .fin>svg{width:112px}
-.ign{position:relative;width:96px;animation:ignite .7s cubic-bezier(.2,1.5,.4,1) both}
-.ign svg{width:100%;display:block;animation:flick 1.4s ease-in-out .7s infinite alternate;transform-origin:50% 100%}
-.ign b{position:absolute;left:0;right:0;bottom:10px;font:900 30px var(--disp);color:var(--ledink);font-variant-numeric:tabular-nums}
+.fign{position:relative;width:96px;animation:fin-ignite .7s cubic-bezier(.2,1.5,.4,1) both}
+.fign svg{width:100%;display:block;animation:fin-flick 1.4s ease-in-out .7s infinite alternate;transform-origin:50% 100%}
+.fign b{position:absolute;left:0;right:0;bottom:10px;font:900 30px var(--disp);color:var(--ledink);font-variant-numeric:tabular-nums}
 .igt{font:800 22px var(--disp);color:var(--hot);margin-top:-6px}
-@keyframes ignite{0%{transform:scale(0) translateY(30px);opacity:0}60%{transform:scale(1.18)}100%{transform:none;opacity:1}}
-@keyframes flick{to{transform:scale(1.04,.96) skewX(-2deg)}}
+@keyframes fin-ignite{0%{transform:scale(0) translateY(30px);opacity:0}60%{transform:scale(1.18)}100%{transform:none;opacity:1}}
+@keyframes fin-flick{to{transform:scale(1.04,.96) skewX(-2deg)}}
 .xpg{font:800 36px/1.1 var(--disp);color:var(--copper);font-variant-numeric:tabular-nums}
 .xpg small{font-size:15px;vertical-align:middle;background:var(--led);color:var(--ledink);border-radius:6px;padding:1px 6px}
 .gl{width:100%;display:grid;gap:6px}
@@ -1754,7 +1755,9 @@ const dxLeft = (s, now = Date.now()) => Math.max(0, s.dxEnd - now), dxMul = s =>
 // Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
 const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
 
-const fresh = () => ({ xp: 0, done: {}, box: {}, ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0], goal: GOAL, pledge: [], snd: true, ms: [], dxEnd: 0, dxDay: -1, rpFor: -1, rpDay: -1, rpLost: 0, rpN: 0 });
+const fresh = () => ({ xp: 0, done: {}, box: {}, ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0], goal: GOAL, pledge: [], snd: true, ms: [], dxEnd: 0, dxDay: -1, rpFor: -1, rpDay: -1, rpLost: 0, rpN: 0, goalDay: -1, setAt: [0, 0, 0] });
+// setAt: kullanıcının hedef, ses ve hatırlatıcıyı son değiştirdiği an (ms); cihazlar birleşirken yeni olan ayar kalır.
+const SET = { goal: 0, snd: 1, rem: 2 }, setNow = (s, k) => { s.setAt[SET[k]] = Date.now(); };
 
 // Akıllı tekrar kutusu: box[id] = [seviye 0-3, vade günü]. Doğru cevap bir üst seviyeye çıkarır ve GAPS gün sonraya atar; 3'te doğru kutudan çıkarır.
 const GAPS = [0, 1, 3, 7], dueIds = (s, t) => Object.keys(s.box).filter(id => s.box[id][1] <= t);
@@ -1784,6 +1787,10 @@ function parseState(raw, validIds, today = dayNum()) {
   if (!int(s.dxDay, -1, today)) s.dxDay = Number.isInteger(s.dxDay) && s.dxDay > today ? today : -1;
   if (!int(s.rpFor, -1, today)) s.rpFor = -1;
   if (!int(s.rpDay, -1, today) || !int(s.rpN, 0, RP_N) || !int(s.rpLost, 0, Math.max(0, s.bestStreak))) { s.rpDay = -1; s.rpN = 0; s.rpLost = 0; }
+  // goalDay: hedefin sayıldığı son gün. Eski kayıtta yoksa ya da bozuksa, bugün hedef geçilmişse sayılmış kabul edilir (iki kez sayılmasın).
+  if (!int(p.goalDay, -1, today)) s.goalDay = int(s.day, 0, today) && s.dayXp >= s.goal ? s.day : -1;
+  // Ayar zamanları: sayı, negatif değil, saatten en çok 10 dk ileride; değilse 0 (öteki cihazın ayarı geçer).
+  s.setAt = [0, 1, 2].map(i => { const v = s.setAt[i]; return typeof v === 'number' && v >= 0 && v <= Date.now() + 6e5 ? v : 0; });
   return s;
 }
 
@@ -1825,9 +1832,10 @@ function pledgeTick(s, t) {
 function addXp(s, n, today) {
   touchStreak(s, today);
   if (s.day !== today) { s.day = today; s.dayXp = 0; }
-  if (s.dayXp < s.goal && s.dayXp + n >= s.goal) s.goalDays++;
-  s.dayXp += n; s.xp += n;
+  s.dayXp += n; s.xp += n; goalTick(s, today);
 }
+// Günlük hedef günde bir kez sayılır; hedef gün içinde değişirse de (düşürülünce hemen, yükseltilince ikinci kez değil).
+function goalTick(s, today) { if (s.day === today && s.dayXp >= s.goal && s.goalDay !== today) { s.goalDay = today; s.goalDays++; } }
 
 function record(s, id, type, right, today, z = 1, xp = XP_Z[z]) { // xp: ipucu alınınca düşük
   const b = s.box[id];
@@ -1843,8 +1851,12 @@ function finishLesson(s, lid, right, total, today) {
   s.done[lid] = Math.max(s.done[lid] || 0, right);
   if (right === total) s.perfect++;
   addXp(s, (XP_FINISH + (right === total ? XP_PERFECT : 0)) * dxMul(s), today);
-  // Onarma: o gün RP_N. ders bitince eski seri + bugün geri gelir. Onarma bir kaçırma hakkı gibi sayılır, hak 7 günde dolar.
-  if (s.rpLost && s.rpDay === today && ++s.rpN >= RP_N) { s.streak = Math.max(s.streak, s.rpLost + 1); s.rpLost = 0; s.freeze = false; s.refill = 7; s.bestStreak = Math.max(s.bestStreak, s.streak); }
+  // Onarma: o gün RP_N. ders bitince eski seri + bugün geri gelir. Onarma bir kaçırma hakkı gibi sayılır, hak 7 günde dolar
+  // (bozulmada yeni seriyle gelen hak verilmez; yoksa seriyi koparıp onarmak bedava hak olurdu). Aynı boşlukta kopan söz de geri gelir, bugün sayılır.
+  if (s.rpLost && s.rpDay === today && ++s.rpN >= RP_N) {
+    s.streak = Math.max(s.streak, s.rpLost + 1); s.rpLost = 0; s.freeze = false; s.refill = 7; s.bestStreak = Math.max(s.bestStreak, s.streak);
+    const p = s.pledge; if (p.length === 4 && p[3] === 2 && p[2] === s.rpFor) { p[3] = 0; pledgeTick(s, today); }
+  }
 }
 
 // "1.500" Türkçede 1500, klavyede 1,5 olabilir: iki yorum da aday.
@@ -2539,12 +2551,29 @@ function mergeState(a, b) {
   m.pledge = [...(!pb.length || (pa.length && (pa[0] - pb[0] || pa[1] - pb[1] || pa[3] - pb[3]) >= 0) ? pa : pb)];
   for (const [k, v] of Object.entries(lo.box)) { const o = m.box[k]; if (!o || v[0] < o[0] || (v[0] === o[0] && v[1] < o[1])) m.box[k] = v; } // kutu birleşir: daha zayıf olan kalır
   // Seri en son çalışılan cihazdan gelir (aynı günse uzun olan): böylece bir cihazdaki onarma ötekinde kaybolmaz.
-  const sk = a.last !== b.last ? (a.last > b.last ? a : b) : a.streak >= b.streak ? a : b;
-  [m.last, m.streak, m.freeze, m.refill] = [sk.last, sk.streak, sk.freeze, sk.refill];
+  // Yeni cihazın serisi eskinin son gününe bitişik başladıysa (ya da eskinin kaçırma hakkıyla bir gün arayla) iki seri birleşir:
+  // yeni telefonda bugün 1 ders + bulutta dün biten 50 günlük seri = 51.
+  const [nw, od] = a.last !== b.last ? (a.last > b.last ? [a, b] : [b, a]) : a.streak >= b.streak ? [a, b] : [b, a];
+  [m.last, m.streak, m.freeze, m.refill] = [nw.last, nw.streak, nw.freeze, nw.refill];
+  const gap = nw.last - nw.streak + 1 - od.last; // yeni serinin ilk günü, eskinin son gününden kaç gün sonra
+  if (od.last >= 0 && od.streak > 0 && nw.streak > 0 && (gap <= 1 || (gap === 2 && od.freeze))) {
+    m.streak = Math.max(nw.streak, od.streak + Math.min(nw.last - od.last, nw.streak));
+    // Seri gerçekten uzadıysa kaçırma hakkı eski serinin durumundan yürütülür (yeni seriyle gelen hak bedava olmasın; ara gün hakkı harcar).
+    if (m.streak > nw.streak) {
+      let f = od.freeze, r = od.refill;
+      for (let i = 0, k = Math.min(nw.last - od.last, nw.streak); i < k; i++) if (!i && gap === 2) { f = false; r = 7; } else if (!f && --r <= 0) f = true;
+      m.freeze = f && nw.freeze; m.refill = m.freeze ? nw.refill : Math.max(f ? 0 : r, nw.freeze ? 0 : nw.refill);
+    }
+  }
+  m.bestStreak = Math.max(m.bestStreak, m.streak);
+  m.goalDays = Math.max(a.goalDays, b.goalDays); m.goalDay = Math.max(a.goalDay, b.goalDay);
+  // Ayarlar (hedef, ses, hatırlatıcı): her biri en son değiştirildiği cihazdan; zaman yoksa ya da eşitse XP'si yüksek olan.
+  for (const [k, i] of Object.entries(SET)) { const w = a.setAt[i] !== b.setAt[i] ? (a.setAt[i] > b.setAt[i] ? a : b) : hi; m[k] = w[k]; m.setAt[i] = w.setAt[i]; }
   m.ms = [...new Set([...a.ms, ...b.ms])].sort((x, y) => x - y); m.dxEnd = Math.max(a.dxEnd, b.dxEnd); m.dxDay = Math.max(a.dxDay, b.dxDay); m.rpFor = Math.max(a.rpFor, b.rpFor);
   // Onarma: yeni günün önerisi geçer; aynı günse büyük ilerleme, bir cihazda tamamlandıysa öneri kapanır (iki kez geri getirilemez).
   if (a.rpDay !== b.rpDay) [m.rpDay, m.rpN, m.rpLost] = a.rpDay > b.rpDay ? [a.rpDay, a.rpN, a.rpLost] : [b.rpDay, b.rpN, b.rpLost];
   else { m.rpN = Math.max(a.rpN, b.rpN); m.rpLost = m.rpN >= RP_N || !a.rpLost || !b.rpLost ? 0 : Math.max(a.rpLost, b.rpLost); }
+  if (m.rpLost && m.rpFor >= 0 && m.last - m.streak + 1 <= m.rpFor) m.rpLost = 0; // birleşen seri kopan günü kapsıyor: onarılacak bir şey yok
   return m;
 }
 
@@ -2738,7 +2767,7 @@ function home() {
   const [hi, sub] = !S.xp ? ['Akımlı’ya hoş geldin', 'İlk derste yükten başlıyoruz.'] : x >= G ? ['Bugünkü hedef tamam', 'İstersen bir ders daha çöz.']
     : st ? ['Devam edelim', `Hedefe ${G - x} XP kaldı.`] : ['Yeniden yakalım', 'Bir derslik 3 dakikan var mı?'];
   return `<main class="scr"><div class="stat"><span class="sk">${flame(x > 0, ign)}${st} günlük seri<span class="sr">. ${x ? 'Seri yanıyor' : 'Bugün seri yanmadı'}</span></span><span>${ICON.xp}${S.xp} XP</span><div class="goal">${bar(x, G, 'Günlük hedef')}Bugün ${x} / ${G} XP</div></div>
-  ${pledgeCard(t)}${dxBadge('home')}${S.rpLost && S.rpDay === t ? `<section class="rp" aria-labelledby="rph">${IGNITE}<div><h2 id="rph">Serin bozuldu (${S.rpLost} gün).</h2><p>Bugün ${RP_N} ders bitirirsen geri gelsin.</p>${bar(S.rpN, RP_N, 'Seri onarma')}<small>${S.rpN} / ${RP_N} ders</small></div></section>` : ''}
+  ${pledgeCard(t)}${dxBadge('home')}${S.rpLost && S.rpDay === t ? `<section class="rp" aria-labelledby="rph">${IGNITE}<div><h2 id="rph">Serin bozuldu (${S.rpLost} gün).</h2><p>Bugün ${RP_N} ders bitirirsen geri gelsin. Onarma bir kaçırma hakkı sayılır, hak 7 gün sonra dolar.</p>${bar(S.rpN, RP_N, 'Seri onarma')}<small>${S.rpN} / ${RP_N} ders</small></div></section>` : ''}
   ${questCard(t)}
   <div class="hello">${mascot(x >= G ? 'iyi' : 'normal')}<div><h1 tabindex="-1">${hi}</h1><p>${sub}</p></div></div>
   ${UNITS.map((u, i) => {
@@ -2757,10 +2786,12 @@ const dots = (n, now) => `<ol class="dots" aria-hidden="true">${[...Array(SOZ)].
 function pledgeCard(t) {
   const p = S.pledge;
   if (p.length !== 4 || p[3] === 3) return '';
-  if (p[3] === 2) return `<section class="soz" aria-labelledby="sozh"><h2 id="sozh" tabindex="-1">Söz bitti, istersen yeniden başla</h2><p class="note">Seri bazen kopar. Yeni söz bugünden sayılır.</p><div class="sa"><button class="btn alt" id="sozyeni">Yeniden söz ver</button><button class="btn alt" id="sozkapat">Kapat</button></div></section>`;
+  const fix = S.rpLost && S.rpDay === t && p[1] && p[2] === S.rpFor; // seri bugün onarılırsa söz de geri gelir
+  if (p[3] === 2) return `<section class="soz" aria-labelledby="sozh"><h2 id="sozh" tabindex="-1">${p[1] ? 'Söz bitti, istersen yeniden başla' : 'Söz başlamadı, istersen bugün başla.'}</h2><p class="note">${fix ? 'Serini bugün onarırsan söz de kaldığı yerden sürer.' : p[1] ? 'Seri bazen kopar. Yeni söz bugünden sayılır.' : 'Yeni söz bugünden sayılır.'}</p><div class="sa"><button class="btn alt" id="sozyeni">Yeniden söz ver</button><button class="btn alt" id="sozkapat">Kapat</button></div></section>`;
   const ok = p[2] === t;
-  return `<section class="soz" aria-labelledby="sozh"><header><h2 id="sozh" tabindex="-1">Söz: ${p[1]}/${SOZ} gün</h2>${dots(p[1], !ok)}</header><p class="note">${p[1] >= SOZ ? 'Sözünü tuttun!' : ok ? 'Bugün tamam. Yarın görüşürüz.' : 'Bugün bir ders, söz sürsün.'}</p></section>`;
+  return `<section class="soz" aria-labelledby="sozh"><header><h2 id="sozh" tabindex="-1">Söz: ${p[1]}/${SOZ} gün</h2>${dots(p[1], !ok)}</header><p class="note">${p[1] >= SOZ ? 'Sözünü tuttun!' : ok ? 'Bugün tamam. Yarın görüşürüz.' : 'Bugün biraz çalış, söz sürsün.'}</p></section>`;
 }
+const setGoal = g => { S.goal = g; setNow(S, 'goal'); goalTick(S, dayNum()); save(); };
 const pledgeNew = () => { S.pledge = [dayNum(), 0, -1, 0]; save(); };
 
 function questCard(t) {
@@ -2801,7 +2832,7 @@ function profile() {
 function bindReminder() {
   const sel = $('#rem'), st = $('#remst'), test = $('#remtest');
   const show = r => { st.textContent = S.rem ? REM_NOTE[r] : 'Kapalı. Açarsan, o gün ders çözmediğinde telefonuna kısa bir hatırlatma gelir.'; st.classList.toggle('err', !!S.rem && !['tamam', 'sunucu', 'giris'].includes(r)); test.hidden = !S.rem || ['yok', 'izin', 'giris'].includes(r); };
-  sel.onchange = async () => { S.rem = +sel.value; save(); if (!S.rem) pushOff(); show(S.rem ? await armReminder(true) : 'tamam'); };
+  sel.onchange = async () => { S.rem = +sel.value; setNow(S, 'rem'); save(); if (!S.rem) pushOff(); show(S.rem ? await armReminder(true) : 'tamam'); };
   test.onclick = async () => (await swReg())?.showNotification('Akımlı', { body: 'Bildirimler çalışıyor. Hatırlatmalar böyle görünecek.', icon: 'icon-192.png', tag: 'deneme' });
   (S.rem ? armReminder(false) : Promise.resolve('tamam')).then(show);
 }
@@ -3065,7 +3096,9 @@ function check() {
   // Uyarlanan zorluk: derste iki yanlış üst üste gelirse (derste bir kez) sıradaki soruda Pırıl yardım önerir ve önüne daha kolay bir ısınma sorusu girer.
   if (C.lid && C.wr >= 2 && !C.helped && C.queue.length) { C.helped = C.nudge = true; const e = easier(C.lid, q.z); if (e) C.queue.unshift(C.wq = e); }
   if (C.lid && !C.queue.length) finishLesson(S, C.lid, C.right, C.total, dayNum());
-  const end = !!C.lid && !C.queue.length, qr = questEv(S, { ok, t: q.t, z: q.z, rev: !C.lid, combo: C.combo, fin: end, perfect: end && C.right === C.total, xp: todayXp(S, dayNum()) }, dayNum());
+  const end = !!C.lid && !C.queue.length;
+  if (dx > 1 && (ok || end)) C.dx = true; // bu derste XP gerçekten ikiye katlandı (ders sonundaki 2× etiketi)
+  const qr = questEv(S, { ok, t: q.t, z: q.z, rev: !C.lid, combo: C.combo, fin: end, perfect: end && C.right === C.total, xp: todayXp(S, dayNum()) }, dayNum());
   if (qr.n) questToast(qr, ok && C.combo % 3 === 0 ? 2600 : 0);
   save();
   const mark = (el, v) => { if (v === String(q.a)) el.classList.add('good'); else if (v === String(C.ans)) el.classList.add('bad'); };
@@ -3092,7 +3125,7 @@ const CHEST = '<svg viewBox="0 0 64 56" aria-hidden="true"><path class="lid" d="
 const dxBadge = (cls = '') => { const m = Math.ceil(dxLeft(S) / 6e4); return m ? `<span class="dxb ${cls}" role="img" aria-label="Çift XP açık, ${m} dakika kaldı">2× XP · ${m} dk</span>` : ''; };
 setInterval(() => document.querySelectorAll('.dxb').forEach(b => { const m = Math.ceil(dxLeft(S) / 6e4); if (!m) return b.remove(); b.textContent = `2× XP · ${m} dk`; b.setAttribute('aria-label', `Çift XP açık, ${m} dakika kaldı`); }), 1e4);
 // Sıradaki ders: bu dersten sonra gelen ilk açık ve bitmemiş ders, yoksa ana ekrandaki .node.next.
-const nextLesson = lid => LESSONS.slice(LESSONS.findIndex(l => l.id === lid) + 1).find(l => !(l.id in S.done) && unlocked(l)) || LESSONS.find(l => !(l.id in S.done));
+const nextLesson = lid => LESSONS.slice(LESSONS.findIndex(l => l.id === lid) + 1).find(l => !(l.id in S.done) && unlocked(l)) || LESSONS.find(l => !(l.id in S.done) && unlocked(l));
 // Ders bitince bir kez: kilometre taşı, sandık zarı, çift XP önerisi. Sonuç C.rw'de durur ki ekran yeniden çizilse de tekrar verilmesin.
 function endRewards(t) {
   const st = liveStreak(S, t), got = MS.filter(([d]) => st >= d && !S.ms.includes(d)), chest = rnd() < P_CHEST;
@@ -3102,11 +3135,25 @@ function endRewards(t) {
   return { ms: got, chest: chest ? 1 : 0, dx };
 }
 // Sandık: kaçırma hakkı yalnız hakkı olmayana çıkar, yoksa 5–20 jeton.
-function chestOpen() {
-  if (C.rw.chest !== 1) return;
+function chestRoll() {
   const fz = rnd() < P_FREEZE && !S.freeze, n = fz ? 0 : Math.min(20, 5 + Math.floor(rnd() * 16));
   if (fz) { S.freeze = true; S.refill = 0; } else S.coins += n;
-  C.rw.chest = 2; save(); buzz([10, 40, 10]);
+  C.rw.chest = 2; save();
+  return [fz, n];
+}
+// Açılmadan ders sonundan çıkılırsa sandık kendiliğinden açılır, ödül kısa bir bildirimle gösterilir.
+function chestLeft() {
+  if (C?.rw?.chest !== 1) return;
+  const [fz, n] = chestRoll(), live = document.getElementById('qlive');
+  if (live) { live.textContent = ''; setTimeout(() => live.textContent = `Sandık açıldı: ${fz ? 'kaçırma hakkı' : `+${n} jeton`}.`, 60); }
+  document.querySelectorAll('.qtoast').forEach(e => e.remove());
+  const d = document.createElement('div'); d.className = 'qtoast chl'; d.setAttribute('aria-hidden', 'true');
+  d.innerHTML = `${fz ? IGNITE : COIN}<div><b>Sandık açıldı!</b><small>${fz ? 'Kaçırma hakkı kazandın' : `Toplam ${S.coins} bakır jeton`}</small></div><strong>${fz ? '' : `+${n}`}</strong>`;
+  document.body.append(d); setTimeout(() => d.remove(), 2500);
+}
+function chestOpen() {
+  if (C.rw.chest !== 1) return;
+  const [fz, n] = chestRoll(); buzz([10, 40, 10]);
   const d = document.createElement('div');
   d.className = 'chest open'; d.id = 'chest'; d.tabIndex = -1; d.setAttribute('role', 'status');
   d.innerHTML = `${CHEST}<span class="cw" data-r="${fz ? 'freeze' : n}">${fz ? '<b>Kaçırma hakkı!</b><small>Bir gün kaçırırsan serin bozulmaz.</small>' : `<b>${COIN}+${n} jeton</b><small>Toplam ${S.coins} bakır jeton</small>`}</span>`;
@@ -3124,10 +3171,10 @@ function finish() {
   const rw = C.rw ||= endRewards(t), x = todayXp(S, t), x0 = C.t0 === t ? Math.min(C.x0, x) : 0, nx = nextLesson(C.lid), coins = rw.ms.reduce((a, m) => a + m[1], 0);
   const fixed = C.rp0 && !S.rpLost && S.rpN >= RP_N && S.rpDay === t, lit = !fixed && C.last0 !== t && S.last === t && st > 0, top = rw.ms[rw.ms.length - 1];
   save();
-  const head = lit ? `<div class="ign" role="img" aria-label="Seri ${st} gün">${IGNITE}<b>${st}</b></div><p class="igt">${st > 1 ? `Seri yandı: ${st} gün!` : 'Seri başladı!'}</p>` : mascot(wrong < 3 ? 'iyi' : 'normal');
+  const head = lit ? `<div class="fign" role="img" aria-label="Seri ${st} gün">${IGNITE}<b>${st}</b></div><p class="igt">${st > 1 ? `Seri yandı: ${st} gün!` : 'Seri başladı!'}</p>` : mascot(wrong < 3 ? 'iyi' : 'normal');
   const goal = x >= S.goal ? (x0 < S.goal ? 'Günlük hedef tamam!' : 'Hedef tamam') : `Hedefe ${S.goal - x} XP`;
   app.innerHTML = `<main class="scr"><div class="end fin">${head}<h1 tabindex="-1">${title}</h1>
-  <p class="xpg"><span class="sr">${gain} XP kazandın</span><span aria-hidden="true">+<b id="xpn">${gain}</b> XP${dxLeft(S) ? ' <small>2×</small>' : ''}</span></p>
+  <p class="xpg"><span class="sr">${gain} XP kazandın</span><span aria-hidden="true">+<b id="xpn">${gain}</b> XP${C.dx ? ' <small>2×</small>' : ''}</span></p>
   <div class="gl">${bar(x, S.goal, 'Günlük hedef')}<p><span>Bugün ${x} / ${S.goal} XP</span><span>${goal}</span></p></div>
   ${fixed ? `<p class="rw rpok">${IGNITE}<span><b>Serin geri geldi!</b><small>${st} günlük seri, kaldığın yerden.</small></span></p>` : ''}
   ${top ? `<p class="rw mst">${IGNITE}<span><b>${top[0]} günlük seri!</b><small>Kilometre taşı ödülü: +${coins} bakır jeton</small></span></p>` : ''}
@@ -3152,6 +3199,7 @@ function finish() {
 function route() {
   const h = location.hash.slice(1), d = /^(ders|konu)-(.+)$/.exec(h), l = d && LESSONS.find(x => x.id === d[2]);
   if (shown) scrollMem[shown] = scrollY;
+  chestLeft();
   if (repairCheck(S, dayNum())) save();
   shown = null; termClose(false); if (document.getElementById('szo')) szClose();
   if (!h && needHos()) return welcome();
@@ -3166,7 +3214,7 @@ function route() {
   shown = h === 'profil' ? 'profil' : h.startsWith('tekrar') ? 'tekrar' : 'ana';
   if (shown === 'ana' && pledgeTick(S, dayNum())) save(); // seri koptuysa söz biter
   app.innerHTML = { profil: profile, tekrar: review, ana: home }[shown]();
-  if (shown === 'profil') { bindReminder(); bindBackup(); cloudUI(); $('#hedef').onchange = e => { S.goal = +e.target.value; save(); $('#bugun').textContent = `${todayXp(S, dayNum())} / ${S.goal} XP`; }; }
+  if (shown === 'profil') { bindReminder(); bindBackup(); cloudUI(); $('#hedef').onchange = e => { setGoal(+e.target.value); $('#bugun').textContent = `${todayXp(S, dayNum())} / ${S.goal} XP`; }; }
   if (shown === 'ana') bindPledge();
   focusTop(scrollMem[shown] || 0);
   // Uygulama yeni açıldığında sıradaki ders ekranın ortasına gelir.
@@ -3188,7 +3236,7 @@ function welcome(step = 0) {
     'Hoş geldin! İlerlemen kaybolmasın diye Google hesabınla kaydolabilirsin. İstersen hesapsız da başlayabilirsin.',
     'Tekrar hoş geldin! Google hesabınla gir, kaldığın yerden devam et.',
     'Günde ne kadar zaman ayırmak istersin? Sonra Profil’den değiştirebilirsin.',
-    '7 gün boyunca her gün bir ders yapmaya söz veriyor musun?'
+    '7 gün boyunca her gün biraz çalışmaya söz veriyor musun?'
   ][step];
   const acts = step === 0 ? `<button class="btn" data-h="3">Ben yeniyim</button><button class="btn alt" data-h="2">Hesabım var</button>`
     : step === 3 ? GOALS.map(([m, x, n]) => `<button class="btn alt gopt" data-g="${x}"><b>${m} dk</b><small>${n} · günde ${x} XP</small></button>`).join('')
@@ -3197,7 +3245,7 @@ function welcome(step = 0) {
   app.innerHTML = `<main class="scr hos"><div class="pr">${mascot('iyi').replace('<svg ', '<svg role="img" aria-label="Pırıl" ')}</div><h1 class="bubble" tabindex="-1">${say}</h1><div class="acts">${acts}</div><p class="note" id="hmsg" aria-live="polite"></p></main>`;
   $('h1').focus({ preventScroll: true });
   $$('[data-h]').forEach(b => b.onclick = () => { buzz(8); welcome(+b.dataset.h); });
-  $$('[data-g]').forEach(b => b.onclick = () => { buzz(8); S.goal = +b.dataset.g; save(); welcome(4); });
+  $$('[data-g]').forEach(b => b.onclick = () => { buzz(8); setGoal(+b.dataset.g); welcome(4); });
   if (step === 4) $('#hsoz').onclick = () => { buzz(8); pledgeNew(); welcome(1); };
   const done = () => { try { localStorage.setItem(HOS, '1'); } catch {} route(); };
   if (step === 1 || step === 2) $('#hskip').onclick = done;
@@ -3245,7 +3293,7 @@ function snd(name, at = 0) {
 const UNLOCK = ['pointerdown', 'keydown', 'touchend'];
 function unlock() { if (!sndOn()) return; try { if (audio()?.state === 'running') UNLOCK.forEach(e => removeEventListener(e, unlock, true)); } catch {} }
 UNLOCK.forEach(e => addEventListener(e, unlock, true));
-app.addEventListener('change', e => { if (e.target.id !== 'snd') return; S.snd = e.target.checked; save(); snd('dogru'); });
+app.addEventListener('change', e => { if (e.target.id !== 'snd') return; S.snd = e.target.checked; setNow(S, 'snd'); save(); snd('dogru'); });
 app.addEventListener('click', e => {
   const b = e.target.closest('[data-go]');
   if (!b || b.disabled) return;

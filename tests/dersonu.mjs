@@ -47,9 +47,9 @@ try {
   assert.equal(await page.textContent('#xpn'), String(a.want), 'sayaç son değerde durur');
   assert.equal(await page.getAttribute('.gl .bar', 'aria-valuenow'), String(a.want), 'hedef çubuğu bugünkü XP');
   assert.equal(await ev(page, () => document.querySelector('.gl .bar i').style.width), `${Math.min(100, Math.round(a.want / 30 * 100))}%`, 'çubuk doldu');
-  assert.equal(await page.locator('.ign').count(), 1, 'günün ilk dersi: seri alevi');
+  assert.equal(await page.locator('.fign').count(), 1, 'günün ilk dersi: seri alevi');
   assert.match(await page.textContent('.igt'), /Seri başladı/);
-  assert.equal(await page.textContent('.ign b'), '1');
+  assert.equal(await page.textContent('.fign b'), '1');
   assert.equal(await page.locator('.foot').getByText('Yanlışları tekrar et').count(), 0, 'hatasızda tekrar düğmesi yok');
   assert.equal(await page.locator('.foot .btn.alt', { hasText: 'Derslere dön' }).count(), 1, 'ikincil: Derslere dön');
   assert.equal(await page.locator('#chest, #dxo, .mst, .rpok').count(), 0, 'zar tutmadı: ödül yok');
@@ -60,7 +60,7 @@ try {
 
   // (2) Aynı gün ikinci ders: alev yok; yanlış varsa "Yanlışları tekrar et"; konusu olmayan sıradaki ders doğrudan sorulara.
   await ev(page, () => { __seq(.99, .99); __play('1-2', [1]); });
-  assert.equal(await page.locator('.ign').count(), 0, 'ikinci derste alev yok');
+  assert.equal(await page.locator('.fign').count(), 0, 'ikinci derste alev yok');
   assert.equal(await page.locator('.end > svg').count(), 1, 'maskot');
   assert.equal(await page.locator('[data-go="tekrar-coz"]').count(), 1, 'yanlışları tekrar et duruyor');
   assert.equal(await page.getAttribute('#nxl', 'data-go'), 'konu-1-3');
@@ -99,7 +99,7 @@ try {
   await ev(page, () => { __seq(0, 0); __go('pratik-1'); C.queue = ['1-1-1', '1-1-3']; C.total = 2; question(); __ans(true); question(); __ans(false); C.queue.length ? question() : finish(); });
   await ev(page, () => { while (C.queue.length) { __ans(true); if (C.queue.length) question(); else finish(); } });
   assert.match(await page.textContent('h1'), /Antrenman tamam/);
-  assert.equal(await page.locator('#chest, #dxo, #nxl, .ign').count(), 0, 'antrenmanda ödül ve sıradaki ders yok');
+  assert.equal(await page.locator('#chest, #dxo, #nxl, .fign').count(), 0, 'antrenmanda ödül ve sıradaki ders yok');
   assert.deepEqual(await page.$$eval('.foot .btn', b => b.map(x => x.textContent)), ['Derslere dön']);
 
   // (4) Çift XP saati: öneri gelir, başlatınca 15 dk 2× XP; rozet soru ve ana ekranda; süre bitince normale döner; günde en çok bir öneri.
@@ -142,8 +142,8 @@ try {
   await ev(page, () => { __seq(.99, .99); __play('1-1'); });
   assert.deepEqual(await ev(page, () => [S.streak, S.ms, S.coins]), [7, [7], c0 + 20], '7 gün: +20 jeton');
   assert.match(await page.textContent('.mst'), /7 günlük seri!/);
-  assert.equal(await page.locator('.ign').count(), 1, 'seriyi uzatan ders: alev');
-  assert.equal(await page.textContent('.ign b'), '7');
+  assert.equal(await page.locator('.fign').count(), 1, 'seriyi uzatan ders: alev');
+  assert.equal(await page.textContent('.fign b'), '7');
   await page.waitForSelector('.party.ms', { timeout: 1500 });
   assert.match(await page.textContent('.party.ms'), /7 GÜNLÜK SERİ!/);
   if (shots) { await page.waitForTimeout(500); await page.screenshot({ path: `${shots}/dersonu-kilometre.png` }); }
@@ -214,15 +214,88 @@ try {
     const a = f({ xp: 100, ms: [7], dxEnd: 500, dxDay: 3, rpFor: 7, rpDay: 10, rpN: 3, rpLost: 0, last: 10, streak: 13, freeze: false, refill: 7 });
     const b = f({ xp: 200, ms: [30], dxEnd: 900, dxDay: 2, rpFor: 7, rpDay: 10, rpN: 1, rpLost: 12, last: 10, streak: 1, freeze: true, refill: 0 });
     const m = mergeState(a, b), m2 = mergeState(b, a);
-    const c = f({ xp: 50, rpDay: 11, rpN: 0, rpLost: 4, rpFor: 8, last: 8, streak: 4 }), m3 = mergeState(a, c);
+    const c = f({ xp: 50, rpDay: 11, rpN: 0, rpLost: 4, rpFor: 8, last: 8, streak: 4 }), m3 = mergeState({ ...a, streak: 1 }, { ...c, freeze: false }), m3b = mergeState(a, c);
     const d = f({ xp: 300, last: 9, streak: 30, freeze: true }), m4 = mergeState(a, d);
     const e1 = f({ rpDay: 10, rpN: 1, rpLost: 12 }), e2 = f({ rpDay: 10, rpN: 2, rpLost: 12 }), m5 = mergeState(e1, e2);
     const k = x => [x.ms, x.dxEnd, x.dxDay, x.rpDay, x.rpN, x.rpLost, x.rpFor, x.last, x.streak, x.freeze, x.refill];
-    return [k(m), k(m2), [m3.rpDay, m3.rpN, m3.rpLost, m3.rpFor], [m4.last, m4.streak, m4.freeze, m4.xp], [m5.rpN, m5.rpLost]]; });
+    return [k(m), k(m2), [m3.rpDay, m3.rpN, m3.rpLost, m3.rpFor, m3b.rpLost, m3b.streak], [m4.last, m4.streak, m4.freeze, m4.xp], [m5.rpN, m5.rpLost]]; });
   assert.deepEqual(mg[0], [[7, 30], 900, 3, 10, 3, 0, 7, 10, 13, false, 7], 'birleşim');
   assert.deepEqual(mg[1], mg[0], 'sıradan bağımsız');
-  assert.deepEqual(mg[2], [11, 0, 4, 8], 'yeni günün önerisi geçer');
-  assert.deepEqual(mg[3], [10, 13, false, 300], 'seri en son günden, XP yüksekten');
+  assert.deepEqual(mg[2], [11, 0, 4, 8, 0, 13], "yeni günün önerisi geçer; öteki cihazın serisi kopan günü kapsıyorsa öneri kalkar");
+  assert.deepEqual(mg[3], [10, 31, false, 300], 'seri en son günden, örtüşen seriler birleşir (30 + 1 gün), XP yüksekten');
+
+  // (8b) Seri onarılınca aynı boşlukta kopan 7 günlük söz de geri gelir ve bugün sayılır; kartlar çelişmez.
+  await ev(page, () => { const t = dayNum(); Object.assign(S, { streak: 12, bestStreak: Math.max(S.bestStreak, 12), last: t - 3, freeze: false, refill: 4, rpFor: -1, rpLost: 0, rpDay: -1, rpN: 0, pledge: [t - 6, 3, t - 3, 0] }); save(); });
+  await ev(page, () => __open());
+  assert.deepEqual(await ev(page, () => [S.rpLost, S.pledge[3]]), [12, 2], 'onarma önerisi açık, söz o boşlukta koptu');
+  assert.match(await page.textContent('.rp'), /Onarma bir kaçırma hakkı sayılır, hak 7 gün sonra dolar\./, 'onarma kartı kaçırma hakkını söyler');
+  assert.match(await page.textContent('.soz .note'), /Serini bugün onarırsan söz de kaldığı yerden sürer/);
+  await ev(page, () => { for (const id of ['1-1', '1-2', '1-3']) { __seq(.99, .99); __play(id); } });
+  assert.deepEqual(await ev(page, () => [S.streak, S.rpLost, S.pledge.slice(1), S.pledge[2] === dayNum()]), [13, 0, [4, await ev(page, () => dayNum()), 0], true], 'söz geri geldi: 4/7, bugün sayıldı');
+  await ev(page, () => __go(''));
+  assert.equal(await page.textContent('.soz h2'), 'Söz: 4/7 gün');
+  assert.equal(await page.locator('.rp').count(), 0, 'onarma kartı kalktı');
+  const rv = await ev(page, () => { const t = dayNum(), f = o => ({ ...fresh(), ...o }), r = {};
+    // Söz bu boşluktan önce kopmuşsa (son sayılan gün kopan seri gününden önce) geri gelmez; tamamlanmış ya da kapatılmış söz dokunulmaz.
+    for (const [k, p] of Object.entries({ old: [t - 9, 2, t - 6, 2], kapali: [t - 6, 3, t - 3, 3], yeni: [t, 0, -1, 2] })) {
+      const s = f({ streak: 1, last: t, rpFor: t - 3, rpDay: t, rpLost: 12, rpN: 2, pledge: [...p] }); finishLesson(s, '1-1', 6, 6, t); r[k] = s.pledge; }
+    // Son gün: söz 6/7 iken onarma 7. günü sayar, jeton verir.
+    const s = f({ streak: 1, last: t, rpFor: t - 3, rpDay: t, rpLost: 12, rpN: 2, pledge: [t - 9, 6, t - 3, 2] }), c0 = s.coins; finishLesson(s, '1-1', 6, 6, t); r.son = [...s.pledge, s.coins - c0];
+    return [r, t]; });
+  assert.deepEqual(rv[0], { old: [rv[1] - 9, 2, rv[1] - 6, 2], kapali: [rv[1] - 6, 3, rv[1] - 3, 3], yeni: [rv[1], 0, -1, 2], son: [rv[1] - 9, 7, rv[1], 1, 25] }, 'yalnız aynı boşlukta kopan söz geri gelir');
+
+  // (8c) Açılmamış sandık ders sonundan çıkınca kendiliğinden açılır; ödül kısa bildirimle görünür, bir kez verilir.
+  for (const via of ['ana', 'nxl']) {
+    await ev(page, () => { document.querySelectorAll('.qtoast').forEach(e => e.remove()); S.freeze = true; __seq(0); __play('1-1'); });
+    assert.equal(await page.locator('button#chest').count(), 1, 'sandık çıktı');
+    c0 = await ev(page, () => S.coins);
+    await ev(page, () => __seq(.5, .5));
+    await page.click(via === 'ana' ? '.foot [data-go="ana"]' : '#nxl'); await page.waitForSelector('.qtoast.chl');
+    assert.equal(await ev(page, () => S.coins), c0 + 13, `${via}: sandık ödülü verildi`);
+    assert.match(await page.textContent('.qtoast.chl'), /Sandık açıldı!.*\+13/);
+    assert.equal(await ev(page, () => JSON.parse(localStorage.getItem('piril-v1')).coins), c0 + 13, 'kaydedildi');
+    await ev(page, () => { __seq(.5, .5); __go(''); });
+    assert.equal(await ev(page, () => S.coins), c0 + 13, `${via}: ikinci kez verilmez`);
+  }
+  // Açılmış sandıkla çıkmak ve sandıksız ders sonu bildirim göstermez.
+  await ev(page, () => { document.querySelectorAll('.qtoast').forEach(e => e.remove()); __seq(0); __play('1-1'); __seq(.5, .5); });
+  await page.click('#chest'); c0 = await ev(page, () => S.coins); await ev(page, () => __go(''));
+  assert.deepEqual([await ev(page, () => S.coins), await page.locator('.qtoast.chl').count()], [c0, 0], 'açılmış sandık: ikinci ödül ve bildirim yok');
+
+  // (8d) "2×" etiketi bu dersin XP'si ikiye katlandıysa görünür, o anki çift XP durumuna bakmaz.
+  await ev(page, () => { S.dxEnd = 0; __seq(.99, .99); __play('1-1'); });
+  assert.doesNotMatch(await page.textContent('.xpg'), /2×/);
+  await ev(page, () => { S.dxEnd = Date.now() + DX_MS; finish(); }); // ders bittikten sonra açılan çift XP
+  assert.doesNotMatch(await page.textContent('.xpg'), /2×/, 'sonradan açılan çift XP etiketi getirmez');
+  await ev(page, () => { __seq(.99, .99); __play('1-2'); });
+  assert.match(await page.textContent('.xpg'), /2×/, 'çift XP ile oynanan ders');
+  await ev(page, () => { S.dxEnd = 0; finish(); });
+  assert.match(await page.textContent('.xpg'), /2×/, 'süre sonra bitse de bu ders 2× kaldı');
+  await ev(page, () => { S.dxEnd = 0; S.dxDay = -1; });
+
+  // (8e) Sıradaki ders yedeği kilitli ders döndürmez.
+  const nl = await ev(page, () => { const done = S.done, order = [...LESSONS], i2 = LESSONS.findIndex(l => l.id === '1-2'), i3 = LESSONS.findIndex(l => l.id === '1-3');
+    S.done = Object.fromEntries(LESSONS.map(l => [l.id, 1]).filter(([id]) => id !== '1-2' && id !== '1-3'));
+    [LESSONS[i2], LESSONS[i3]] = [LESSONS[i3], LESSONS[i2]]; // sıra bozulursa ilk bitmemiş ders kilitli olabilir
+    const r = nextLesson(LESSONS[LESSONS.length - 1].id)?.id;
+    LESSONS.splice(0, LESSONS.length, ...order); S.done = done; return r; });
+  assert.equal(nl, '1-2', 'yedek: açık ders');
+
+  // (8f) Ders sonu alevinin animasyonları ana sayfa alevininkinden ayrı; aynı adlı iki keyframes yok.
+  const kf = await ev(page, () => { const names = [...document.styleSheets].flatMap(s => [...s.cssRules]).filter(r => r instanceof CSSKeyframesRule).map(r => r.name);
+    return { dup: names.filter((n, i) => names.indexOf(n) !== i), has: ['ignite', 'flick', 'fin-ignite', 'fin-flick'].every(n => names.includes(n)) }; });
+  assert.deepEqual(kf, { dup: [], has: true }, 'keyframes adları tekil');
+  await ev(page, () => { S.last = dayNum() - 1; S.streak = 3; __seq(.99, .99); __play('1-1'); });
+  assert.deepEqual(await ev(page, () => { const e = document.querySelector('.fign'); return [getComputedStyle(e).animationName, getComputedStyle(e.querySelector('svg')).animationName]; }), ['fin-ignite', 'fin-flick']);
+  await ev(page, () => { S.day = -1; flameDay = -1; addXp(S, 4, dayNum()); __go(''); });
+  assert.deepEqual(await ev(page, () => { const f = document.querySelector('.stat .flame.ign'), cs = getComputedStyle(f); return [cs.animationName, cs.position, Math.round(f.getBoundingClientRect().width) < 40]; }), ['ignite, flick', 'static', true], 'ana sayfa alevi kendi tutuşmasıyla, küçük');
+
+  // (8g) "DURDURULAMAZ!" kutlama başlığı 390 px'e sığar; diğer kutlamalar da taşmaz.
+  for (const [n, h] of [[6, ''], [9, ''], [0, 'SERİN GERİ GELDİ!'], [0, '365 GÜNLÜK SERİ!']]) {
+    const w = await ev(page, ([n, h]) => { party(n, h || undefined, h ? 'x' : undefined); const e = document.querySelector('.party h2'); e.style.animation = 'none'; const r = e.getBoundingClientRect(); return [r.left >= 0 && r.right <= innerWidth, e.scrollWidth <= e.clientWidth + 1, e.textContent]; }, [n, h]);
+    assert.deepEqual(w.slice(0, 2), [true, true], `kutlama başlığı sığar: ${w[2]}`);
+  }
+  await ev(page, () => document.querySelectorAll('.party').forEach(e => e.remove()));
   assert.deepEqual(mg[4], [2, 12], 'aynı gün: büyük ilerleme');
 
   assert.deepEqual(errors, [], 'konsol hatası yok');

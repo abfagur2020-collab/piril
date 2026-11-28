@@ -50,7 +50,7 @@ try {
     await page.waitForTimeout(1000); await shot(page, `hosgeldin-hedef-${tag}`);
     await page.click('[data-g="60"]');
     assert.equal(await page.evaluate(() => S.goal), 60);
-    assert.match(await page.textContent('h1'), /7 gün boyunca her gün bir ders yapmaya söz veriyor musun/);
+    assert.match(await page.textContent('h1'), /7 gün boyunca her gün biraz çalışmaya söz veriyor musun/);
     assert.equal(await page.locator('.hos .dots li').count(), 7);
     assert.deepEqual(await page.$$eval('.hos .acts button', b => b.map(x => x.textContent)), ['Söz veriyorum', 'Şimdilik değil']);
     await page.waitForTimeout(1000); await shot(page, `hosgeldin-soz-${tag}`);
@@ -116,6 +116,22 @@ try {
     // Günün akımı rozeti kişisel hedefle sayılır
     assert.deepEqual(await page.evaluate(() => { const s = fresh(); s.goal = 20; addXp(s, 18, 100); const a = s.goalDays; addXp(s, 4, 100); const b = s.goalDays; addXp(s, 40, 100);
       const u = fresh(); u.goal = 60; addXp(u, 30, 100); const c = u.goalDays; addXp(u, 30, 100); return [a, b, s.goalDays, c, u.goalDays]; }), [0, 1, 1, 0, 1]);
+    // Hedef gün içinde değişirse gün bir kez sayılır: yükseltip yeniden geçmek ikinci kez saymaz, ertesi gün yine sayılır
+    assert.deepEqual(await page.evaluate(() => { const s = fresh(); s.goal = 20; addXp(s, 25, 100); s.goal = 60; goalTick(s, 100); addXp(s, 40, 100); const a = s.goalDays; addXp(s, 70, 101); return [a, s.goalDays, s.goalDay]; }), [1, 2, 101]);
+    // Gerçek akış: 25 XP'deyken hedef 60'tan 20'ye düşürülünce bugün hemen sayılır; geri 60'a çıkıp geçince yine bir kez
+    await page.evaluate(() => { const t = dayNum(); Object.assign(S, { day: t, dayXp: 25, goal: 60, goalDays: 0, goalDay: -1 }); save(); });
+    await page.goto(url + '#profil'); await page.waitForSelector('#hedef');
+    await page.selectOption('#hedef', '20');
+    assert.deepEqual(await page.evaluate(() => [S.goalDays, S.goalDay === dayNum(), JSON.parse(localStorage.getItem('piril-v1')).goalDays]), [1, true, 1], 'düşürülen hedef bugünü sayar');
+    await page.selectOption('#hedef', '60'); await page.evaluate(() => { addXp(S, 40, dayNum()); save(); });
+    await page.selectOption('#hedef', '20');
+    assert.equal(await page.evaluate(() => S.goalDays), 1, 'aynı gün ikinci kez sayılmaz');
+    // parseState: goalDay doğrulanır; eski kayıtta yoksa ve bugün hedef geçilmişse sayılmış kabul edilir; birleşmede en büyük
+    assert.deepEqual(await page.evaluate(() => { const t = dayNum(), ids = Object.keys(QUESTIONS), P = o => parseState(JSON.stringify({ goal: 30, ...o }), ids).goalDay;
+      const legacy = parseState(JSON.stringify({ goal: 30, day: t, dayXp: 35, goalDays: 4 }), ids); addXp(legacy, 5, t);
+      return [P({ goalDay: t - 2 }) === t - 2, P({ goalDay: t + 1 }), P({ goalDay: 1.5 }), P({ day: t, dayXp: 35 }) === t, P({ day: t, dayXp: 10 }), P({ goalDay: 'x', day: t, dayXp: 40 }) === t, legacy.goalDays,
+        mergeState({ ...fresh(), xp: 9, goalDays: 3, goalDay: 5 }, { ...fresh(), xp: 1, goalDays: 7, goalDay: 8 }).goalDays, mergeState({ ...fresh(), xp: 9, goalDay: 5 }, { ...fresh(), xp: 1, goalDay: 8 }).goalDay]; }),
+      [true, -1, -1, true, -1, true, 4, 7, 8]);
     await ctx.close();
   }
 
@@ -190,7 +206,8 @@ try {
     await page.clock.setFixedTime(base + 11 * DAY); await page.reload(); await page.waitForSelector('.pcb');
     assert.equal(await card(page), 'Söz: 0/7 gün', 'ertesi gün hâlâ sürer');
     await page.clock.setFixedTime(base + 12 * DAY); await page.reload(); await page.waitForSelector('.pcb');
-    assert.equal(await card(page), 'Söz bitti, istersen yeniden başla');
+    assert.equal(await card(page), 'Söz başlamadı, istersen bugün başla.', 'hiç gün tutulmadıysa "söz bitti" denmez');
+    assert.equal(await page.textContent('.soz .note'), 'Yeni söz bugünden sayılır.');
     // Bugün ders yaptıktan sonra yeniden söz: bugün sayılır
     await page.evaluate(() => { addXp(S, 4, dayNum()); save(); }); await page.click('#sozyeni');
     assert.equal(await card(page), 'Söz: 1/7 gün');
