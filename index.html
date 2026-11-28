@@ -332,6 +332,19 @@ dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:ri
 @media (hover:hover) and (pointer:fine){.opt:not([disabled]):hover{border-color:var(--copper)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .sel{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sel input.sw{flex:none}
+/* Açma-kapama düğmesi: gerçek onay kutusu, role=switch */
+.sw{appearance:none;-webkit-appearance:none;position:relative;width:52px;height:32px;margin:0;border-radius:16px;background:var(--line);box-shadow:inset 0 0 0 2px var(--soft);cursor:pointer;transition:background .15s}
+.sw::before{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--soft);box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}
+.sw:checked{background:var(--good);box-shadow:none}
+.sw:checked::before{transform:translateX(20px);background:var(--card)}
+label.sel:has(.sw){min-height:48px;cursor:pointer}
+/* Uyarlanan zorluk: iki yanlıştan sonra Pırıl'ın notu ve ısınma sorusu etiketi */
+.nudge{display:grid;grid-template-columns:52px 1fr;gap:4px 10px;align-items:center;margin-top:10px;padding:10px 12px;border:2px solid var(--copper);border-radius:14px;background:var(--hi1)}
+.nudge>svg{width:52px;grid-row:span 2}
+.nudge p{margin:0;font-size:15px;line-height:1.4}
+.nudge .ipb{min-height:40px}
+.isin{color:var(--term);font-weight:700}
 .sel select{min-height:48px;min-width:150px;font:inherit;padding:0 12px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
 /* Dokun-öğren: altı noktalı terim, alttan açılan kart ve Sözlük */
 .term{font:inherit;color:inherit;user-select:text;-webkit-user-select:text;text-align:inherit;display:inline;padding:0;border-radius:3px;text-decoration:underline dotted var(--term) 2px;text-underline-offset:.22em}
@@ -1690,7 +1703,7 @@ const GOALS = [[3, 20, 'Rahat'], [5, 30, 'Normal'], [10, 60, 'Ciddi']], SOZ = 7,
 // Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
 const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
 
-const fresh = () => ({ xp: 0, done: {}, box: {}, ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0], goal: GOAL, pledge: [] });
+const fresh = () => ({ xp: 0, done: {}, box: {}, ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0], goal: GOAL, pledge: [], snd: true });
 
 // Akıllı tekrar kutusu: box[id] = [seviye 0-3, vade günü]. Doğru cevap bir üst seviyeye çıkarır ve GAPS gün sonraya atar; 3'te doğru kutudan çıkarır.
 const GAPS = [0, 1, 3, 7], dueIds = (s, t) => Object.keys(s.box).filter(id => s.box[id][1] <= t);
@@ -2121,7 +2134,7 @@ function party(n, head, line) { // head/line: başka kutlamalar (söz) kendi met
   const title = head || (n >= 9 ? 'EFSANE!' : n >= 6 ? 'DURDURULAMAZ!' : 'MUHTEŞEM!');
   const d = document.createElement('div'); d.className = 'party'; d.setAttribute('role', 'status');
   d.innerHTML = `${bits}<div class="pp"><div class="pr2"><span class="ring"></span><span class="ring"></span><span class="ring"></span>${mascot('iyi')}</div><h2>${title}</h2><p>${line || `⚡ ${n} doğru arka arkaya!`}</p></div>`;
-  document.body.append(d); setTimeout(() => d.remove(), 2700);
+  document.body.append(d); setTimeout(() => d.remove(), 2700); snd('seri', .22);
 }
 // Bakır jeton; görev bitince üstte kısa bildirim. 3'lü kutlama açıksa onun bitmesini bekler. Ekran okuyucuya kalıcı canlı bölgeden gider.
 const COIN = '<svg viewBox="0 0 24 24" class="coin" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--copper)"/><circle cx="12" cy="12" r="8" fill="none" stroke="var(--coinink)" stroke-width="1.4" opacity=".5"/><path d="M13.4 6.5 8.8 13h3l-1.2 4.5L15.2 11h-3z" fill="var(--coinink)"/></svg>';
@@ -2133,7 +2146,7 @@ function questToast(r, wait) {
     const d = document.createElement('div'); d.className = 'qtoast' + (r.all ? ' all' : ''); d.setAttribute('aria-hidden', 'true');
     d.innerHTML = `${COIN}<div><b>${r.all ? 'Hepsi tamam!' : 'Görev tamam!'}</b><small>${r.all ? `+${QBONUS} bonus dahil` : esc(what)}</small></div><strong>+${r.n}</strong>`
       + (r.all ? [...Array(14)].map((_, i) => { const a = i / 14 * 6.283; return `<i style="--x:${(Math.cos(a) * 120).toFixed(0)}px;--y:${(Math.sin(a) * 90).toFixed(0)}px;--r:0deg;--t:${1 + i % 3 * .25}s;--d:${(i % 4 * .08).toFixed(2)}s"></i>`; }).join('') : '');
-    document.body.append(d); buzz(r.all ? [15, 60, 15, 60, 30] : [10, 40, 10]); setTimeout(() => d.remove(), r.all ? 3300 : 2500);
+    document.body.append(d); buzz(r.all ? [15, 60, 15, 60, 30] : [10, 40, 10]); snd('jeton'); setTimeout(() => d.remove(), r.all ? 3300 : 2500);
   }, wait);
 }
 function mascot(mood) { // iyi | normal | kotu
@@ -2700,6 +2713,7 @@ function profile() {
   <p class="note">Bir gün kaçırırsan serin bozulmaz. Kullandığın hak, 7 günlük seriyle geri gelir.</p>${saveOk ? '' : '<p class="note err">Bu tarayıcı kayda izin vermiyor. İlerlemen sayfa kapanınca silinir.</p>'}
   <h2>Günlük hedef</h2><label class="sel"><span>Günde ne kadar?</span><select id="hedef">${GOALS.map(([m, x, n]) => `<option value="${x}" ${S.goal === x ? 'selected' : ''}>${m} dk · ${n} (${x} XP)</option>`).join('')}</select></label>
   <h2>Sözlük</h2><p class="note">Derslerdeki terim ve simgelerin kısa açıklamaları. Ders metninde noktalı çizgiyle işaretli kelimeye dokunarak da açabilirsin.</p><button class="btn alt" data-go="sozluk">Sözlüğü aç</button>
+  <h2>Ses</h2><label class="sel"><span>Ses efektleri</span><input type="checkbox" role="switch" class="sw" id="snd"${S.snd ? ' checked' : ''}></label><p class="note">Doğru, yanlış, seri ve görev anlarında kısa sesler. iPhone sessiz moddaysa duyulmaz.</p>
   <h2>Hatırlatıcı</h2><label class="sel"><span>Bildirim sıklığı</span><select id="rem">${['Kapalı', 'Her gün', '2 günde bir'].map((n, i) => `<option value="${i}" ${S.rem === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
   <p class="note" id="remst" aria-live="polite"></p><button class="btn alt" id="remtest" hidden>Deneme bildirimi gönder</button>
   <h2>Rozetler (${got}/${BADGES.length})</h2><ul class="bdg">${BADGES.map(([n, d, f]) => `<li>${badgeSvg(f(S))}<span><b>${n}</b>${d}${f(S) ? '. Kazanıldı' : ''}</span></li>`).join('')}</ul>
@@ -2934,14 +2948,28 @@ function hintStep() {
   $('#ipb').setAttribute('aria-expanded', !t.hidden); hintLabel();
 }
 
+// Isınma sorusu: dersin soruları aynı zorlukta olduğundan aynı ünitenin önceki, zorluğu en fazla bu kadar olan en yakın dersinden
+// (sıralı kilit nedeniyle çoğunlukla geçilmiş) bir soru seçilir; tekrar kutusunda olmayanlar ve çoktan seçmeliler öne alınır. Yoksa null.
+function easier(lid, z) {
+  const i = LESSONS.findIndex(l => l.id === lid), u = LESSONS[i].unit;
+  for (let j = i - 1; j >= 0 && LESSONS[j].unit === u; j--) {
+    const l = LESSONS[j]; if (l.z > z) continue;
+    const ids = l.qs.map((_, k) => `${l.id}-${k + 1}`).filter(id => !C.queue.includes(id)), pick = f => ids.filter(f), c = [id => !(id in S.box) && QUESTIONS[id].t === 'mc', id => !(id in S.box), () => true].map(pick).find(a => a.length);
+    if (c) return c[Math.random() * c.length | 0];
+  }
+  return null;
+}
+
 function question() {
-  const q = C.q = QUESTIONS[C.queue[0]]; C.ans = null; C.checked = false; C.hint = 0; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; if (!C.fl?.length) C.fl = null; // fl: null akışı kapatır
-  app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
-  <div><p class="kind">${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1>${hintBox(q)}</div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
+  const q = C.q = QUESTIONS[C.queue[0]], warm = C.queue[0] === C.wq, help = C.nudge, nh = help && hints(q).length; C.ans = null; C.nudge = false; C.checked = false; C.hint = 0; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; if (!C.fl?.length) C.fl = null; // fl: null akışı kapatır
+  app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? warm ? 'Isınma' : `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
+  ${help ? `<div class="nudge" role="status">${mascot('iyi')}<p>İki soru üst üste zorladı, olur böyle. ${warm ? 'Önce kısa bir ısınma sorusu çözelim; sayılmaz, XP’si yine gelir.' : 'Acele yok, adım adım gidelim.'}${nh ? ' Takılırsan ipucu alabilirsin.' : ''}</p>${nh ? `<button class="ipb" id="nhint">${BULB}<span>İpucu al <small>−${XP_HINT(q.z, 0) - XP_HINT(q.z, 1)} XP</small></span></button>` : ''}</div>` : ''}
+  <div><p class="kind">${warm ? '<span class="isin">Isınma sorusu</span> · ' : ''}${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1>${hintBox(q)}</div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
   $('#ok').onclick = check;
   if ($('#akb')) $('#akb').onclick = flowToggle;
   if ($('#ipb')) { $('#ipb').onclick = hintStep; hintLabel(); }
+  if ($('#nhint')) $('#nhint').onclick = () => { $('.nudge').remove(); hintStep(); $('#ipb').focus(); }; // normal ipucu, aynı XP bedeliyle; isteğe bağlı
   focusTop();
 }
 
@@ -2950,11 +2978,16 @@ function check() {
   const q = C.q, id = C.queue[0], ok = grade(q, C.ans, SIMS), xp = XP_HINT(q.z, C.hint);
   if (ok === null) { const e = $('#nerr'); e.textContent = 'Bunu sayı olarak okuyamadım. Yalnızca rakam yaz, örneğin 2,5.'; e.className = 'note err'; $('#n').focus(); return; }
   C.checked = true; C.queue.shift();
+  const warm = id === C.wq; if (warm) C.wq = null; // ısınma sorusu: XP ve tekrar kutusu normal; ilerleme, doğru sayısı ve ders sonucu sayılmaz
   record(S, id, q.t, ok, dayNum(), q.z, xp);
-  if (ok) C.right++;
+  if (ok && !warm) C.right++;
   C.combo = ok ? (C.combo || 0) + 1 : 0;
   if (ok) { if (C.combo % 3 === 0) party(C.combo); else cheer(); }
-  if (ok || C.lid) C.n++; else C.queue.push(id); // Tekrar'da yanlış soru kuyruğun sonuna döner
+  snd(ok ? 'dogru' : 'yanlis');
+  if (!warm) { if (ok || C.lid) C.n++; else C.queue.push(id); } // Tekrar'da yanlış soru kuyruğun sonuna döner
+  C.wr = ok ? 0 : (C.wr || 0) + 1;
+  // Uyarlanan zorluk: derste iki yanlış üst üste gelirse (derste bir kez) sıradaki soruda Pırıl yardım önerir ve önüne daha kolay bir ısınma sorusu girer.
+  if (C.lid && C.wr >= 2 && !C.helped && C.queue.length) { C.helped = C.nudge = true; const e = easier(C.lid, q.z); if (e) C.queue.unshift(C.wq = e); }
   if (C.lid && !C.queue.length) finishLesson(S, C.lid, C.right, C.total, dayNum());
   const end = !!C.lid && !C.queue.length, qr = questEv(S, { ok, t: q.t, z: q.z, rev: !C.lid, combo: C.combo, fin: end, perfect: end && C.right === C.total, xp: todayXp(S, dayNum()) }, dayNum());
   if (qr.n) questToast(qr, ok && C.combo % 3 === 0 ? 2600 : 0);
@@ -2963,6 +2996,7 @@ function check() {
   if (q.t === 'mc') $$('.opt').forEach(b => mark(b, b.dataset.i));
   if (q.t === 'ariza') $$('.part').forEach(p => mark(p, p.dataset.id));
   if (q.t === 'sira' && !ok) $$('.opt').sort((a, b) => a.dataset.i - b.dataset.i).forEach((b, i) => { $('kbd', b).textContent = i + 1; b.parentNode.append(b); });
+  $('.nudge')?.remove();
   $$('main button:not(.x):not(#akb):not(.term),main input').forEach(b => b.disabled = true);
   if (C.fl) { if (!$('#akb')) { $('.fig').insertAdjacentHTML('afterend', FLOWBTN); $('#akb').onclick = flowToggle; } showFlow(true); } // açıklama görsel olsun
   const right = { mc: () => q.o[q.a], ariza: () => q.a, kur: () => q.a.join(', '), num: () => `${fmt(q.a)} ${q.u}`, oku: () => `${fmt(q.a)} ${q.u}`, sira: () => 'sıra yukarıda', sim: () => '' }[q.t]();
@@ -2972,7 +3006,7 @@ function check() {
   foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${xp} XP` : 'Yanlış'}</h2>${ok && C.hint ? `<p class="note">İpucu: −${XP_Z[q.z] - xp} XP</p>` : ''}${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${txg(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
   if (q.s) { $('main').insertAdjacentHTML('beforeend', `<section class="kart sol"><h2>Çözüm</h2><ol>${q.s.map(x => `<li>${tx(x)}</li>`).join('')}</ol></section>`); }
   if (q.t === 'sim' && C.miss) $('.fb h2').insertAdjacentHTML('afterend', `<p>${tx(C.miss)}</p>`);
-  $('#nx').onclick = () => C.queue.length ? question() : finish();
+  $('#nx').onclick = () => C.queue.length ? question() : (snd('bitti'), finish());
   $('#nx').focus({ preventScroll: true });
 }
 
@@ -3046,6 +3080,41 @@ function welcome(step = 0) {
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 // Kısa titreşim yalnız destekleyen telefonda (Android); iPhone Safari desteklemez, sessizce geçer.
 const buzz = ms => { if (!calm.matches) navigator.vibrate?.(ms); };
+/* ---------- Ses efektleri: Web Audio ile sentezlenir, ses dosyası yok ---------- */
+// Notalar: [frekans Hz, başlangıç s, süre s, dalga, kayma sonu Hz]. Her ses 0,8 s'nin altında ve kısık.
+const SND = {
+  dogru: [[784, 0, .14, 'triangle'], [1175, .08, .28, 'triangle']],
+  yanlis: [[247, 0, .32, 'sine', 185]],
+  bitti: [[523, 0, .16, 'triangle'], [659, .12, .16, 'triangle'], [784, .24, .16, 'triangle'], [1047, .36, .42, 'triangle']],
+  seri: [[1047, 0, .12], [1319, .06, .12], [1568, .12, .12], [2093, .18, .14], [2637, .24, .32]],
+  jeton: [[988, 0, .09, 'square'], [1319, .07, .36, 'square']]
+};
+let actx = null;
+// Otomatik testlerde (webdriver) sessiz; ses testi bunu kapatıp sesleri açar.
+const sndOn = () => S.snd && !navigator.webdriver;
+function audio() { // tek bağlam, ilk dokunuşta kurulur; iPhone sesi ancak kullanıcı dokununca açar
+  const A = window.AudioContext || window.webkitAudioContext;
+  if (!actx && A) actx = new A();
+  if (/^(suspended|interrupted)$/.test(actx?.state)) actx.resume()?.catch?.(() => {}); // interrupted: iPhone'da arama ya da başka uygulama sesi kesince
+  return actx;
+}
+function snd(name, at = 0) {
+  if (!sndOn()) return;
+  try {
+    const a = audio(), n = SND[name]; if (!a || !n) return;
+    const t0 = a.currentTime + at + .01, out = a.createGain(); out.gain.value = .12; out.connect(a.destination);
+    for (const [f, s, d, w = 'sine', f2] of n) {
+      const o = a.createOscillator(), g = a.createGain(), t = t0 + s, top = w === 'square' ? .35 : 1;
+      o.type = w; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(top, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + d + .02);
+    }
+  } catch {}
+}
+const UNLOCK = ['pointerdown', 'keydown', 'touchend'];
+function unlock() { if (!sndOn()) return; try { if (audio()?.state === 'running') UNLOCK.forEach(e => removeEventListener(e, unlock, true)); } catch {} }
+UNLOCK.forEach(e => addEventListener(e, unlock, true));
+app.addEventListener('change', e => { if (e.target.id !== 'snd') return; S.snd = e.target.checked; save(); snd('dogru'); });
 app.addEventListener('click', e => {
   const b = e.target.closest('[data-go]');
   if (!b || b.disabled) return;
