@@ -303,6 +303,52 @@ nav b{position:absolute;top:5px;left:calc(50% + 8px);min-width:20px;border-radiu
 .fb code{font:14px/1.45 var(--mono);overflow-wrap:anywhere}
 .end{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
 .end>svg{width:150px}
+/* Ders sonu: XP sayacı, hedef çubuğu, seri alevi, sandık ve çift XP. */
+.fin{gap:12px;justify-content:flex-start}
+.fin>svg{width:112px}
+.ign{position:relative;width:96px;animation:ignite .7s cubic-bezier(.2,1.5,.4,1) both}
+.ign svg{width:100%;display:block;animation:flick 1.4s ease-in-out .7s infinite alternate;transform-origin:50% 100%}
+.ign b{position:absolute;left:0;right:0;bottom:10px;font:900 30px var(--disp);color:var(--ledink);font-variant-numeric:tabular-nums}
+.igt{font:800 22px var(--disp);color:var(--hot);margin-top:-6px}
+@keyframes ignite{0%{transform:scale(0) translateY(30px);opacity:0}60%{transform:scale(1.18)}100%{transform:none;opacity:1}}
+@keyframes flick{to{transform:scale(1.04,.96) skewX(-2deg)}}
+.xpg{font:800 36px/1.1 var(--disp);color:var(--copper);font-variant-numeric:tabular-nums}
+.xpg small{font-size:15px;vertical-align:middle;background:var(--led);color:var(--ledink);border-radius:6px;padding:1px 6px}
+.gl{width:100%;display:grid;gap:6px}
+.gl .bar{height:14px;border-radius:7px}
+.gl .bar i{transition:width .9s cubic-bezier(.2,.8,.3,1) .15s}
+.gl p{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--soft)}
+.rw,.chest{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:10px 14px;border-radius:14px;background:var(--card);border:2px solid var(--line)}
+.rw>svg,.chest>svg{width:38px;flex:none}
+.rw>span,.chest>span{flex:1;min-width:0;display:grid;line-height:1.3}
+.rw b,.chest b{font:800 18px var(--disp);display:flex;align-items:center;gap:6px}
+.rw small,.chest small{font-size:14px;color:var(--soft)}
+.mst{border-color:var(--hot);background:linear-gradient(120deg,var(--hi1),var(--hi2))}
+.rpok{border-color:var(--good);background:var(--goodbg)}
+.dxo{border-color:var(--led)}
+.dxo .btn{width:auto;min-height:44px;flex:none;font-size:15px}
+.chest{border:2px dashed var(--copper)}
+.chest>svg{width:56px;overflow:visible}
+.chest:not(.open)>svg{animation:wiggle 1.8s ease-in-out infinite}
+.chest .lid{transform-box:fill-box;transform-origin:0 100%;transition:transform .35s cubic-bezier(.2,1.6,.4,1)}
+.chest.open{border-style:solid}
+.chest.open .lid{transform:translate(-3px,-6px) rotate(-24deg)}
+.chest .coin{width:22px;height:22px}
+.cw{animation:ptitle .45s cubic-bezier(.2,1.6,.4,1) .15s both}
+@keyframes wiggle{0%,70%,100%{transform:none}76%{transform:rotate(-8deg)}84%{transform:rotate(7deg)}92%{transform:rotate(-4deg)}}
+.dxb{display:inline-flex;align-items:center;flex:none;padding:2px 8px;border-radius:999px;background:var(--led);color:var(--ledink);font:800 13px/1.4 var(--disp);white-space:nowrap}
+.dxb.home{align-self:flex-start;font-size:15px;padding:4px 12px}
+.rp{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--card);border:2px solid var(--hot)}
+.rp>svg{width:40px;flex:none}
+.rp>div{flex:1;min-width:0;display:grid;gap:4px}
+.rp h2{font-size:18px}
+.rp small{font-size:13px;color:var(--soft)}
+.foot .row{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px}
+.foot .row .btn{min-height:48px;font-size:15px;padding-inline:8px}
+.btn.big{display:grid;justify-items:center;align-content:center;min-height:62px;font-size:19px;line-height:1.25}
+.btn.big small{max-width:100%;font-weight:400;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.party.ms{background:radial-gradient(circle at 50% 42%,color-mix(in oklch,var(--hot) 34%,transparent),transparent 62%)}
+.party.ms h2{font-size:38px}
 .tbl{display:grid;grid-template-columns:1fr auto;gap:8px 0;margin:0;width:100%;text-align:left}
 dt,dd{padding-bottom:8px;border-bottom:1px solid var(--line);margin:0}
 dd{font:700 17px/1.5 var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding-left:16px}
@@ -1699,11 +1745,16 @@ const ZN = ['', 'Kolay', 'Orta', 'Zor'];
 const XP_Z = [0, 4, 6, 8], XP_RIGHT = 4, XP_FINISH = 10, XP_PERFECT = 6, GOAL = 30;
 // Günlük hedef seçenekleri: [dakika, XP, ad]. GOAL varsayılandır; sunucu hatırlatması ikisini de buradan okur.
 const GOALS = [[3, 20, 'Rahat'], [5, 30, 'Normal'], [10, 60, 'Ciddi']], SOZ = 7, SOZ_JETON = 25;
+// Sürpriz ödüller: ders sonunda sandık (bazen kaçırma hakkı), günde en çok bir kez çift XP saati önerisi. rnd testte sabitlenir.
+// Seri kilometre taşları bir kez jeton verir; bozulan seri o gün RP_N ders bitirilirse geri gelir.
+const P_CHEST = .35, P_FREEZE = .1, P_DX = .2, DX_MS = 15 * 6e4, MS = [[7, 20], [30, 50], [100, 150], [365, 500]], RP_N = 3, RP_GAP = 7;
+let rnd = Math.random;
+const dxLeft = (s, now = Date.now()) => Math.max(0, s.dxEnd - now), dxMul = s => dxLeft(s) > 0 ? 2 : 1;
 
 // Yerel takvim günü; UTC ile sayılır ki yaz saati geçişi günü kaydırmasın.
 const dayNum = (d = new Date()) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
 
-const fresh = () => ({ xp: 0, done: {}, box: {}, ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0], goal: GOAL, pledge: [], snd: true });
+const fresh = () => ({ xp: 0, done: {}, box: {}, ok: {}, perfect: 0, fixed: 0, last: -1, streak: 0, bestStreak: 0, freeze: true, refill: 0, day: -1, dayXp: 0, goalDays: 0, rem: 0, coins: 0, qd: -1, qp: [0, 0, 0], goal: GOAL, pledge: [], snd: true, ms: [], dxEnd: 0, dxDay: -1, rpFor: -1, rpDay: -1, rpLost: 0, rpN: 0 });
 
 // Akıllı tekrar kutusu: box[id] = [seviye 0-3, vade günü]. Doğru cevap bir üst seviyeye çıkarır ve GAPS gün sonraya atar; 3'te doğru kutudan çıkarır.
 const GAPS = [0, 1, 3, 7], dueIds = (s, t) => Object.keys(s.box).filter(id => s.box[id][1] <= t);
@@ -1726,6 +1777,13 @@ function parseState(raw, validIds, today = dayNum()) {
   if (!GOALS.some(g => g[1] === s.goal)) s.goal = GOAL;
   const pl = s.pledge; // söz: [başlangıç günü, tutulan gün, son sayılan gün, durum]; boş dizi: söz yok
   if (pl.length && !(pl.length === 4 && pl.every(Number.isInteger) && pl[0] >= 0 && pl[1] >= 0 && pl[1] <= SOZ && pl[2] >= -1 && pl[3] >= 0 && pl[3] <= 3)) s.pledge = [];
+  // Ödül ve seri onarma alanları: bilinmeyen kilometre taşı atılır, çift XP en çok 15 dk ileriye, günler bugünden ileri olamaz.
+  const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+  s.ms = [...new Set(s.ms.filter(d => MS.some(m => m[0] === d)))].sort((a, b) => a - b);
+  s.dxEnd = Math.min(Math.max(0, s.dxEnd), Date.now() + DX_MS);
+  if (!int(s.dxDay, -1, today)) s.dxDay = Number.isInteger(s.dxDay) && s.dxDay > today ? today : -1;
+  if (!int(s.rpFor, -1, today)) s.rpFor = -1;
+  if (!int(s.rpDay, -1, today) || !int(s.rpN, 0, RP_N) || !int(s.rpLost, 0, Math.max(0, s.bestStreak))) { s.rpDay = -1; s.rpN = 0; s.rpLost = 0; }
   return s;
 }
 
@@ -1739,6 +1797,14 @@ function touchStreak(s, today) {
   } else { s.streak = 1; s.freeze = true; }
   s.last = today;
   s.bestStreak = Math.max(s.bestStreak, s.streak);
+}
+
+// Seri bozulduysa (kaçırma hakkı da yetmediyse) bozulmadan sonraki ilk açılışta bir kez onarma önerilir; öneri yalnız o gün geçerli.
+function repairCheck(s, t) {
+  const was = s.rpLost;
+  if (s.rpLost && s.rpDay !== t) s.rpLost = 0;
+  if (s.streak >= 2 && s.last >= 0 && t - s.last <= RP_GAP && !liveStreak(s, t) && s.rpFor !== s.last) { s.rpFor = s.last; s.rpDay = t; s.rpLost = s.streak; s.rpN = 0; return true; }
+  return was !== s.rpLost;
 }
 
 const liveStreak = (s, today) => s.last >= 0 && (today - s.last <= 1 || (today - s.last === 2 && s.freeze)) ? s.streak : 0;
@@ -1770,13 +1836,15 @@ function record(s, id, type, right, today, z = 1, xp = XP_Z[z]) { // xp: ipucu a
   s.ok['z' + z] = (s.ok['z' + z] || 0) + 1;
   // Ders içinde de Tekrar'daki gibi sayılır, ama yalnız vadesi geldiyse; vadesi gelmemiş soru olduğu gibi kalır.
   if (b && b[1] <= today) { if (b[0] >= 3) { delete s.box[id]; s.fixed++; } else s.box[id] = [b[0] + 1, today + GAPS[b[0] + 1]]; }
-  addXp(s, xp, today);
+  addXp(s, xp * dxMul(s), today);
 }
 
 function finishLesson(s, lid, right, total, today) {
   s.done[lid] = Math.max(s.done[lid] || 0, right);
   if (right === total) s.perfect++;
-  addXp(s, XP_FINISH + (right === total ? XP_PERFECT : 0), today);
+  addXp(s, (XP_FINISH + (right === total ? XP_PERFECT : 0)) * dxMul(s), today);
+  // Onarma: o gün RP_N. ders bitince eski seri + bugün geri gelir. Onarma bir kaçırma hakkı gibi sayılır, hak 7 günde dolar.
+  if (s.rpLost && s.rpDay === today && ++s.rpN >= RP_N) { s.streak = Math.max(s.streak, s.rpLost + 1); s.rpLost = 0; s.freeze = false; s.refill = 7; s.bestStreak = Math.max(s.bestStreak, s.streak); }
 }
 
 // "1.500" Türkçede 1500, klavyede 1,5 olabilir: iki yorum da aday.
@@ -2125,14 +2193,14 @@ function cheer() {
   const d = document.createElement('div'); d.className = 'cheer'; d.setAttribute('aria-hidden', 'true');
   d.innerHTML = BOLT + esc(CHEER[Math.random() * CHEER.length | 0]); document.body.append(d); setTimeout(() => d.remove(), 1400);
 }
-function party(n, head, line) { // head/line: başka kutlamalar (söz) kendi metnini verir
+function party(n, head, line, cls = '') { // head/line/cls: söz, seri kilometre taşı gibi özel kutlamalar kendi metnini verir
   document.querySelectorAll('.party').forEach(e => e.remove());
   const star = 'polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)', bolt = 'polygon(55% 0,10% 58%,45% 58%,35% 100%,90% 38%,55% 38%)';
   const cols = ['var(--led)', 'var(--copper)', 'var(--hot)', 'var(--good)', 'var(--cold)', '#fff'];
   const bits = [...Array(44)].map((_, i) => { const a = i / 44 * 6.283 + Math.random() * .3, r = 140 + Math.random() * 260;
     return `<i style="--x:${(Math.cos(a) * r).toFixed(0)}px;--y:${(Math.sin(a) * r).toFixed(0)}px;--r:${Math.random() * 720 - 360 | 0}deg;--s:${18 + Math.random() * 22 | 0}px;--c:${cols[i % cols.length]};--k:${i % 3 ? star : i % 2 ? bolt : 'circle(50%)'};--t:${1.2 + Math.random() * .9}s;--d:${(Math.random() * .35).toFixed(2)}s"></i>`; }).join('');
   const title = head || (n >= 9 ? 'EFSANE!' : n >= 6 ? 'DURDURULAMAZ!' : 'MUHTEŞEM!');
-  const d = document.createElement('div'); d.className = 'party'; d.setAttribute('role', 'status');
+  const d = document.createElement('div'); d.className = 'party ' + cls; d.setAttribute('role', 'status');
   d.innerHTML = `${bits}<div class="pp"><div class="pr2"><span class="ring"></span><span class="ring"></span><span class="ring"></span>${mascot('iyi')}</div><h2>${title}</h2><p>${line || `⚡ ${n} doğru arka arkaya!`}</p></div>`;
   document.body.append(d); setTimeout(() => d.remove(), 2700); snd('seri', .22);
 }
@@ -2470,6 +2538,13 @@ function mergeState(a, b) {
   const [pa, pb] = [a.pledge, b.pledge]; // söz: daha yeni başlayan; aynıysa daha ileri giden (gün, sonra durum)
   m.pledge = [...(!pb.length || (pa.length && (pa[0] - pb[0] || pa[1] - pb[1] || pa[3] - pb[3]) >= 0) ? pa : pb)];
   for (const [k, v] of Object.entries(lo.box)) { const o = m.box[k]; if (!o || v[0] < o[0] || (v[0] === o[0] && v[1] < o[1])) m.box[k] = v; } // kutu birleşir: daha zayıf olan kalır
+  // Seri en son çalışılan cihazdan gelir (aynı günse uzun olan): böylece bir cihazdaki onarma ötekinde kaybolmaz.
+  const sk = a.last !== b.last ? (a.last > b.last ? a : b) : a.streak >= b.streak ? a : b;
+  [m.last, m.streak, m.freeze, m.refill] = [sk.last, sk.streak, sk.freeze, sk.refill];
+  m.ms = [...new Set([...a.ms, ...b.ms])].sort((x, y) => x - y); m.dxEnd = Math.max(a.dxEnd, b.dxEnd); m.dxDay = Math.max(a.dxDay, b.dxDay); m.rpFor = Math.max(a.rpFor, b.rpFor);
+  // Onarma: yeni günün önerisi geçer; aynı günse büyük ilerleme, bir cihazda tamamlandıysa öneri kapanır (iki kez geri getirilemez).
+  if (a.rpDay !== b.rpDay) [m.rpDay, m.rpN, m.rpLost] = a.rpDay > b.rpDay ? [a.rpDay, a.rpN, a.rpLost] : [b.rpDay, b.rpN, b.rpLost];
+  else { m.rpN = Math.max(a.rpN, b.rpN); m.rpLost = m.rpN >= RP_N || !a.rpLost || !b.rpLost ? 0 : Math.max(a.rpLost, b.rpLost); }
   return m;
 }
 
@@ -2663,7 +2738,8 @@ function home() {
   const [hi, sub] = !S.xp ? ['Akımlı’ya hoş geldin', 'İlk derste yükten başlıyoruz.'] : x >= G ? ['Bugünkü hedef tamam', 'İstersen bir ders daha çöz.']
     : st ? ['Devam edelim', `Hedefe ${G - x} XP kaldı.`] : ['Yeniden yakalım', 'Bir derslik 3 dakikan var mı?'];
   return `<main class="scr"><div class="stat"><span class="sk">${flame(x > 0, ign)}${st} günlük seri<span class="sr">. ${x ? 'Seri yanıyor' : 'Bugün seri yanmadı'}</span></span><span>${ICON.xp}${S.xp} XP</span><div class="goal">${bar(x, G, 'Günlük hedef')}Bugün ${x} / ${G} XP</div></div>
-  ${pledgeCard(t)}${questCard(t)}
+  ${pledgeCard(t)}${dxBadge('home')}${S.rpLost && S.rpDay === t ? `<section class="rp" aria-labelledby="rph">${IGNITE}<div><h2 id="rph">Serin bozuldu (${S.rpLost} gün).</h2><p>Bugün ${RP_N} ders bitirirsen geri gelsin.</p>${bar(S.rpN, RP_N, 'Seri onarma')}<small>${S.rpN} / ${RP_N} ders</small></div></section>` : ''}
+  ${questCard(t)}
   <div class="hello">${mascot(x >= G ? 'iyi' : 'normal')}<div><h1 tabindex="-1">${hi}</h1><p>${sub}</p></div></div>
   ${UNITS.map((u, i) => {
     const ls = LESSONS.filter(l => l.unit === i);
@@ -2817,7 +2893,7 @@ function szClose() {
 /* ---------- Soru oturumu ---------- */
 let C = null; // etkin oturum; lid yoksa Tekrar
 const KIND = { mc: 'Çoktan seçmeli', num: 'Hesapla', oku: 'Renk kodu', kur: 'Renk kodu', ariza: 'Arızayı bul', sira: 'Sırala', sim: 'Simülasyon' };
-function start(ids, lid, practice) { C = { queue: [...ids], total: ids.length, n: 0, right: 0, lid, practice, xp0: S.xp, had: BADGES.map(b => b[2](S)) }; question(); }
+function start(ids, lid, practice) { const t = dayNum(); C = { queue: [...ids], total: ids.length, n: 0, right: 0, lid, practice, xp0: S.xp, had: BADGES.map(b => b[2](S)), t0: t, x0: todayXp(S, t), last0: S.last, rp0: S.rpLost }; question(); }
 const answer = (v, ready = true) => { C.ans = v; $('#ok').disabled = !ready; };
 const fig = q => q.c ? `<div class="fig">${circuit(q.c)}</div>${C.fl && !q.fa ? FLOWBTN : ''}` : ''; // fa: akış cevabı gösteriyorsa ipucu cevaptan sonra
 // Akımı göster: ipucu, XP'yi etkilemez. Arıza sorusunda düğme yok; cevaptan sonra yalnız elle yazılmış q.fl gösterilir.
@@ -2962,7 +3038,7 @@ function easier(lid, z) {
 
 function question() {
   const q = C.q = QUESTIONS[C.queue[0]], warm = C.queue[0] === C.wq, help = C.nudge, nh = help && hints(q).length; C.ans = null; C.nudge = false; C.checked = false; C.hint = 0; C.fl = q.c ? 'fl' in q ? q.fl : q.t !== 'ariza' && flowOf(q.c) : null; if (!C.fl?.length) C.fl = null; // fl: null akışı kapatır
-  app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? warm ? 'Isınma' : `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output></div>
+  app.innerHTML = `<main class="scr"><div class="top"><button class="x" data-go="${C.lid ? 'ana' : 'tekrar'}" aria-label="Çık">${ICON.x}</button>${bar(C.n, C.total, 'İlerleme')}<output>${C.lid ? warm ? 'Isınma' : `${C.n + 1}/${C.total}` : `${C.queue.length} kaldı`}</output>${dxBadge()}</div>
   ${help ? `<div class="nudge" role="status">${mascot('iyi')}<p>İki soru üst üste zorladı, olur böyle. ${warm ? 'Önce kısa bir ısınma sorusu çözelim; sayılmaz, XP’si yine gelir.' : 'Acele yok, adım adım gidelim.'}${nh ? ' Takılırsan ipucu alabilirsin.' : ''}</p>${nh ? `<button class="ipb" id="nhint">${BULB}<span>İpucu al <small>−${XP_HINT(q.z, 0) - XP_HINT(q.z, 1)} XP</small></span></button>` : ''}</div>` : ''}
   <div><p class="kind">${warm ? '<span class="isin">Isınma sorusu</span> · ' : ''}${zTag(q.z)} · ${KIND[q.t]}</p><h1 class="q" tabindex="-1">${tx(q.q)}</h1>${hintBox(q)}</div>${VIEW[q.t](q)}</main><div class="foot" aria-live="polite"><button class="btn" id="ok" disabled>Kontrol et</button></div>`;
   BIND[q.t](q);
@@ -2975,7 +3051,7 @@ function question() {
 
 function check() {
   if (C.checked) return;
-  const q = C.q, id = C.queue[0], ok = grade(q, C.ans, SIMS), xp = XP_HINT(q.z, C.hint);
+  const q = C.q, id = C.queue[0], ok = grade(q, C.ans, SIMS), xp = XP_HINT(q.z, C.hint), dx = dxMul(S);
   if (ok === null) { const e = $('#nerr'); e.textContent = 'Bunu sayı olarak okuyamadım. Yalnızca rakam yaz, örneğin 2,5.'; e.className = 'note err'; $('#n').focus(); return; }
   C.checked = true; C.queue.shift();
   const warm = id === C.wq; if (warm) C.wq = null; // ısınma sorusu: XP ve tekrar kutusu normal; ilerleme, doğru sayısı ve ders sonucu sayılmaz
@@ -3003,25 +3079,80 @@ function check() {
   const foot = $('.foot'), hint = !ok && (q.t === 'num' || q.t === 'oku') ? clue(C.ans, q.a) : '';
   $('h1.q').innerHTML = txg(q.q); // terimler cevaptan sonra: tanımlar çoğu zaman cevabı söyler
   foot.className = 'foot ' + (ok ? 'good' : 'bad'); buzz(ok ? 12 : [20, 40, 20]);
-  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${xp} XP` : 'Yanlış'}</h2>${ok && C.hint ? `<p class="note">İpucu: −${XP_Z[q.z] - xp} XP</p>` : ''}${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${txg(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
+  foot.innerHTML = `<div class="fb">${mascot(ok ? 'iyi' : 'kotu')}<div><h2>${ok ? `Doğru, +${xp * dx} XP${dx > 1 ? ' (2×)' : ''}` : 'Yanlış'}</h2>${ok && C.hint ? `<p class="note">İpucu: −${XP_Z[q.z] - xp} XP</p>` : ''}${ok ? '' : `${right ? `<p><b>Doğru cevap: ${tx(right)}</b></p>` : ''}${hint ? `<p>${tx(hint)}</p>` : ''}<p>${txg(q.e)}</p>`}<code>${tx(q.f)}</code></div></div><button class="btn" id="nx">Devam</button>`;
   if (q.s) { $('main').insertAdjacentHTML('beforeend', `<section class="kart sol"><h2>Çözüm</h2><ol>${q.s.map(x => `<li>${tx(x)}</li>`).join('')}</ol></section>`); }
   if (q.t === 'sim' && C.miss) $('.fb h2').insertAdjacentHTML('afterend', `<p>${tx(C.miss)}</p>`);
   $('#nx').onclick = () => C.queue.length ? question() : (snd('bitti'), finish());
   $('#nx').focus({ preventScroll: true });
 }
 
+// Ders sonu: XP sayarak artar, günlük hedef dolar; günün ilk dersi seriyi uzattıysa alev yanar. Sıradaki ders tek dokunuşta.
+const IGNITE = '<svg viewBox="0 0 64 80" aria-hidden="true" class="fire"><path d="M32 4c4 14 22 22 22 44a22 22 0 0 1-44 0c0-10 5-17 10-22 0 8 4 12 8 13-3-12 1-25 4-35z" fill="var(--hot)"/><path d="M32 34c3 8 12 12 12 24a12 12 0 0 1-24 0c0-6 3-10 6-13 0 5 2 7 4 7-1-7 0-13 2-18z" fill="var(--led)"/></svg>';
+const CHEST = '<svg viewBox="0 0 64 56" aria-hidden="true"><path class="lid" d="M6 24a12 12 0 0 1 12-12h28a12 12 0 0 1 12 12v3H6z" fill="var(--copper)" stroke="var(--coinink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M6 27h52v20a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="var(--copper)" stroke="var(--coinink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M6 34h52M20 27v24M44 27v24" stroke="var(--coinink)" stroke-width="2" opacity=".55"/><rect x="27" y="23" width="10" height="14" rx="2" fill="var(--led)" stroke="var(--coinink)" stroke-width="2"/></svg>';
+const dxBadge = (cls = '') => { const m = Math.ceil(dxLeft(S) / 6e4); return m ? `<span class="dxb ${cls}" role="img" aria-label="Çift XP açık, ${m} dakika kaldı">2× XP · ${m} dk</span>` : ''; };
+setInterval(() => document.querySelectorAll('.dxb').forEach(b => { const m = Math.ceil(dxLeft(S) / 6e4); if (!m) return b.remove(); b.textContent = `2× XP · ${m} dk`; b.setAttribute('aria-label', `Çift XP açık, ${m} dakika kaldı`); }), 1e4);
+// Sıradaki ders: bu dersten sonra gelen ilk açık ve bitmemiş ders, yoksa ana ekrandaki .node.next.
+const nextLesson = lid => LESSONS.slice(LESSONS.findIndex(l => l.id === lid) + 1).find(l => !(l.id in S.done) && unlocked(l)) || LESSONS.find(l => !(l.id in S.done));
+// Ders bitince bir kez: kilometre taşı, sandık zarı, çift XP önerisi. Sonuç C.rw'de durur ki ekran yeniden çizilse de tekrar verilmesin.
+function endRewards(t) {
+  const st = liveStreak(S, t), got = MS.filter(([d]) => st >= d && !S.ms.includes(d)), chest = rnd() < P_CHEST;
+  got.forEach(([d, c]) => { S.ms.push(d); S.coins += c; }); S.ms.sort((a, b) => a - b);
+  const dx = !chest && S.dxDay !== t && !dxLeft(S) && rnd() < P_DX;
+  if (dx) S.dxDay = t;
+  return { ms: got, chest: chest ? 1 : 0, dx };
+}
+// Sandık: kaçırma hakkı yalnız hakkı olmayana çıkar, yoksa 5–20 jeton.
+function chestOpen() {
+  if (C.rw.chest !== 1) return;
+  const fz = rnd() < P_FREEZE && !S.freeze, n = fz ? 0 : Math.min(20, 5 + Math.floor(rnd() * 16));
+  if (fz) { S.freeze = true; S.refill = 0; } else S.coins += n;
+  C.rw.chest = 2; save(); buzz([10, 40, 10]);
+  const d = document.createElement('div');
+  d.className = 'chest open'; d.id = 'chest'; d.tabIndex = -1; d.setAttribute('role', 'status');
+  d.innerHTML = `${CHEST}<span class="cw" data-r="${fz ? 'freeze' : n}">${fz ? '<b>Kaçırma hakkı!</b><small>Bir gün kaçırırsan serin bozulmaz.</small>' : `<b>${COIN}+${n} jeton</b><small>Toplam ${S.coins} bakır jeton</small>`}</span>`;
+  $('#chest').replaceWith(d); d.focus({ preventScroll: true });
+}
 function finish() {
-  const t = dayNum(), wrong = C.lid ? C.total - C.right : 0, fresh = BADGES.filter((b, i) => !C.had[i] && b[2](S));
-  app.innerHTML = `<main class="scr"><div class="end">${mascot(wrong < 3 ? 'iyi' : 'normal')}<h1 tabindex="-1">${!C.lid ? (C.practice ? 'Antrenman tamam' : 'Tekrar temizlendi') : wrong ? 'Ders tamam' : 'Hatasız bitirdin'}</h1>
-  <dl class="tbl"><dt>Kazanılan</dt><dd>${S.xp - C.xp0} XP</dd>${C.lid ? `<dt>Doğru</dt><dd>${C.right} / ${C.total}</dd>` : ''}<dt>Bugün</dt><dd>${todayXp(S, t)} / ${S.goal} XP</dd><dt>Seri</dt><dd>${liveStreak(S, t)} gün</dd>${fresh.map(b => `<dt>Yeni rozet</dt><dd>${b[0]}</dd>`).join('')}</dl></div></main>
-  <div class="foot">${wrong ? '<button class="btn" data-go="tekrar-coz">Yanlışları tekrar et</button><button class="btn alt" data-go="ana">Derslere dön</button>' : '<button class="btn" data-go="ana">Derslere dön</button>'}</div>`;
+  const t = dayNum(), wrong = C.lid ? C.total - C.right : 0, fresh = BADGES.filter((b, i) => !C.had[i] && b[2](S)), gain = S.xp - C.xp0, st = liveStreak(S, t);
+  const title = !C.lid ? (C.practice ? 'Antrenman tamam' : 'Tekrar temizlendi') : wrong ? 'Ders tamam' : 'Hatasız bitirdin';
+  if (!C.lid) {
+    app.innerHTML = `<main class="scr"><div class="end">${mascot('iyi')}<h1 tabindex="-1">${title}</h1>
+  <dl class="tbl"><dt>Kazanılan</dt><dd>${gain} XP</dd><dt>Bugün</dt><dd>${todayXp(S, t)} / ${S.goal} XP</dd><dt>Seri</dt><dd>${st} gün</dd>${fresh.map(b => `<dt>Yeni rozet</dt><dd>${b[0]}</dd>`).join('')}</dl></div></main>
+  <div class="foot"><button class="btn" data-go="ana">Derslere dön</button></div>`;
+    return focusTop();
+  }
+  const rw = C.rw ||= endRewards(t), x = todayXp(S, t), x0 = C.t0 === t ? Math.min(C.x0, x) : 0, nx = nextLesson(C.lid), coins = rw.ms.reduce((a, m) => a + m[1], 0);
+  const fixed = C.rp0 && !S.rpLost && S.rpN >= RP_N && S.rpDay === t, lit = !fixed && C.last0 !== t && S.last === t && st > 0, top = rw.ms[rw.ms.length - 1];
+  save();
+  const head = lit ? `<div class="ign" role="img" aria-label="Seri ${st} gün">${IGNITE}<b>${st}</b></div><p class="igt">${st > 1 ? `Seri yandı: ${st} gün!` : 'Seri başladı!'}</p>` : mascot(wrong < 3 ? 'iyi' : 'normal');
+  const goal = x >= S.goal ? (x0 < S.goal ? 'Günlük hedef tamam!' : 'Hedef tamam') : `Hedefe ${S.goal - x} XP`;
+  app.innerHTML = `<main class="scr"><div class="end fin">${head}<h1 tabindex="-1">${title}</h1>
+  <p class="xpg"><span class="sr">${gain} XP kazandın</span><span aria-hidden="true">+<b id="xpn">${gain}</b> XP${dxLeft(S) ? ' <small>2×</small>' : ''}</span></p>
+  <div class="gl">${bar(x, S.goal, 'Günlük hedef')}<p><span>Bugün ${x} / ${S.goal} XP</span><span>${goal}</span></p></div>
+  ${fixed ? `<p class="rw rpok">${IGNITE}<span><b>Serin geri geldi!</b><small>${st} günlük seri, kaldığın yerden.</small></span></p>` : ''}
+  ${top ? `<p class="rw mst">${IGNITE}<span><b>${top[0]} günlük seri!</b><small>Kilometre taşı ödülü: +${coins} bakır jeton</small></span></p>` : ''}
+  ${rw.chest === 1 ? `<button class="chest" id="chest">${CHEST}<span><b>Sürpriz sandık!</b><small>Açmak için dokun</small></span></button>` : ''}
+  ${rw.dx && !dxLeft(S) ? `<div class="rw dxo" id="dxo"><span><b>Çift XP saati</b><small>15 dakika boyunca her doğru cevap ve biten ders 2× XP.</small></span><button class="btn alt" id="dxgo">Başlat</button></div>` : ''}
+  <dl class="tbl"><dt>Doğru</dt><dd>${C.right} / ${C.total}</dd><dt>Seri</dt><dd>${st} gün</dd>${S.rpLost && S.rpDay === t ? `<dt>Seri onarma</dt><dd>${S.rpN} / ${RP_N} ders</dd>` : ''}${fresh.map(b => `<dt>Yeni rozet</dt><dd>${b[0]}</dd>`).join('')}</dl></div></main>
+  <div class="foot">${nx ? `<button class="btn big" id="nxl" data-go="${nx.k ? 'konu' : 'ders'}-${nx.id}">Sıradaki ders →<small>${tx(nx.name)}</small></button>` : ''}
+  <div class="row">${wrong ? '<button class="btn alt" data-go="tekrar-coz">Yanlışları tekrar et</button>' : ''}<button class="btn${nx ? ' alt' : ''}" data-go="ana">Derslere dön</button></div></div>`;
+  if ($('#chest')) $('#chest').onclick = chestOpen;
+  if ($('#dxgo')) $('#dxgo').onclick = () => { S.dxEnd = Date.now() + DX_MS; save(); const d = $('#dxo'); d.setAttribute('role', 'status'); d.innerHTML = `<span><b>Çift XP saati başladı!</b><small>15 dakika boyunca doğru cevaplar 2× XP.</small></span>${dxBadge()}`; $('.foot .btn').focus({ preventScroll: true }); };
   focusTop();
+  if (!calm.matches) { // sayaç ve hedef çubuğu eski değerden yeniye akar; azaltılmış harekette son değerler hemen görünür
+    const n = $('#xpn'), i = $('.gl .bar i'), t0 = performance.now(), f = now => { const k = Math.min(1, (now - t0) / 800); n.textContent = Math.round(gain * (1 - (1 - k) ** 3)); if (k < 1 && n.isConnected) requestAnimationFrame(f); };
+    n.textContent = 0; requestAnimationFrame(f);
+    i.style.transition = 'none'; i.style.width = pct(x0, S.goal) + '%'; i.offsetWidth; i.style.transition = ''; i.style.width = pct(x, S.goal) + '%';
+  }
+  if (top) setTimeout(() => party(0, `${top[0]} GÜNLÜK SERİ!`, `Kilometre taşı: +${coins} jeton`, 'ms'), 350);
+  else if (fixed) setTimeout(() => party(0, 'SERİN GERİ GELDİ!', `${st} günlük seri kurtarıldı`, 'ms'), 350);
 }
 
 /* ---------- Yönlendirme: Android geri tuşu hash geçmişiyle çalışır ---------- */
 function route() {
   const h = location.hash.slice(1), d = /^(ders|konu)-(.+)$/.exec(h), l = d && LESSONS.find(x => x.id === d[2]);
   if (shown) scrollMem[shown] = scrollY;
+  if (repairCheck(S, dayNum())) save();
   shown = null; termClose(false); if (document.getElementById('szo')) szClose();
   if (!h && needHos()) return welcome();
   // konu-: önce konu anlatımı; düğmesi ders-'e gider, geri tuşu anlatıma döner.
